@@ -1,0 +1,15 @@
+*.xml
+.RData
+.Rhistory
+*.png
+*.jpg
+*.svg
+shiny_bookmarks
+*.tmx
+Imaris/
+*.tif
+*.tiff
+*.txt
+*.csv
+.RDataTmp
+*.xml
