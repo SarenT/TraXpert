@@ -35,11 +35,18 @@ allPositionTypes = list(positionColumns, fixedPositionColumns, rotFixedPositions
 
 edgeDirectionColumns = c("EDGE_DIRECTION_PHI", "EDGE_DIRECTION_THETA")
 pointSourceColumns = paste("pointSource", c("x", "y", "z"), sep = "_")
+cardinalCols = list(DIRECTION_POINT_SOURCE_PHI_CARDINAL = "DIRECTION_POINT_SOURCE_PHI",
+					DIRECTION_POINT_SOURCE_THETA_CARDINAL = "DIRECTION_POINT_SOURCE_THETA",
+					EDGE_DIRECTION_POINT_SOURCE_PHI_CARDINAL = "EDGE_DIRECTION_POINT_SOURCE_PHI",
+					EDGE_DIRECTION_POINT_SOURCE_THETA_CARDINAL = "EDGE_DIRECTION_POINT_SOURCE_THETA",
+					DIRECTION_CARDINAL = "TRACK_DIRECTION", DIRECTION_CARDINAL_ROT = "TRACK_DIRECTION_ROT")
 
 #edgePointSourceDirectionColumns = gsub("DIRECTION", "POINT_SOURCE_DIRECTION", edgeDirectionColumns)
 pointSourceDirectionColumns = c("DIRECTION_POINT_SOURCE_PHI", "DIRECTION_POINT_SOURCE_THETA", 
+								"DIRECTION_POINT_SOURCE_PHI_CARDINAL", "DIRECTION_POINT_SOURCE_THETA_CARDINAL", 
 								"MEAN_DEVIATION_FROM_POINT_SOURCE_PHI", "MEAN_DEVIATION_FROM_POINT_SOURCE_THETA",
 								"EDGE_DIRECTION_POINT_SOURCE_PHI", "EDGE_DIRECTION_POINT_SOURCE_THETA",
+								"EDGE_DIRECTION_POINT_SOURCE_PHI_CARDINAL", "EDGE_DIRECTION_POINT_SOURCE_THETA_CARDINAL",
 								"EDGE_DEVIATION_FROM_POINT_SOURCE_PHI", "EDGE_DEVIATION_FROM_POINT_SOURCE_THETA")
 
 trajFeats = data.frame(feature = c(locationColumns, "TRACK_ID", 
@@ -98,16 +105,23 @@ featsStartEndPositions = data.frame(feature = c(startPositionColumns, endPositio
 						type = c("Track", "Track", "Track", "Track", "Track", "Track", "Track", "Track"))
 pointSourceFeats = data.frame(feature = pointSourceDirectionColumns,
 								   name = c("Direction to point source φ (XY)", "Direction to point source θ (Z)",
+								   		 "Cardinal direction to point source φ (XY)", "Cardinal direction to point source θ (Z)",
 								   		 "Deviation from point source φ (XY)", "Deviation from point source θ (Z)",
-								   		 "Direction to point source φ (XY)", "Direction to point source θ (Z)",
-								   		 "Deviation from point source φ (XY)", "Deviation from point source θ (Z)"),
-								   shortname = c("φ (Point Source)", "θ (Point Source)",
-								   			  "Dφ (Point Source)", "Dθ (Point Source)",
-								   			  "φ (Point Source)", "θ (Point Source)",
-								   			  "Dφ (Point Source)", "Dθ (Point Source)"),
-								   dimension = c("ANGLE", "ANGLE", "ANGLE", "ANGLE", "ANGLE", "ANGLE", "ANGLE", "ANGLE"),
-								   isint = c(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE),
-								   type = c("Track", "Track", "Track", "Track", "Edge", "Edge", "Edge", "Edge")
+								   		 "Edge direction to point source φ (XY)", "Edge direction to point source θ (Z)",
+								   		 "Cardinal edge direction to point source φ (XY)", "Cardinal edge direction to point source θ (Z)",
+								   		 "Edge deviation from point source φ (XY)", "Edge deviation from point source θ (Z)"),
+								   shortname = c("φ (Point src)", "θ (Point src)",
+								   			  "Card. φ (Point src)", "Card. θ (Point src)",
+								   			  "Dφ (Point src)", "Dθ (Point src)",
+								   			  "φ (Point src)", "θ (Point src)",
+								   			  "Card. φ (Point src)", "Card. θ (Point src)",
+								   			  "Dφ (Point src)", "Dθ (Point src)"),
+								   dimension = c("ANGLE", "ANGLE", "ANGLE", "ANGLE", "ANGLE", "ANGLE", 
+								   			  "ANGLE", "ANGLE", "ANGLE", "ANGLE", "ANGLE", "ANGLE"),
+								   isint = c(FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, 
+								   		  FALSE, FALSE),
+								   type = c("Track", "Track", "Track", "Track", "Track", "Track", 
+								   		 "Edge", "Edge", "Edge", "Edge", "Edge", "Edge")
 )
 featureTypes = c("Spot", "Edge", "Track")
 featsDir = data.frame(feature = c("TRACK_DIRECTION", "TRACK_DIRECTION_ROT", "TRACK_DIRECTION_Z", 
@@ -781,6 +795,18 @@ appendNewFeatures = function(oldFeatures, newFeatureColName, newFeatureName, new
 	return(oldFeatures)
 }
 
+setFeatureType = function(x, col, features, data_tag){
+	is_int = (features %>% filter(feature == col & type == data_tag))$isint
+	x = as.character(x)
+	
+	if(is_int){ # See if type is integer then set
+		x = as.integer(x)
+	}else{
+		x = as.numeric(x)
+	}
+	return(x)
+}
+
 #' Sets the features in the data according to the feature type
 #'
 #' @param data 
@@ -792,14 +818,10 @@ appendNewFeatures = function(oldFeatures, newFeatureColName, newFeatureName, new
 #'
 #' @examples
 setFeatureTypesinData = function(data, features, dataTag){
-	for(i in which(features$type==dataTag)){
-		data[features$feature[i]] = as.character(data[[features$feature[i]]])
-		if(features$isint[i]){ # See if type is integer then set
-			data[features$feature[i]] = as.integer(data[[features$feature[i]]])
-		}else{
-			data[features$feature[i]] = as.numeric(data[[features$feature[i]]])
-		}
-	}
+	#browser()
+	cols = features$feature[which(features$type==dataTag)]
+	data = data %>% mutate(across(cols[cols %in% colnames(data)], ~ setFeatureType(., cur_column(), features, dataTag)))
+	
 	return(data)
 }
 
@@ -922,6 +944,16 @@ prepareBareGroupings = function(files){
 
 	#print(groupings)
 	return(list(groupings = groupings, groups = uniqueGroups))
+}
+
+toCardinal = function(angles, directionCat, name, browse = FALSE){
+	if(browse){browser()}
+	anglesCardinal = cut(angles, directionCat)
+	anglesCardinal = replace(anglesCardinal, anglesCardinal == last(levels(anglesCardinal)), 
+							 first(levels(anglesCardinal)))
+	df = tibble(anglesCardinal)
+	colnames(df)[1] = name
+	return(df)
 }
 
 #' Parses files into data structure
@@ -1250,20 +1282,33 @@ processData = function(dataList, groups, groupings, updateProgress = NULL, initi
 					  by = "track_global_id")
 		
 		tracks$TRACK_DIRECTION_Z = acos(tracks$TRACK_DIRECTION_Z / tracks$TRACK_DISPLACEMENT) %% pi
-		
-		tracks$DIRECTION_CARDINAL = cut(tracks$TRACK_DIRECTION, directionCat)
+		#browser()
+		tracks = tracks %>% mutate(toCardinal(get("TRACK_DIRECTION"), directionCat, 
+											  unlist(names(cardinalCols)[cardinalCols == "TRACK_DIRECTION"])))
+	
+		# tracks = tracks %>% 
+		# 	mutate(DIRECTION_CARDINAL = cut(TRACK_DIRECTION, directionCat)) %>% #mutate(across(starts_with("DIRECTION_POINT_SOURCE"), ~ cut(., directionCat), .names = "{.col}_CARDINAL")) %>% 
+		# 	mutate(DIRECTION_CARDINAL = replace(DIRECTION_CARDINAL, 
+		# 										DIRECTION_CARDINAL == last(levels(DIRECTION_CARDINAL)), 
+		# 										first(levels(DIRECTION_CARDINAL))))
+		# 
+		#tracks$DIRECTION_CARDINAL = cut(tracks$TRACK_DIRECTION, directionCat)
 		
 		
 		#ROT tracks$DIRECTION_CARDINAL_ROT = cut(tracks$TRACK_DIRECTION_ROT, directionCat)
 		
 		# Setting last group to first group
 		#tracks = angleCategoryFix(tracks, c("DIRECTION_CARDINAL"))#ROT , "DIRECTION_CARDINAL_ROT"))
-		tracks = tracks %>% 
-			mutate(DIRECTION_CARDINAL = replace(DIRECTION_CARDINAL, 
-				   			DIRECTION_CARDINAL == last(levels(tracks$DIRECTION_CARDINAL)), 
-				   			first(levels(tracks$DIRECTION_CARDINAL))))
+		# tracks = tracks %>% 
+		# 	mutate(DIRECTION_CARDINAL = replace(DIRECTION_CARDINAL, 
+		# 		   			DIRECTION_CARDINAL == last(levels(tracks$DIRECTION_CARDINAL)), 
+		# 		   			first(levels(tracks$DIRECTION_CARDINAL))))
+		# 
+		
+		
 		tracks$TRACK_DIRECTION_ROT = tracks$TRACK_DIRECTION; tracks$TRACK_DIRECTION_Z_ROT = tracks$TRACK_DIRECTION_Z
 		tracks$DIRECTION_CARDINAL_ROT = tracks$DIRECTION_CARDINAL#; tracks$DIRECTION_CARDINAL_Z_ROT = tracks$DIRECTION_CARDINAL_Z
+		
 		
 		if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 		for(grouping in groupings$names){
@@ -1375,10 +1420,12 @@ pointSource = function(dataList, updateProgress = NULL, initializeProgress = NUL
 	}
 	suppressWarnings({
 		trajsPS = trajectories %>% 
-			left_join(files, by = c("files" = "name")) %>%
+			left_join(files %>%  ungroup() %>% select(name, starts_with("pointSource_")), by = c("files" = "name"), 
+					  suffix = c("", ".y")) %>% select(-ends_with(".y")) %>%
 			group_by(track_global_id) %>%
-			mutate(EDGE_DIRECTION_POINT_SOURCE_PHI = angleRemap(EDGE_DIRECTION_PHI %% (pi*2) - atan2(POSITION_Y - pointSource_y, 
-																						  pointSource_x - POSITION_X) %% (pi*2)),
+			mutate(EDGE_DIRECTION_POINT_SOURCE_PHI = angleRemap(EDGE_DIRECTION_PHI %% (pi*2) - 
+																	atan2(POSITION_Y - pointSource_y, 
+																		  pointSource_x - POSITION_X) %% (pi*2)),
 				   EDGE_DIRECTION_POINT_SOURCE_THETA = EDGE_DIRECTION_THETA - acos((get(pointSourceColumns[3]) - get(positionColumns[3])) / DISPLACEMENT
 				   										 )
 				   )
@@ -1386,14 +1433,17 @@ pointSource = function(dataList, updateProgress = NULL, initializeProgress = NUL
 		trajsPS$EDGE_DEVIATION_FROM_POINT_SOURCE_THETA = abs(trajsPS$EDGE_DIRECTION_POINT_SOURCE_THETA)
 		
 		trcksPS = tracks %>%
-			left_join(files, by = c("files" = "name")) %>%
+			left_join(files %>%  ungroup() %>% select(name, starts_with("pointSource_")), by = c("files" = "name"), 
+					  suffix = c("", ".y")) %>% select(-ends_with(".y")) %>%
 			group_by(track_global_id) %>%
-			mutate(DIRECTION_POINT_SOURCE_PHI = angleRemap(TRACK_DIRECTION %% (2*pi) - atan2(START_POSITION_Y - pointSource_y, 
-																				pointSource_x - START_POSITION_X) %% (2*pi)),
-				   DIRECTION_POINT_SOURCE_THETA = TRACK_DIRECTION_Z - acos((get(pointSourceColumns[3]) - START_POSITION_Z) / 
-				   																	sqrt((get(pointSourceColumns[1]) - START_POSITION_X) ^ 2 + 
-				   																		 	(get(pointSourceColumns[2]) - START_POSITION_Y) ^ 2 + 
-				   																		 	(get(pointSourceColumns[3]) - START_POSITION_Z) ^ 2)
+			mutate(DIRECTION_POINT_SOURCE_PHI = angleRemap(TRACK_DIRECTION %% (2*pi) - 
+														   	atan2(START_POSITION_Y - pointSource_y, 
+														   		  pointSource_x - START_POSITION_X) %% (2*pi)),
+				   DIRECTION_POINT_SOURCE_THETA = TRACK_DIRECTION_Z - 
+				   	acos((get(pointSourceColumns[3]) - START_POSITION_Z) / 
+				   		 	sqrt((get(pointSourceColumns[1]) - START_POSITION_X) ^ 2 + 
+				   		 		 	(get(pointSourceColumns[2]) - START_POSITION_Y) ^ 2 + 
+				   		 		 	(get(pointSourceColumns[3]) - START_POSITION_Z) ^ 2)
 				   )
 			)
 		
@@ -1402,22 +1452,51 @@ pointSource = function(dataList, updateProgress = NULL, initializeProgress = NUL
 					  	group_by(track_global_id) %>% 
 					  	summarise(MEAN_DEVIATION_FROM_POINT_SOURCE_PHI = mean(EDGE_DEVIATION_FROM_POINT_SOURCE_PHI, na.rm = TRUE),
 					  			  MEAN_DEVIATION_FROM_POINT_SOURCE_THETA = mean(EDGE_DEVIATION_FROM_POINT_SOURCE_THETA, na.rm = TRUE)), 
-					  by = "track_global_id")
+					  by = "track_global_id", suffix = c("", ".y")) %>% select(-ends_with(".y"))
 		
 		if(is.function(initializeProgress) && is.function(updateProgress)){
 			updateProgress(detail = "Point source directons calculated...", value = 1)
 		}
 		
-		trajectories$EDGE_DIRECTION_POINT_SOURCE_PHI = trajsPS$EDGE_DIRECTION_POINT_SOURCE_PHI
-		trajectories$EDGE_DIRECTION_POINT_SOURCE_THETA = trajsPS$EDGE_DIRECTION_POINT_SOURCE_THETA
-		trajectories$EDGE_DEVIATION_FROM_POINT_SOURCE_PHI = trajsPS$EDGE_DEVIATION_FROM_POINT_SOURCE_PHI
-		trajectories$EDGE_DEVIATION_FROM_POINT_SOURCE_THETA = trajsPS$EDGE_DEVIATION_FROM_POINT_SOURCE_THETA
+		trajectories$EDGE_DIRECTION_POINT_SOURCE_PHI = trajsPS$EDGE_DIRECTION_POINT_SOURCE_PHI %% (2 * pi)
+		trajectories$EDGE_DIRECTION_POINT_SOURCE_THETA = trajsPS$EDGE_DIRECTION_POINT_SOURCE_THETA %% (2 * pi)
+		trajectories$EDGE_DEVIATION_FROM_POINT_SOURCE_PHI = trajsPS$EDGE_DEVIATION_FROM_POINT_SOURCE_PHI# %% (2 * pi)
+		trajectories$EDGE_DEVIATION_FROM_POINT_SOURCE_THETA = trajsPS$EDGE_DEVIATION_FROM_POINT_SOURCE_THETA# %% (2 * pi)
 		
 		
-		tracks$DIRECTION_POINT_SOURCE_PHI = trcksPS$DIRECTION_POINT_SOURCE_PHI
-		tracks$DIRECTION_POINT_SOURCE_THETA = trcksPS$DIRECTION_POINT_SOURCE_THETA
-		tracks$MEAN_DEVIATION_FROM_POINT_SOURCE_PHI = trcksPS$MEAN_DEVIATION_FROM_POINT_SOURCE_PHI
-		tracks$MEAN_DEVIATION_FROM_POINT_SOURCE_THETA = trcksPS$MEAN_DEVIATION_FROM_POINT_SOURCE_THETA
+		tracks$DIRECTION_POINT_SOURCE_PHI = trcksPS$DIRECTION_POINT_SOURCE_PHI %% (2 * pi)
+		tracks$DIRECTION_POINT_SOURCE_THETA = trcksPS$DIRECTION_POINT_SOURCE_THETA %% (2 * pi)
+		tracks$MEAN_DEVIATION_FROM_POINT_SOURCE_PHI = trcksPS$MEAN_DEVIATION_FROM_POINT_SOURCE_PHI# %% (2 * pi)
+		tracks$MEAN_DEVIATION_FROM_POINT_SOURCE_THETA = trcksPS$MEAN_DEVIATION_FROM_POINT_SOURCE_THETA# %% (2 * pi)
+		#TODO use toCardinal function
+		#toCardinal(., directionCat, )
+		tracks = tracks %>% mutate(toCardinal(get("DIRECTION_POINT_SOURCE_PHI"), directionCat, 
+											  unlist(names(cardinalCols)[cardinalCols == "DIRECTION_POINT_SOURCE_PHI"])))
+		tracks = tracks %>% mutate(toCardinal(get("DIRECTION_POINT_SOURCE_THETA"), directionCat, 
+											  unlist(names(cardinalCols)[cardinalCols == "DIRECTION_POINT_SOURCE_THETA"])))
+		
+		trajectories = trajectories %>% mutate(toCardinal(get("EDGE_DIRECTION_POINT_SOURCE_PHI"), directionCat, 
+											  unlist(names(cardinalCols)[cardinalCols == "EDGE_DIRECTION_POINT_SOURCE_PHI"])))
+		trajectories = trajectories %>% mutate(toCardinal(get("EDGE_DIRECTION_POINT_SOURCE_THETA"), directionCat, 
+											  unlist(names(cardinalCols)[cardinalCols == "EDGE_DIRECTION_POINT_SOURCE_THETA"])))
+		
+		# trajectories = 
+		# 		trajectories %>% mutate(across(starts_with("EDGE_DIRECTION_POINT_SOURCE"), ~ cut(., directionCat),
+		# 									   .names = "{.col}_CARDINAL")) %>%
+		# 		mutate(across(matches("POINT_SOURCE_.*_CARDINAL"), ~ replace(., . == last(levels(.)), first(levels(.)))))
+		# tracks = tracks %>% 
+		# 	mutate(across(starts_with("DIRECTION_POINT_SOURCE"), ~ cut(., directionCat), .names = "{.col}_CARDINAL")) %>% 
+		# 	mutate(across(matches("POINT_SOURCE_.*_CARDINAL"), ~ replace(., . == last(levels(.)), first(levels(.)))))
+		# trajectories = 
+		# 	trajectories %>% mutate(across(starts_with("EDGE_DIRECTION_POINT_SOURCE"), ~ cut(., directionCat), 
+		# 								   .names = "{.col}_CARDINAL")) %>% 
+		# 	mutate(across(matches("POINT_SOURCE_.*_CARDINAL"), ~ replace(., . == last(levels(.)), first(levels(.)))))
+		
+		# Setting last group to first group
+		tracks = tracks
+		trajectories = trajectories
+		
+		#TODO cardinal!!!!
 
 		features = features %>% 
 			ungroup() %>%
@@ -2396,8 +2475,72 @@ setThemeBase = function(plot, is.dark, subtitle.hjust, subtitle.size, subtitle.f
 	return(plot)
 }
 
-
+#TODO
+#' Title
+#'
+#' @param dataTraj 
+#' @param x 
+#' @param y 
+#' @param type 
+#' @param trackGlobalIDName 
+#' @param groupings 
+#' @param x.unit 
+#' @param y.unit 
+#' @param y.Range y axis range in a vector c(min, max)
+#' @param fillGroupName 
+#' @param colorGroupName 
+#' @param groupTracks 
+#' @param shapeGroupName 
+#' @param lineTypeGroupName 
+#' @param sizeVarName 
+#' @param coord_equal 
+#' @param color.legend 
+#' @param alpha.legend 
+#' @param inverse 
+#' @param facet.row 
+#' @param facet.col 
+#' @param facet.wrap 
+#' @param title 
+#' @param subtitle 
+#' @param smooth.window 
+#' @param replicateGroupName 
+#' @param aggregate.fun 
+#' @param dispersion.fun 
+#' @param dispersion.type 
+#' @param linesize 
+#' @param pointsize 
+#' @param limitNTracks 
+#' @param randomizeTrackSampling 
+#' @param trackReduced 
+#' @param spotReduced 
+#' @param colorAlpha 
+#' @param fillAlpha 
+#' @param dispAlpha 
+#' @param is.dark 
+#' @param plot.subtitle.hjust 
+#' @param plot.subtitle.size 
+#' @param plot.subtitle.face 
+#' @param h.line 
+#' @param v.line 
+#' @param panel.border 
+#' @param panel.grid.major 
+#' @param facet.label.fill.color 
+#' @param facet.text.face 
+#' @param x.lab 
+#' @param y.lab 
+#' @param browse 
+#' @param verbose 
+#' @param benchmark 
+#' @param initializeProg 
+#' @param updateProg 
+#' @param closeProg 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 plotTrajFeatures = function(dataTraj, x, y, type, trackGlobalIDName, groupings, x.unit = NULL, y.unit = NULL, 
+							y.Range = NULL,
 							fillGroupName = NULL, colorGroupName = NULL, #colorReverseOrder = FALSE, 
 							groupTracks = FALSE,
 							shapeGroupName = NULL, lineTypeGroupName = NULL, sizeVarName = NULL, 
@@ -2751,6 +2894,7 @@ plotTrajFeatures = function(dataTraj, x, y, type, trackGlobalIDName, groupings, 
 	#plot = plot + ylim(min, max)
 	#if(inverse) plot = plot + ylim(max, min)
 	
+	plot = plot + coord_cartesian(ylim = y.Range)
 	
 	if(verbose) cat("Theme...\n")
 	plot = setThemeBase(plot, is.dark, plot.subtitle.hjust, plot.subtitle.size, plot.subtitle.face, facet.label.fill.color, facet.text.face)
@@ -2837,14 +2981,15 @@ vMQQ <- function(circdat, mu = NULL, kappa = NULL, title = "") {
 #' @export
 #'
 #' @examples
-groupedCircDataModel = function(data, x, y, groupings, allGroupswRep, allGroupswoRep#, 
+groupedCircDataModel = function(data, xContinuous, x, y, groupings, allGroupswRep, allGroupswoRep#, 
 							   #summary.fun
 							   #colorGroup = NULL, fillGroup = NULL, #alphaGroup = NULL,
 							   #colorGroupName = NULL, fillGroupName = NULL, #alphaGroupName = NULL, 
 							   #facet.row = NULL, facet.col = NULL, facet.wrap = FALSE, 
 							   #colorAlpha = 1.0, fillAlpha = 1.0, is.dark = FALSE
 							   ){
-	xContinuous = paste("TRACK", gsub("_CARDINAL", "", x), sep = "_")
+	#TODO ERROR with paste part here
+	#xContinuous = paste("TRACK", gsub("_CARDINAL", "", x), sep = "_")
 	data = data %>% group_by_at(c(allGroupswRep))
 	nGroups = data %>% n_groups()
 	#dev.off()
@@ -2854,7 +2999,9 @@ groupedCircDataModel = function(data, x, y, groupings, allGroupswRep, allGroupsw
 	dataToPlot = list()
 	for(i in 1:nGroups){
 		title = apply(dataByGroups[[i]][1, c(allGroupswRep)], 1, paste, collapse = " ")
-		circdat = circular(dataByGroups[[i]][[xContinuous]], units = "radians")
+		#browser()
+		
+		circdat = circular(dataByGroups[[i]][[xContinuous]], units = "radians") #TODO error here
 		dataToPlot[[title]] = circdat
 		#circularHistogram(circdat, title = title)
 		#vMQQ(circdat, title = title)
@@ -3582,7 +3729,9 @@ plotRadar = function(dataTracks, groups, directionCatGroupName, cumulativeGroupN
 										 axis.ticks.y = element_blank())
 	dirPlot = plot
 	# Histogram of each group to check data distribution
-	circDataModel = groupedCircDataModel(dataTracks, directionCatGroupName, cumulativeGroupName,
+	directionGroupName = cardinalCols[[directionCatGroupName]]
+	#browser()
+	circDataModel = groupedCircDataModel(dataTracks, directionGroupName, directionCatGroupName, cumulativeGroupName,
 									groupings, allGroupswRep, allGroupswoRep)#, summary.fun
 									#colorGroup, fillGroup, colorGroupName, fillGroupName, 
 									#facet.row, facet.col, facet.wrap, 
@@ -3608,13 +3757,13 @@ plotRadar = function(dataTracks, groups, directionCatGroupName, cumulativeGroupN
 		summaryStat = data.frame(`Title` = title, `n` = firstMoment$n, 
 								 `μ` = firstMoment$mu * 180/pi, 
 								 `median` = median.circular(circGroupData) * 180/pi,
-								 `R` = firstMoment$rho,
-								 `V` = circV,
+								 `R` = firstMoment$rho, # concentration parameter of the distribution. rho must be between 0 and
+								 `V` = circV, # Sample circular variance
 								 `σ` = sd.circular(circGroupData),
-								 `δ` = (1-secondMoment$rho)/(2*(firstMoment$rho)**2),
-								 `w` = range.circular(circGroupData),
+								 `δ` = (1-secondMoment$rho)/(2*(firstMoment$rho)**2), # The sample circular dispersion
+								 `w` = range.circular(circGroupData), # Circular range
 								 `Angular. Dev.` = angular.deviation(circGroupData),
-								 `s` = circSkewness,
+								 `s` = circSkewness, 
 								 `k` = circKurtosis)
 		summaryStats = rbind(summaryStats, summaryStat)
 	}
@@ -3892,7 +4041,8 @@ parseTMFile = function(filePath, groupText, fileGroup, recalculate = FALSE, brow
 	
 	# Reading XML Model
 	model = xml_find_first(xmlDoc, xpath = "/TrackMate/Model")
-	unts = data.frame(t(data.frame(xml_attrs(model))))
+	model_attrs = as.list(xml_attrs(model))
+	unts = tibble(rbindlist(list(model_attrs)))
 	row.names(unts) = NULL
 	
 	feats = data.frame()
@@ -3901,7 +4051,9 @@ parseTMFile = function(filePath, groupText, fileGroup, recalculate = FALSE, brow
 	for(featureType in featureTypes){
 		typeFeaturesXML = xml_find_all(xmlDoc, xpath = paste0('/TrackMate/Model/FeatureDeclarations/', 
 															  featureType, 'Features/Feature'))
-		typeFeatures = data.frame(t(data.frame(xml_attrs(typeFeaturesXML))))
+		type_features_attrs = xml_attrs(typeFeaturesXML)
+		type_features_attrs = lapply(type_features_attrs, as.list)
+		typeFeatures = tibble(rbindlist(type_features_attrs, fill = TRUE))
 		typeFeatures$type = featureType
 		
 		feats = rbind(feats, typeFeatures)
@@ -3919,7 +4071,8 @@ parseTMFile = function(filePath, groupText, fileGroup, recalculate = FALSE, brow
 	#browser()
 	xmlTrackAttrs = xml_attrs(xml_find_all(xmlDoc, xpath = '/TrackMate/Model/AllTracks//Track'))
 	xmlTrackAttrs = analyzeXMLError(filePath = filePath, groupText = groupText, xmlAttrs = xmlTrackAttrs)
-	trks = data.frame(t(data.frame(xmlTrackAttrs)))
+	xmlTrackAttrs = lapply(xmlTrackAttrs, as.list)
+	trks = tibble(rbindlist(xmlTrackAttrs, fill = TRUE))
 	#TODO check for NaN and Infinity values within trackmate files and report back to users!
 	
 	row.names(trks) = NULL
@@ -3930,19 +4083,22 @@ parseTMFile = function(filePath, groupText, fileGroup, recalculate = FALSE, brow
 	# Loading spots
 	xmlSpotAttrs = xml_attrs(xml_find_all(xmlDoc, xpath = '/TrackMate/Model/AllSpots//Spot'))
 	xmlSpotAttrs = analyzeXMLError(filePath = filePath, groupText = groupText, xmlAttrs = xmlSpotAttrs)
-	spots = data.frame(t(data.frame(xmlSpotAttrs)))
+	xmlSpotAttrs = lapply(xmlSpotAttrs, as.list)
+	spots = tibble(rbindlist(xmlSpotAttrs, fill = TRUE))
 	
 	row.names(spots) = NULL
 	spots = setFeatureTypesinData(spots, feats, "Spot")
 	
 	# Sorting spots chronologically
-	spots = spots[order(spots$FRAME), ]
+	spots = spots %>% arrange(FRAME)
 	
 	cat("\t");cat(paste("Parsing edges for", groupText));cat("\n")
 	# Loading edges with associated tracks IDs from parent nodes
 	edge.nodes = xml_find_all(xmlDoc, ".//Edge")
-	
-	edges = data.frame(t(data.frame(xml_attrs(xml_find_all(xmlDoc, xpath = '/TrackMate/Model/AllTracks//Edge')))))
+	edge_attrs = xml_attrs(xml_find_all(xmlDoc, xpath = '/TrackMate/Model/AllTracks//Edge'))
+	edge_attrs = lapply(edge_attrs, as.list)
+	edges = tibble(rbindlist(edge_attrs, fill = TRUE))
+	#edges = data.frame(t(data.frame(xml_attrs(xml_find_all(xmlDoc, xpath = '/TrackMate/Model/AllTracks//Edge')))))
 	row.names(edges) = NULL
 	edges = setFeatureTypesinData(edges, feats, "Edge")
 	edges = cbind(data.frame(TRACK_ID = as.numeric(as.character(xml_find_first( edge.nodes, ".//ancestor::Track") %>% xml_attr("TRACK_ID")))), 
@@ -3950,11 +4106,10 @@ parseTMFile = function(filePath, groupText, fileGroup, recalculate = FALSE, brow
 	              )
 	
 	# Sorting spots chronologically and according to track ID
-	edges = edges[order(edges$EDGE_TIME), ]
-	edges = edges[order(edges$TRACK_ID), ]
+	edges = edges %>% dplyr::arrange(EDGE_TIME) %>% dplyr::arrange(TRACK_ID)
 	
 	# It is nicer if we can keep matching column (SPOT_SOURCE_ID) of the edges data frame
-	edges$SPOT_ID = edges$SPOT_SOURCE_ID
+	edges = edges %>% mutate(SPOT_ID = SPOT_SOURCE_ID)
 	
 	cat("\t");cat(paste("Constructing trajectories for", groupText));cat("\n")
 	# Trajectories are generated by merging spots and edges
