@@ -2654,7 +2654,7 @@ server = function(input, output, session) {
 			width = input$track_width_In; height = input$track_height_In
 			if(input$track_auto_width_In){width = NA}
 			if(input$track_auto_height_In){height = NA}
-			ggsave(filename = file, plot = trackFeaturePlot()$plot, width = width, height = height, dpi = 300, units = "cm")
+			ggsave(filename = file, plot = trackFeaturePlot()$plot, width = width, height = height, dpi = 300, units = "cm", fix_text_size = FALSE)
 		},
 		contentType = paste("image", "svg", sep = "/")
 	)
@@ -2680,7 +2680,7 @@ server = function(input, output, session) {
 			width = input$traj_width_In; height = input$traj_height_In
 			if(input$traj_auto_width_In){width = NA}
 			if(input$traj_auto_height_In){height = NA}
-			ggsave(filename = file, plot = trajectoryPlot()$plot, width = width, height = height, dpi = 300, units = "cm")
+			ggsave(filename = file, plot = trajectoryPlot()$plot, width = width, height = height, dpi = 300, units = "cm", fix_text_size = FALSE)
 		},
 		contentType = paste("image", "svg", sep = "/")
 	)
@@ -2706,7 +2706,7 @@ server = function(input, output, session) {
 			width = input$dir_width_In; height = input$dir_height_In
 			if(input$dir_auto_width_In){width = NA}
 			if(input$dir_auto_height_In){height = NA}
-			ggsave(filename = file, plot = directionalityPlot()$plot, width = width, height = height, dpi = 300, units = "cm")
+			ggsave(filename = file, plot = directionalityPlot()$plot, width = width, height = height, dpi = 300, units = "cm", fix_text_size = FALSE)
 		},
 		contentType = paste("image", "svg", sep = "/")
 	)
@@ -2732,7 +2732,7 @@ server = function(input, output, session) {
 			width = input$traj_feat_width_In; height = input$traj_feat_height_In
 			if(input$traj_feat_auto_width_In){width = NA}
 			if(input$traj_feat_auto_height_In){height = NA}
-			ggsave(filename = file, plot = trajFeaturePlot()$plot, width = width, height = height, dpi = 300, units = "cm")
+			ggsave(filename = file, plot = trajFeaturePlot()$plot, width = width, height = height, dpi = 300, units = "cm", fix_text_size = FALSE)
 		},
 		contentType = paste("image", "svg", sep = "/")
 	)
