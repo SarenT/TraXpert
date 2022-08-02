@@ -4042,7 +4042,7 @@ parseTMFile = function(filePath, groupText, fileGroup, recalculate = FALSE, brow
 	# Reading XML Model
 	model = xml_find_first(xmlDoc, xpath = "/TrackMate/Model")
 	model_attrs = as.list(xml_attrs(model))
-	unts = tibble(rbindlist(list(model_attrs)))
+	unts = bind_rows(list(model_attrs))
 	row.names(unts) = NULL
 	
 	feats = data.frame()
@@ -4053,7 +4053,7 @@ parseTMFile = function(filePath, groupText, fileGroup, recalculate = FALSE, brow
 															  featureType, 'Features/Feature'))
 		type_features_attrs = xml_attrs(typeFeaturesXML)
 		type_features_attrs = lapply(type_features_attrs, as.list)
-		typeFeatures = tibble(rbindlist(type_features_attrs, fill = TRUE))
+		typeFeatures = bind_rows(type_features_attrs)
 		typeFeatures$type = featureType
 		
 		feats = rbind(feats, typeFeatures)
@@ -4072,7 +4072,7 @@ parseTMFile = function(filePath, groupText, fileGroup, recalculate = FALSE, brow
 	xmlTrackAttrs = xml_attrs(xml_find_all(xmlDoc, xpath = '/TrackMate/Model/AllTracks//Track'))
 	xmlTrackAttrs = analyzeXMLError(filePath = filePath, groupText = groupText, xmlAttrs = xmlTrackAttrs)
 	xmlTrackAttrs = lapply(xmlTrackAttrs, as.list)
-	trks = tibble(rbindlist(xmlTrackAttrs, fill = TRUE))
+	trks = bind_rows(xmlTrackAttrs)
 	#TODO check for NaN and Infinity values within trackmate files and report back to users!
 	
 	row.names(trks) = NULL
@@ -4084,7 +4084,7 @@ parseTMFile = function(filePath, groupText, fileGroup, recalculate = FALSE, brow
 	xmlSpotAttrs = xml_attrs(xml_find_all(xmlDoc, xpath = '/TrackMate/Model/AllSpots//Spot'))
 	xmlSpotAttrs = analyzeXMLError(filePath = filePath, groupText = groupText, xmlAttrs = xmlSpotAttrs)
 	xmlSpotAttrs = lapply(xmlSpotAttrs, as.list)
-	spots = tibble(rbindlist(xmlSpotAttrs, fill = TRUE))
+	spots = bind_rows(xmlSpotAttrs)
 	
 	row.names(spots) = NULL
 	spots = setFeatureTypesinData(spots, feats, "Spot")
@@ -4097,7 +4097,7 @@ parseTMFile = function(filePath, groupText, fileGroup, recalculate = FALSE, brow
 	edge.nodes = xml_find_all(xmlDoc, ".//Edge")
 	edge_attrs = xml_attrs(xml_find_all(xmlDoc, xpath = '/TrackMate/Model/AllTracks//Edge'))
 	edge_attrs = lapply(edge_attrs, as.list)
-	edges = tibble(rbindlist(edge_attrs, fill = TRUE))
+	edges = bind_rows(edge_attrs)
 	#edges = data.frame(t(data.frame(xml_attrs(xml_find_all(xmlDoc, xpath = '/TrackMate/Model/AllTracks//Edge')))))
 	row.names(edges) = NULL
 	edges = setFeatureTypesinData(edges, feats, "Edge")

@@ -2,8 +2,8 @@
 # Line below should run before other packages are loaded. See link for the reason:
 # https://stackoverflow.com/questions/27153974/how-to-fix-outofmemoryerror-java-gc-overhead-limit-exceeded-in-r
 options(java.parameters = "-Xmx4096m")
-libs = c("methods", "xml2", "ggplot2", "magrittr", "dplyr", "ggpubr", "RColorBrewer", "udunits2", "sticky", "shiny", 
-	  "sortable", "colourpicker", "DT", "svglite", "readxl", "colorspace", "smoother", "shinyBS", "car", "latex2exp")
+libs = c("methods", "xml2", "ggplot2", "magrittr", "dplyr", "ggpubr", "RColorBrewer", "udunits2", "sticky", "shiny",
+			  "sortable", "colourpicker", "DT", "svglite", "readxl", "colorspace", "smoother", "shinyBS", "car", "latex2exp")
 
 only.install = c("shinyjs", "htmlwidgets", "shinyWidgets")
 
@@ -18,10 +18,10 @@ lapply(libs, require, character.only = TRUE)
 options(shiny.port = 7777, shiny.maxRequestSize=1024*1024^2, scipen = 10, browser = "firefox")
 
 
-defaultWD = "~/"
-if(dir.exists(defaultWD)){
-	setwd(defaultWD)	
-}
+# defaultWD = "~/"
+# if(dir.exists(defaultWD)){
+# 	setwd(defaultWD)	
+# }
 
 source("functions.R")
 

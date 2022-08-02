@@ -13,3 +13,4 @@ Imaris/
 *.csv
 .RDataTmp
 *.xml
+.Rproj.user
