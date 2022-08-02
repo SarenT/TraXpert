@@ -3245,7 +3245,7 @@ plotData = function(dataTracks, x, y, type, groupings, y.unit = NULL, colorGroup
 	attr(dataTracks[[y]], "unit") = y.unit
 	
 	dataRange = c(min(dataTracks[[y]]), max(dataTracks[[y]]))
-	if(is.null(y.lab)){y.labDisp = ""}else{y.labDisp = TeX(paste0(transformFormulaFun(y.lab, data.transform$parameter), " ", transformFormulaFun(y.unit, data.transform$parameter)))}
+	if(is.null(y.lab)){y.labDisp = ""}else{y.labDisp = TeX(paste0(transformFormulaFun(y.lab, data.transform$parameter), " \\[", transformFormulaFun(y.unit, data.transform$parameter), "\\]"))}
 	
 	#if(!is.null(unit)){  ud.convert(tracks$TRACK_MEAN_SPEED, "μm/sec", "μm/h")
 	fillGroup = nameToExpr(fillGroupName); colorGroup = nameToExpr(colorGroupName)
