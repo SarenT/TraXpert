@@ -1,14 +1,5 @@
 source("Black_Theme.R")
 
-libs.func = c("dplyr", "tidyr", "purrr", "rlang", "viridisLite", "e1071", "circular")
-only.install.func = c("stringr", "ggiraphExtra", "Rmisc", "tools")
-
-# Install missing packages if there is any
-#install.packages(only.install.func[!is.element(only.install.func, installed.packages())])
-#install.packages(libs.func[!is.element(libs.func, installed.packages())])
-
-lapply(libs.func, require, character.only = TRUE)
-
 trackDisplacementColumns = paste("TRACK_DISPLACEMENT", c("X", "Y", "Z"), sep = "_")
 
 # TRACK_[XYZ]_LOCATION
@@ -528,8 +519,8 @@ replaceStatLabels = function(statOuts, statGroupName, y.lab){
 #' @export
 #'
 #' @examples
-imarisImportTrajectories = function(trajectories, filePath, sheetName, exprs, sheets, newColnames, groupText, recalculate, 
-							  coreNames, specNames, title = ""){
+imarisImportTrajectories = function(trajectories, filePath, sheetName, exprs, sheets, newColnames, groupText, 
+									recalculate, coreNames, specNames, title = ""){
 	
 	if(recalculate || !(sheetName %in% sheets)){
 		cat("\t");cat(paste("Calculating trajectory features -", title, groupText));cat("\n")
@@ -565,8 +556,8 @@ imarisImportTrajectories = function(trajectories, filePath, sheetName, exprs, sh
 #' @export
 #'
 #' @examples
-imarisImportTracks = function(tracks, trajectories, filePath, sheetName, exprs, summarize, sheets, newColnames, groupText, recalculate, 
-							  coreNames, specNames, title = ""){
+imarisImportTracks = function(tracks, trajectories, filePath, sheetName, exprs, summarize, sheets, newColnames, 
+							  groupText, recalculate, coreNames, specNames, title = ""){
 	if(recalculate || !(sheetName %in% sheets)){
 		cat("\t");cat(paste("Calculating track features -", title, groupText));cat("\n")
 		if(summarize){
@@ -937,7 +928,9 @@ prepareBareGroupings = function(files){
 		uniqueGroups$files = files
 		#browser()
 	}else if(length(files) == 1){
-		groupings = rbind(groupings, data.frame(names = c("TMX_GROUP_A"), labels = c("Grouping"), groups = list(c("Group")), groupLabels = list(c("Group")), colors = list(c("#000000"))))
+		groupings = rbind(groupings, data.frame(names = c("TMX_GROUP_A"), labels = c("Grouping"), 
+												groups = list(c("Group")), groupLabels = list(c("Group")), 
+												colors = list(c("#000000"))))
 		uniqueGroups = data.frame(TMX_GROUP_A = c("Group"), files = files)
 	}
 	if(is.null(files)){return(groupings)}
@@ -1016,17 +1009,22 @@ parseFiles = function(filesDF, groupings, groups, recalculate = FALSE, browse = 
 		for(f in 1:length(files)){
 			filePath = files[f]
 			
-			if(is.function(updateProgress)){updateProgress(value = f - 1, detail = paste0("Parsing ", fileNames[f], "..."))}
+			if(is.function(updateProgress)){
+				updateProgress(value = f - 1, detail = paste0("Parsing ", fileNames[f], "..."))
+			}
 			
 			groupText = paste(data.frame(lapply(groups[f, ], as.character), stringsAsFactors=FALSE), collapse = " | ")
 			cat(paste(f, "Reading", groupText));cat("\n")
 			
 			if(fileType == "xml"){
-				fileData = parseTMFile(filePath = filePath, groupText = groupText, fileGroup = groups[f, ], recalculate = recalculate, browse = browse)	
+				fileData = parseTMFile(filePath = filePath, groupText = groupText, fileGroup = groups[f, ], 
+									   recalculate = recalculate, browse = browse)	
 			}else if(fileType == "xlsx" || fileType == "xls"){
-				fileData = parseImarisXLSXFile(filePath = filePath, groupText = groupText, fileGroup = groups[f, ], recalculate = recalculate, browse = browse)
+				fileData = parseImarisXLSXFile(filePath = filePath, groupText = groupText, fileGroup = groups[f, ], 
+											   recalculate = recalculate, browse = browse)
 			}else if(fileType == "csv" || fileType == "txt"){
-				fileData = parseChemotaxisToolFile(filePath = filePath, groupText = groupText, fileGroup = groups[f, ], recalculate = recalculate, browse = browse, ...)
+				fileData = parseChemotaxisToolFile(filePath = filePath, groupText = groupText, fileGroup = groups[f, ], 
+												   recalculate = recalculate, browse = browse, ...)
 			}
 			#feats = cbind(feats, groups[r, -ncol(groups)])
 			if(is.null(fileData)){
@@ -1074,8 +1072,8 @@ parseFiles = function(filesDF, groupings, groups, recalculate = FALSE, browse = 
 #' @export
 #'
 #' @examples
-processData = function(dataList, groups, groupings, updateProgress = NULL, initializeProgress = NULL, closeProgress = NULL, 
-					   recalculate = FALSE, browse = 0, benchmark = TRUE){#, rotation_fix = 0, rotation_z_fix = 0){
+processData = function(dataList, groups, groupings, updateProgress = NULL, initializeProgress = NULL, 
+					   closeProgress = NULL, recalculate = FALSE, browse = 0, benchmark = TRUE){#, rotation_fix = 0, rotation_z_fix = 0){
 	if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 	if(benchmark) startTime = benchMark()
 	# Getting data frames
@@ -1125,8 +1123,9 @@ processData = function(dataList, groups, groupings, updateProgress = NULL, initi
 			mutate_at(positionColumns, list(FIX = fixTrajectoryStartPos)) %>% 
 			mutate_at(positionColumns[1:3], list(DISPLACEMENT = ~lead(.) - .)) %>%
 			# Keep -1 * get(.... for y as image pixel coordinates in Y axis are mirrored.
-			mutate(EDGE_DIRECTION_PHI = atan2(-1 * get(displacementColumns[2]), get(displacementColumns[1])) %% (2 * pi),
-						  EDGE_DIRECTION_THETA = acos(get(displacementColumns[3]) / DISPLACEMENT) %% pi)
+			mutate(EDGE_DIRECTION_PHI = atan2(-1 * get(displacementColumns[2]), 
+											  get(displacementColumns[1])) %% (2 * pi), 
+				   EDGE_DIRECTION_THETA = acos(get(displacementColumns[3]) / DISPLACEMENT) %% pi)
 		trajectories = trajectories %>% group_by(track_global_id) %>% 
 			mutate(TURN_ANGLE = lead(EDGE_DIRECTION_PHI) - EDGE_DIRECTION_PHI)
 		
@@ -1151,7 +1150,8 @@ processData = function(dataList, groups, groupings, updateProgress = NULL, initi
 						  	summarise(PATH_LENGTH = sum(DISPLACEMENT, na.rm = TRUE),
 						  			  TRACK_DISPLACEMENT_X = last(POSITION_X) - first(POSITION_X),
 						  			  TRACK_DISPLACEMENT_Y = last(POSITION_Y) - first(POSITION_Y),
-						  			  TRACK_DISPLACEMENT_Z = last(POSITION_Z) - first(POSITION_Z)), by = "track_global_id")
+						  			  TRACK_DISPLACEMENT_Z = last(POSITION_Z) - first(POSITION_Z)), 
+						  by = "track_global_id")
 		}
 		
 		# Start and end positions
@@ -1159,14 +1159,16 @@ processData = function(dataList, groups, groupings, updateProgress = NULL, initi
 			if(!(startPositionColumns[i] %in% colnames(tracks))){
 				tracks = tracks %>% 
 					left_join(trajectories %>% group_by(track_global_id) %>% 
-							  summarise(!! startPositionColumns[i] := first(get(positionColumns[i]))), by = "track_global_id")
+							  summarise(!! startPositionColumns[i] := first(get(positionColumns[i]))), 
+							  by = "track_global_id")
 			}
 		}
 		for(i in 1:length(positionColumns)){
 			if(!(endPositionColumns[i] %in% colnames(tracks))){
 				tracks = tracks %>% 
 					left_join(trajectories %>% group_by(track_global_id) %>% 
-							  	summarise(!! endPositionColumns[i] := last(get(positionColumns[i]))), by = "track_global_id")
+							  	summarise(!! endPositionColumns[i] := last(get(positionColumns[i]))), 
+							  by = "track_global_id")
 			}
 		}
 		
@@ -1273,7 +1275,8 @@ processData = function(dataList, groups, groupings, updateProgress = NULL, initi
 		tracks = tracks %>% 
 			left_join(trajectories %>% 
 					  	group_by(track_global_id) %>% 
-					  	summarise(TRACK_DIRECTION = atan2(-1 * last(get(fixedPositionColumns[2])), last(get(fixedPositionColumns[1]))) %% (2 * pi)), 
+					  	summarise(TRACK_DIRECTION = atan2(-1 * last(get(fixedPositionColumns[2])), 
+					  									  last(get(fixedPositionColumns[1]))) %% (2 * pi)), 
 					  by = "track_global_id")
 		tracks = tracks %>% 
 			left_join(trajectories %>% 
@@ -1426,9 +1429,8 @@ pointSource = function(dataList, updateProgress = NULL, initializeProgress = NUL
 			mutate(EDGE_DIRECTION_POINT_SOURCE_PHI = angleRemap(EDGE_DIRECTION_PHI %% (pi*2) - 
 																	atan2(POSITION_Y - pointSource_y, 
 																		  pointSource_x - POSITION_X) %% (pi*2)),
-				   EDGE_DIRECTION_POINT_SOURCE_THETA = EDGE_DIRECTION_THETA - acos((get(pointSourceColumns[3]) - get(positionColumns[3])) / DISPLACEMENT
-				   										 )
-				   )
+				   EDGE_DIRECTION_POINT_SOURCE_THETA = EDGE_DIRECTION_THETA - 
+				   	acos((get(pointSourceColumns[3]) - get(positionColumns[3])) / DISPLACEMENT))
 		trajsPS$EDGE_DEVIATION_FROM_POINT_SOURCE_PHI = abs(trajsPS$EDGE_DIRECTION_POINT_SOURCE_PHI)
 		trajsPS$EDGE_DEVIATION_FROM_POINT_SOURCE_THETA = abs(trajsPS$EDGE_DIRECTION_POINT_SOURCE_THETA)
 		
@@ -1450,8 +1452,10 @@ pointSource = function(dataList, updateProgress = NULL, initializeProgress = NUL
 		trcksPS = trcksPS %>% 
 			left_join(trajsPS %>% 
 					  	group_by(track_global_id) %>% 
-					  	summarise(MEAN_DEVIATION_FROM_POINT_SOURCE_PHI = mean(EDGE_DEVIATION_FROM_POINT_SOURCE_PHI, na.rm = TRUE),
-					  			  MEAN_DEVIATION_FROM_POINT_SOURCE_THETA = mean(EDGE_DEVIATION_FROM_POINT_SOURCE_THETA, na.rm = TRUE)), 
+					  	summarise(MEAN_DEVIATION_FROM_POINT_SOURCE_PHI = mean(EDGE_DEVIATION_FROM_POINT_SOURCE_PHI, 
+					  														  na.rm = TRUE),
+					  			  MEAN_DEVIATION_FROM_POINT_SOURCE_THETA = mean(EDGE_DEVIATION_FROM_POINT_SOURCE_THETA, 
+					  			  											  na.rm = TRUE)), 
 					  by = "track_global_id", suffix = c("", ".y")) %>% select(-ends_with(".y"))
 		
 		if(is.function(initializeProgress) && is.function(updateProgress)){
@@ -1470,15 +1474,19 @@ pointSource = function(dataList, updateProgress = NULL, initializeProgress = NUL
 		tracks$MEAN_DEVIATION_FROM_POINT_SOURCE_THETA = trcksPS$MEAN_DEVIATION_FROM_POINT_SOURCE_THETA# %% (2 * pi)
 		#TODO use toCardinal function
 		#toCardinal(., directionCat, )
-		tracks = tracks %>% mutate(toCardinal(get("DIRECTION_POINT_SOURCE_PHI"), directionCat, 
-											  unlist(names(cardinalCols)[cardinalCols == "DIRECTION_POINT_SOURCE_PHI"])))
-		tracks = tracks %>% mutate(toCardinal(get("DIRECTION_POINT_SOURCE_THETA"), directionCat, 
-											  unlist(names(cardinalCols)[cardinalCols == "DIRECTION_POINT_SOURCE_THETA"])))
+		tracks = tracks %>% 
+			mutate(toCardinal(get("DIRECTION_POINT_SOURCE_PHI"), directionCat, 
+							  unlist(names(cardinalCols)[cardinalCols == "DIRECTION_POINT_SOURCE_PHI"])))
+		tracks = tracks %>% 
+			mutate(toCardinal(get("DIRECTION_POINT_SOURCE_THETA"), directionCat, 
+							  unlist(names(cardinalCols)[cardinalCols == "DIRECTION_POINT_SOURCE_THETA"])))
 		
-		trajectories = trajectories %>% mutate(toCardinal(get("EDGE_DIRECTION_POINT_SOURCE_PHI"), directionCat, 
-											  unlist(names(cardinalCols)[cardinalCols == "EDGE_DIRECTION_POINT_SOURCE_PHI"])))
-		trajectories = trajectories %>% mutate(toCardinal(get("EDGE_DIRECTION_POINT_SOURCE_THETA"), directionCat, 
-											  unlist(names(cardinalCols)[cardinalCols == "EDGE_DIRECTION_POINT_SOURCE_THETA"])))
+		trajectories = trajectories %>% 
+			mutate(toCardinal(get("EDGE_DIRECTION_POINT_SOURCE_PHI"), directionCat, 
+							  unlist(names(cardinalCols)[cardinalCols == "EDGE_DIRECTION_POINT_SOURCE_PHI"])))
+		trajectories = trajectories %>% 
+			mutate(toCardinal(get("EDGE_DIRECTION_POINT_SOURCE_THETA"), directionCat, 
+							  unlist(names(cardinalCols)[cardinalCols == "EDGE_DIRECTION_POINT_SOURCE_THETA"])))
 		
 		# trajectories = 
 		# 		trajectories %>% mutate(across(starts_with("EDGE_DIRECTION_POINT_SOURCE"), ~ cut(., directionCat),

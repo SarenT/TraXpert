@@ -1,11 +1,44 @@
 #rm(list = ls())
 # Line below should run before other packages are loaded. See link for the reason:
 # https://stackoverflow.com/questions/27153974/how-to-fix-outofmemoryerror-java-gc-overhead-limit-exceeded-in-r
+
+if(version$major < 4){
+	cat("R version 4 is required.\nAborting...\n")
+	stopifnot(FALSE)
+}
+
 options(java.parameters = "-Xmx4096m")
+
 libs = c("methods", "xml2", "ggplot2", "magrittr", "dplyr", "ggpubr", "RColorBrewer", "udunits2", "sticky", "shiny",
-			  "sortable", "colourpicker", "DT", "svglite", "readxl", "colorspace", "smoother", "shinyBS", "car", "latex2exp")
+		 "sortable", "colourpicker", "DT", "svglite", "readxl", "colorspace", "smoother", "shinyBS", "car", "latex2exp")
 
 only.install = c("shinyjs", "htmlwidgets", "shinyWidgets")
+
+libs.func = c("dplyr", "tidyr", "purrr", "rlang", "viridisLite", "e1071", "circular")
+only.install.func = c("stringr", "ggiraphExtra", "Rmisc", "tools")
+
+all.required.libs = c(libs, only.install, libs.func, only.install.func)
+still.needed.libs = all.required.libs[!(all.required.libs %in% row.names(installed.packages()))]
+
+while(length(still.needed.libs)){
+	cat("Following packages are still missing: ", paste(still.needed.libs, collapse = ", "), "\n")
+	answer = readline(prompt="Do you want to automatically install these packages now? [(y)es, (n)o]: ")
+	if(answer == "y"){
+		install.packages(still.needed.libs)
+
+		still.needed.libs = all.required.libs[!(all.required.libs %in% row.names(installed.packages()))]
+	}else if(answer == "n"){
+		stop("Exiting...")
+	}else{
+		cat("Answer (", answer, ") not recognized only \"y\" for yes or \"n\" for no are allowed.\nExiting...\n")
+	}
+}
+
+# Install missing packages if there is any
+#install.packages(only.install.func[!is.element(only.install.func, installed.packages())])
+#install.packages(libs.func[!is.element(libs.func, installed.packages())])
+
+lapply(libs.func, require, character.only = TRUE)
 
 # Install missing packages if there is any
 #install.packages(only.install[!is.element(only.install, installed.packages())], )
@@ -177,20 +210,21 @@ tabPanelImport = function(title = titleImportGroupings, tabColor){
 }
 
 rotationPanel = function(){
-	column(6, fluidPage(class = "shiny-input-panel", fluidRow(
-		column(4, h4("Rotate"), p("Select XY-Rotation angle (pitch) and Z-rotation angle (yaw) and click \"rotate\" button.")),
-		column(4, sliderInput("processRotationFixIn", "Rotation (Pitch) Fix Angle", min = -180, max = 180, step = 15, value = 0)),
-		column(4, sliderInput("processZRotationFixIn", "Z Rotation (Yaw) Fix Angle", min = -180, max = 180, step = 15, value = 0),
-			   checkboxInput("rotate_browse_In", label = "Debug", value = FALSE),
-			   actionButton(inputId = "rotateIn", label = "Process Files"))
-	)))
+	column(3,
+		   fluidPage(class = "shiny-input-panel", 
+		   		  fluidRow(column(12, h4("Rotate"), p("Select XY-Rotation angle (pitch) and Z-rotation angle (yaw) and click \"rotate\" button."))),
+		   		  fluidRow(column(12, sliderInput("processRotationFixIn", "Rotation (Pitch) Fix Angle", min = -180, max = 180, step = 15, value = 0))),
+		   		  fluidRow(column(12, sliderInput("processZRotationFixIn", "Z Rotation (Yaw) Fix Angle", min = -180, max = 180, step = 15, value = 0))),
+		   		  fluidRow(column(12, checkboxInput("rotate_browse_In", label = "Debug", value = FALSE), actionButton(inputId = "rotateIn", label = "Process Files")))
+		   		  ))
 }
 pointSourcePanel = function(){
-	column(6, fluidPage(class = "shiny-input-panel", fluidRow(
+	column(9, fluidPage(class = "shiny-input-panel", fluidRow(
 		column(3, h4("Point Source"), p("Calculate point source directionality by a providing point source location (physical units NOT pixels)."),
 			   checkboxInput("point_source_browse_In", label = "Debug", value = FALSE), 
 			   tipify(fileInput(inputId = "pointSourceDefUploadIn", label = "Upload"), 
 			   	   "Upload a file to fill up the database", "top", "hover"),
+			   downloadButton(outputId = "pointSourceTemplateIn", label = "Download Template"),
 			   actionButton(inputId = "pointSourceIn", label = "Calculate")),
 		column(9, DTOutput(outputId = "files_point_source_Out", width = "60%"))
 	)))
@@ -1090,6 +1124,7 @@ server = function(input, output, session) {
 		}
 		#dataList = data()
 	})
+	
 	observeEvent(input$pointSourceIn, {
 		if(input$point_source_browse_In){
 			browser()
@@ -2645,6 +2680,21 @@ server = function(input, output, session) {
 		},
 		contentType = paste("text", "csv", sep = "/")
 	)
+	
+	output$pointSourceTemplateIn = downloadHandler(
+		filename = function() {
+			paste("Point_Source_Coordinates", "csv", sep = ".")
+		},
+		content = function(file) {
+			write.csv(x = files() %>% 
+					  	ungroup() %>% 
+					  	select(name, pointSourceColumns), 
+					  file = file, append = FALSE, quote = TRUE, sep = "\t", dec = ".", 
+					  row.names = FALSE, col.names = TRUE)
+		},
+		contentType = paste("text", "csv", sep = "/")
+	)
+	
 	output$track_download_SVG_In = downloadHandler(
 		filename = function() {
 			paste("Track Features", "svg", sep = ".")
