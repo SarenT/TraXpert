@@ -441,29 +441,30 @@ fixTrajectoryStartPos = function(x){
 #' @param z vector
 #' @param phiRotate Rotation on XY plane
 #' @param thetaRotate Rotation on Z
+#' @param browse runs `browser()` for debugging
 #'
 #' @returns the rotated fixed position
 #' @export
 #'
 #' @examples
-rotateFixedPosition = function(x, y, z, phiRotate = 0, thetaRotate = 0){
-	#browser()
+rotateFixedPosition = function(x, y, z, phiRotate = 0, thetaRotate = 0, browse = FALSE){
+	if(browse) browser()
 	r = sqrt(x ^ 2 + y ^ 2 + z ^ 2)
 	phi = atan2(y = y, x = x)
 	phi = phi + phiRotate; phi %% (2*pi)
 	
 	theta = acos(z / r)
 	direction_z = theta[length(theta)] %% (pi)
-	theta = acos(z / r); 
-	if(is.nan(theta)){
-		theta = 0
-	}
+	theta = acos(z / r)
+	
+	theta = ifelse(is.nan(theta), pi/2, theta)
+	
 	theta = theta + thetaRotate
 	theta = theta %% pi
-	rotatedFix = list()
-	rotatedFix[[paste(fixedPositionColumns[1], "ROT", sep = "_")]] = r * cos(phi) * sin(theta)
-	rotatedFix[[paste(fixedPositionColumns[2], "ROT", sep = "_")]] = r * sin(phi) * sin(theta)
-	rotatedFix[[paste(fixedPositionColumns[3], "ROT", sep = "_")]] = r * cos(theta)
+	rotatedFix = data.frame(r * cos(phi) * sin(theta), r * sin(phi) * sin(theta), r * cos(theta))
+	colnames(rotatedFix) = c(paste(fixedPositionColumns[1], "ROT", sep = "_"), 
+							 paste(fixedPositionColumns[2], "ROT", sep = "_"),
+							 paste(fixedPositionColumns[3], "ROT", sep = "_"))
 	return(rotatedFix)
 }
 
@@ -1198,11 +1199,8 @@ processData = function(dataList, groups, groupings, updateProgress = NULL, initi
 		if(benchmark) startTime = benchMark("Process data - path length and velocity", startTime)
 		# Calculating rotated fixed position
 		trajectories = trajectories %>%
-			plyr::summarise(out = list(rotateFixedPosition(
-				get(fixedPositionColumns[1]), get(fixedPositionColumns[2]), get(fixedPositionColumns[3])))) %>% 
-			tidyr::unnest_wider(c(out)) %>% 
-			tidyr::unnest(cols = everything()) %>%
-			bind_cols(trajectories, .)
+			dplyr::mutate(rotateFixedPosition(
+				get(fixedPositionColumns[1]), get(fixedPositionColumns[2]), get(fixedPositionColumns[3])))
 		if(benchmark) startTime = benchMark("Process data - traj rotation", startTime)
 		
 		if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
