@@ -622,7 +622,9 @@ tabPanelPlotTrackFeatures = function(title, tabColor){
 			 			   		   brush = brushOpts(id = "trackFeaturePlotOut_brush", resetOnNew = TRUE)),
 			 			   statDataDetails("track"),
 			 			   tags$style(type="text/css", "#track_stat_text_Out {white-space: pre-wrap;}"), hr(),
-			 			   plotExportSection("track")
+			 			   plotExportSection("track"),
+			 			   h3("Preview (1:4)"),
+			 			   imageOutput(outputId = "trackFeaturePlotPreviewOut")
 			 			   )
 			 		)
 			 	)
@@ -1406,10 +1408,15 @@ server = function(input, output, session) {
 			if(!udunits2::ud.are.convertible(unit, unitToConvert)){
 				unitToConvert = unit
 			}
-			values = transformFun(udunits2::ud.convert(values, unit, unitToConvert), trackTransform()$parameter)
-			
-			#if()
-			pretty(values, 20)
+			#browser()
+			if(!is.factor(values)){
+				values = transformFun(udunits2::ud.convert(values, unit, unitToConvert), trackTransform()$parameter)
+				
+				#if()
+				pretty(values, 20)
+			}else{
+				values
+			}
 		}
 	})
 	#getXMin = reactive({getXPretty()[1]})
@@ -1417,7 +1424,7 @@ server = function(input, output, session) {
 	getTrackYMin = reactive({
 		#browser()
 		prettyMin = getTrackYPretty()[1]
-		if(!is.null(prettyMin)){
+		if(!is.null(prettyMin) && !is.factor(prettyMin)){
 			if(prettyMin > 0){
 				return(0)
 			}else{
@@ -1427,7 +1434,7 @@ server = function(input, output, session) {
 	})
 	getTrackYMax = reactive({
 		prettyMax = last(getTrackYPretty())
-		if(!is.null(prettyMax)){
+		if(!is.null(prettyMax) && !is.factor(prettyMax)){
 			if(prettyMax < 0){
 				return(0)
 			}else{
@@ -1463,10 +1470,14 @@ server = function(input, output, session) {
 			if(!udunits2::ud.are.convertible(unit, unitToConvert)){
 				unitToConvert = unit
 			}
-			values = transformFun(udunits2::ud.convert(values, unit, unitToConvert), trackTransform()$parameter)
-			
-			#if()
-			pretty(values, 20)
+			if(!is.factor(values)){
+				values = transformFun(udunits2::ud.convert(values, unit, unitToConvert), trackTransform()$parameter)
+				
+				#if()
+				pretty(values, 20)
+			}else{
+				values
+			}
 		}
 	})
 	
@@ -2037,7 +2048,56 @@ server = function(input, output, session) {
 		}else{
 			NULL
 		}
-		})
+	})
+	
+	# output$trackFeatureUIExportOut = renderUI({
+	# 	browser()
+	# 	if(input$track_auto_width_In){
+	# 		width_cm = ggplot2:::plot_dim(units = "cm")[1]
+	# 	}else{
+	# 		width_cm = input$track_width_In
+	# 	}
+	# 	if(input$track_auto_height_In){
+	# 		height_cm = ggplot2:::plot_dim(units = "cm")[2]
+	# 	}else{
+	# 		height_cm = input$track_height_In
+	# 	}
+	# 	
+	# 	width_in = ud.convert(width_cm, "cm", "in")
+	# 	height_in = ud.convert(height_cm, "cm", "in")
+	# 	width_px = width_in * 300
+	# 	height_px = height_in * 300
+	# 	
+	# 	imageOutput(outputId = "trackFeaturePlotExportOut", width = width_px, height = height_px)
+	# 	
+	# })
+	
+	output$trackFeaturePlotPreviewOut = renderImage({
+		#browser()
+		trackFeaturePlotOut = trackFeaturePlot()
+		if(is.list(trackFeaturePlotOut)){
+			temp_png_file = tempfile(fileext = ".png")
+			
+			#TODO make this reactive
+			width = input$track_width_In; height = input$track_height_In
+			if(input$track_auto_width_In){width = NA}
+			if(input$track_auto_height_In){height = NA}
+			
+			ggsave(temp_png_file, trackFeaturePlotOut$plot, width = width, height = height, dpi = 300, units = "cm")
+			dim = ggplot2:::plot_dim(dim = c(width, height), dpi = 300, units = "cm") * 300
+			#browser()
+			list(
+				src = temp_png_file,
+				contentType = "image/png",
+				width = dim[1]/4,
+				height = dim[2]/4,
+				alt = "Track feature plot"
+			)
+		}else{
+			NULL
+		}
+	}, deleteFile = FALSE)
+	
 	output$track_stat_DF_Out = renderTable(spacing = "xs", striped = TRUE, {
 		#browser()
 		if("tbl" %in% class(trackFeaturePlot()$stat[[1]])){

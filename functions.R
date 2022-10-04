@@ -3100,7 +3100,8 @@ circQQ = function(data, x, y, groupings, colorGroup = NULL, fillGroup = NULL, #a
 #' @examples
 groupedNormality = function(data, groupings, groups, y, default.y.Unit, y.unit){
 	yVar = unitConversion(default.y.Unit, y.unit, y)
-	normalityTest = data %>% group_by_at(groups) %>% summarise(W = shapiro.test(!!yVar)$statistic, p.value = shapiro.test(!!yVar)$p.value, Skewness = skewness(!!yVar, na.rm = TRUE, type = 1), Kurtosis = kurtosis(!!yVar, na.rm = TRUE, type = 1))
+	normalityTest = data %>% group_by_at(groups) %>% 
+		summarise(W = shapiro.test(!!yVar)$statistic, p.value = shapiro.test(!!yVar)$p.value, Skewness = skewness(!!yVar, na.rm = TRUE, type = 1), Kurtosis = kurtosis(!!yVar, na.rm = TRUE, type = 1))
 	#browser()
 	labels = as.character(unlist(lapply(groups, FUN = getGLab, groupings = groupings)))
 	colnames(normalityTest)[1:length(labels)] = labels
@@ -3247,10 +3248,20 @@ plotData = function(dataTracks, x, y, type, groupings, y.unit = NULL, colorGroup
 		y.unit = default.y.Unit
 		#TODO warn about this?
 	}
-	dataTracks[[y]] = transformFun(udunits2::ud.convert(dataTracks[[y]], default.y.Unit, y.unit), data.transform$parameter)
+	if(!is.factor(dataTracks[[y]])){
+		converted = udunits2::ud.convert(dataTracks[[y]], default.y.Unit, y.unit)
+	}else{
+		converted = dataTracks[[y]]
+	}
+	dataTracks[[y]] = transformFun(converted, data.transform$parameter)
 	attr(dataTracks[[y]], "unit") = y.unit
+	#browser()
+	if(!is.factor(dataTracks[[y]])){
+		dataRange = c(min(dataTracks[[y]]), max(dataTracks[[y]]))
+	}else{
+		dataRange = c(1, length(dataTracks[[y]]))
+	}
 	
-	dataRange = c(min(dataTracks[[y]]), max(dataTracks[[y]]))
 	if(is.null(y.lab)){y.labDisp = ""}else{y.labDisp = TeX(paste0(transformFormulaFun(y.lab, data.transform$parameter), " \\[", transformFormulaFun(y.unit, data.transform$parameter), "\\]"))}
 	
 	#if(!is.null(unit)){  ud.convert(tracks$TRACK_MEAN_SPEED, "μm/sec", "μm/h")
@@ -3357,6 +3368,11 @@ plotData = function(dataTracks, x, y, type, groupings, y.unit = NULL, colorGroup
 	plot = plot + scale_x_discrete(labels = getGLabs(groupings = groupings, name = x, 
 															order = levels(dataTracks[[x]])))
 	
+	if(y.unit == "radian"){
+		plot = plot + scale_y_continuous(breaks  = c(seq(0, 2*pi, pi/2)), 
+										 labels = c("0", "\u03c0/2", "\u03c0", "3\u03c0/2", "2*\u03c0"))
+	}
+	
 	if(benchmark) startTime = benchMark("Colors", startTime)
 	if(verbose) cat("Colors...\n")
 	
@@ -3368,11 +3384,12 @@ plotData = function(dataTracks, x, y, type, groupings, y.unit = NULL, colorGroup
 			}else{
 				label.y = (y.range[2] - y.range[1]) * 0.9 + y.range[1]
 			}
-			plot = plot + stat_compare_means(method = multiple.stat.method, label.x = 0.7, label.y = label.y)
+			plot = plot + 
+				stat_compare_means(method = multiple.stat.method, label.x = 0.7, label.y = label.y, show.legend = F)
 		}
 	}
 	
-	if(!is.null(pairwise.stat.method)){
+	if(!is.null(pairwise.stat.method) && !is.factor(dataTracks[[y]])){
 		if(pairwise.stat.method != "NONE"){
 			comparisons = list()
 			comparisonGroups = as.character(getGroups(groupings = groupings, name = x))
@@ -3394,7 +3411,8 @@ plotData = function(dataTracks, x, y, type, groupings, y.unit = NULL, colorGroup
 			}
 			plot = plot + stat_compare_means(aes(group = !!sym(x)), label = stat.label, method = pairwise.stat.method, 
 											 label.x = 1.5, comparisons = comparisons, hide.ns = hide.ns, 
-											 show.legend = FALSE, color = stat.text.color, symnum.args = statSignSymbols)
+											 show.legend = FALSE, color = stat.text.color, 
+											 symnum.args = statSignSymbols)
 			#statOut = compare_means(data = dataTracks, formula = reformulate(x, y), method = stat.method)
 			stat.fun = match.fun(pairwise.stat.method)
 			nonStatGroupings = allGroupswoRep[allGroupswoRep != x]
@@ -3404,12 +3422,13 @@ plotData = function(dataTracks, x, y, type, groupings, y.unit = NULL, colorGroup
 				if(!is.null(comparisons)){
 					stat.fun = match.fun(paste0("pairwise.", pairwise.stat.method))
 					#browser()
-					statOut[[withinGroupLabel]] = capture.output(stat.fun(x = dataTracksSplit[[y]], g = dataTracksSplit[[x]]))
+					statOut[[withinGroupLabel]] = capture.output(stat.fun(x = dataTracksSplit[[y]], 
+																		  g = dataTracksSplit[[x]]))
 				}else{
-					statOut[[withinGroupLabel]] = capture.output(stat.fun(reformulateT(x, y), data = dataTracksSplit))
+					statOut[[withinGroupLabel]] = capture.output(stat.fun(reformulateT(x, y), 
+																		  data = dataTracksSplit))
 				}
 			}
-			
 			statOut = replaceStatLabels(statOut, getGLab(groupings, x), y.lab)
 		}
 	}
@@ -3425,16 +3444,20 @@ plotData = function(dataTracks, x, y, type, groupings, y.unit = NULL, colorGroup
 	histogram = groupHistograms(dataTracks, x, y, default.y.Unit, y.unit, y.labDisp, groupings, colorGroup, fillGroup, 
 								colorGroupName, fillGroupName, facet.row, facet.col, facet.wrap, colorAlpha, fillAlpha, 
 								is.dark)
-	
-	# QQ plots of each group to check data normality
-	qq = groupQQ(dataTracks, x, y, default.y.Unit, y.unit, groupings, colorGroup, fillGroup, 
-				 colorGroupName, fillGroupName, facet.row, facet.col, facet.wrap, colorAlpha, fillAlpha, is.dark)
-	# Shapiro test
-	normality = groupedNormality(dataTracks, groupings, c(x, allGroupswoRep), y, default.y.Unit, y.unit)
-	
-	# Levene test
-	levene = groupedLevene(dataTracks, c(x, allGroupswoRep), y, default.y.Unit, y.unit)
-	
+	if(!is.factor(dataTracks[[y]])){
+		# QQ plots of each group to check data normality
+		qq = groupQQ(dataTracks, x, y, default.y.Unit, y.unit, groupings, colorGroup, fillGroup, 
+					 colorGroupName, fillGroupName, facet.row, facet.col, facet.wrap, colorAlpha, fillAlpha, is.dark)
+		# Shapiro test
+		normality = groupedNormality(dataTracks, groupings, c(x, allGroupswoRep), y, default.y.Unit, y.unit)
+		
+		# Levene test
+		levene = groupedLevene(dataTracks, c(x, allGroupswoRep), y, default.y.Unit, y.unit)
+	}else{
+		qq = NULL
+		normality = NULL
+		levene = NULL
+	}
 	return(list(plot = plot, stat = statOut, replicates = aggrRepMergedNice, tracks = aggrNice, 
 				histogram = histogram, qq = qq, normality = normality, levene = levene))
 }
