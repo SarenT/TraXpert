@@ -618,13 +618,13 @@ tabPanelPlotTrackFeatures = function(title, tabColor){
 			 		
 			 			   ),
 			 		column(8, 
-			 			   plotOutput(outputId = "trackFeaturePlotOut", dblclick = "trackFeaturePlotOut_dblclick", 
-			 			   		   brush = brushOpts(id = "trackFeaturePlotOut_brush", resetOnNew = TRUE)),
+			 			   plotOutput(outputId = "trackPlotOut", dblclick = "trackPlotOut_dblclick", 
+			 			   		   brush = brushOpts(id = "trackPlotOut_brush", resetOnNew = TRUE)),
 			 			   statDataDetails("track"),
 			 			   tags$style(type="text/css", "#track_stat_text_Out {white-space: pre-wrap;}"), hr(),
 			 			   plotExportSection("track"),
-			 			   h3("Preview (1:4)"),
-			 			   imageOutput(outputId = "trackFeaturePlotPreviewOut")
+			 			   h3("Export Preview (1:4)"),
+			 			   imageOutput(outputId = "trackPlotPreviewOut")
 			 			   )
 			 		)
 			 	)
@@ -711,7 +711,7 @@ tabPanelPlotTrajectories = function(title, tabColor){
 			 			   #tags$style(type="text/css", "#track_stat_text_Out {white-space: pre-wrap;}"), hr(),
 			 			   fluidPage(fluidRow(column(6, actionButton(inputId = "plotTrajIn", label = "Plot Trajectories")),
 			 			   				   column(6, plotExportSection("traj")))),
-			 			   h3("Preview (1:4)"),
+			 			   h3("Export Preview (1:4)"),
 			 			   imageOutput(outputId = "trajectoryPlotPreviewOut")
 			 		)
 			 	)
@@ -806,7 +806,7 @@ tabPanelDirectionality = function(title, tabColor){
 			 			   statCircDataDetails("dir"),
 			 			   tags$style(type="text/css", "#dir_circstat_text_Out {white-space: pre-wrap;}"), hr(),
 			 			   plotExportSection("dir"),
-			 			   h3("Preview (1:4)"),
+			 			   h3("Export Preview (1:4)"),
 			 			   imageOutput(outputId = "directionalityPlotPreviewOut")
 			 		)
 			 	)
@@ -968,7 +968,7 @@ tabPanelPlotTrajectoryFeatures = function(title, tabColor){
 			 			   tags$style(type="text/css", "#traj_feat_stat_text_Out {white-space: pre-wrap;}"), hr(),
 			 			   fluidPage(fluidRow(column(6, actionButton(inputId = "plotTrajFeatIn", label = "Plot Trajectory Festures")),
 			 			   				   column(6, plotExportSection("traj_feat")))),
-			 			   h3("Preview (1:4)"),
+			 			   h3("Export Preview (1:4)"),
 			 			   imageOutput(outputId = "trajFeaturePlotPreviewOut")
 			 		)
 			 	)
@@ -1373,9 +1373,9 @@ server = function(input, output, session) {
 	observe({updateSliderInput(session, "traj_feat_y_range_In", min = getTrajFeatYMin(), max = getTrajFeatYMax(), 
 							   step = getTrajFeatYStep(), value = c(getTrajFeatYMin(), getTrajFeatYMax()))})
 	
-	observeEvent(input$trackFeaturePlotOut_dblclick, {
+	observeEvent(input$trackPlotOut_dblclick, {
 		#browser()
-		brush = input$trackFeaturePlotOut_brush
+		brush = input$trackPlotOut_brush
 		if (!is.null(brush)) {
 			#ranges$x = c(brush$xmin, brush$xmax)
 			#trackRanges$y = c(brush$ymin, brush$ymax)
@@ -1958,7 +1958,7 @@ server = function(input, output, session) {
 		return(list(method = input$traj_feat_data_transform_In, parameter = input[[paste(c("track", "data", input$traj_feat_data_transform_In, "In"), collapse = "_")]]))
 	})
 	
-	trackFeaturePlot = reactive({
+	trackPlot = reactive({
 		if(input$track_browse_In){
 			browser()
 		}
@@ -2047,36 +2047,15 @@ server = function(input, output, session) {
 		}
 		
 	})
-	output$trackFeaturePlotOut = renderPlot({
-		trackFeaturePlotOut = trackFeaturePlot()
-		if(is.list(trackFeaturePlotOut)){
-			trackFeaturePlotOut$plot
+	output$trackPlotOut = renderPlot({
+		trackPlotOut = trackPlot()
+		if(is.list(trackPlotOut)){
+			trackPlotOut$plot
 		}else{
 			NULL
 		}
 	})
 	
-	# output$trackFeatureUIExportOut = renderUI({
-	# 	browser()
-	# 	if(input$track_auto_width_In){
-	# 		width_cm = ggplot2:::plot_dim(units = "cm")[1]
-	# 	}else{
-	# 		width_cm = input$track_width_In
-	# 	}
-	# 	if(input$track_auto_height_In){
-	# 		height_cm = ggplot2:::plot_dim(units = "cm")[2]
-	# 	}else{
-	# 		height_cm = input$track_height_In
-	# 	}
-	# 	
-	# 	width_in = ud.convert(width_cm, "cm", "in")
-	# 	height_in = ud.convert(height_cm, "cm", "in")
-	# 	width_px = width_in * 300
-	# 	height_px = height_in * 300
-	# 	
-	# 	imageOutput(outputId = "trackFeaturePlotExportOut", width = width_px, height = height_px)
-	# 	
-	# })
 	track_export_size = reactive({
 		width = input$track_width_In; height = input$track_height_In
 		if(input$track_auto_width_In){width = NA}
@@ -2105,15 +2084,15 @@ server = function(input, output, session) {
 		return(list(width = width, height = height))
 	})
 	
-	output$trackFeaturePlotPreviewOut = renderImage({
+	output$trackPlotPreviewOut = renderImage({
 		#browser()
-		trackFeaturePlotOut = trackFeaturePlot()
-		if(is.list(trackFeaturePlotOut)){
+		trackPlotOut = trackPlot()
+		if(is.list(trackPlotOut)){
 			temp_png_file = tempfile(fileext = ".png")
 			
 			size = track_export_size()
 			
-			ggsave(temp_png_file, trackFeaturePlotOut$plot, width = size$width, height = size$height, 
+			ggsave(temp_png_file, trackPlotOut$plot, width = size$width, height = size$height, 
 				   dpi = 300, units = "cm")
 			dim = ggplot2:::plot_dim(dim = unlist(size, use.names = F), dpi = 300, units = "cm") * 300
 			#browser()
@@ -2129,64 +2108,137 @@ server = function(input, output, session) {
 		}
 	}, deleteFile = FALSE)
 	
+	output$trajectoryPlotPreviewOut = renderImage({
+		#browser()
+		trajectoryPlotOut = trajectoryPlot()
+		if(is.list(trajectoryPlotOut)){
+			temp_png_file = tempfile(fileext = ".png")
+			
+			size = traj_export_size()
+			
+			ggsave(temp_png_file, trajectoryPlotOut$plot, width = size$width, height = size$height, 
+				   dpi = 300, units = "cm")
+			dim = ggplot2:::plot_dim(dim = unlist(size, use.names = F), dpi = 300, units = "cm") * 300
+			#browser()
+			list(
+				src = temp_png_file,
+				contentType = "image/png",
+				width = dim[1]/4,
+				height = dim[2]/4,
+				alt = "Track feature plot"
+			)
+		}else{
+			NULL
+		}
+	}, deleteFile = FALSE)
+	
+	output$directionalityPlotPreviewOut = renderImage({
+		#browser()
+		directionalityPlotOut = directionalityPlot()
+		if(is.list(directionalityPlotOut)){
+			temp_png_file = tempfile(fileext = ".png")
+			
+			size = dir_export_size()
+			
+			ggsave(temp_png_file, directionalityPlotOut$plot, width = size$width, height = size$height, 
+				   dpi = 300, units = "cm")
+			dim = ggplot2:::plot_dim(dim = unlist(size, use.names = F), dpi = 300, units = "cm") * 300
+			#browser()
+			list(
+				src = temp_png_file,
+				contentType = "image/png",
+				width = dim[1]/4,
+				height = dim[2]/4,
+				alt = "Track feature plot"
+			)
+		}else{
+			NULL
+		}
+	}, deleteFile = FALSE)
+	
+	output$trajFeaturePlotPreviewOut = renderImage({
+		#browser()
+		trajFeaturePlotOut = trajFeaturePlot()
+		if(is.list(trajFeaturePlotOut)){
+			temp_png_file = tempfile(fileext = ".png")
+			
+			size = traj_feat_export_size()
+			
+			ggsave(temp_png_file, trajFeaturePlotOut$plot, width = size$width, height = size$height, 
+				   dpi = 300, units = "cm")
+			dim = ggplot2:::plot_dim(dim = unlist(size, use.names = F), dpi = 300, units = "cm") * 300
+			#browser()
+			list(
+				src = temp_png_file,
+				contentType = "image/png",
+				width = dim[1]/4,
+				height = dim[2]/4,
+				alt = "Track feature plot"
+			)
+		}else{
+			NULL
+		}
+	}, deleteFile = FALSE)
+	
+	
 	output$track_stat_DF_Out = renderTable(spacing = "xs", striped = TRUE, {
 		#browser()
-		if("tbl" %in% class(trackFeaturePlot()$stat[[1]])){
-			trackFeaturePlot()$stat
+		if("tbl" %in% class(trackPlot()$stat[[1]])){
+			trackPlot()$stat
 		}
 		})
 	output$track_stat_text_Out = renderText({
 		#browser()
-		if("character" %in% class(trackFeaturePlot()$stat[[1]])){
+		if("character" %in% class(trackPlot()$stat[[1]])){
 			#browser()
 			statOutText = ""
-			for(i in 1:length(trackFeaturePlot()$stat)){
-				statName = names(trackFeaturePlot()$stat)[i]
+			for(i in 1:length(trackPlot()$stat)){
+				statName = names(trackPlot()$stat)[i]
 				statOutText = paste(statOutText, statName, sep = "\n\n")
-				statOutText = paste(statOutText, paste(trackFeaturePlot()$stat[[i]], collapse = "\n"), sep = "\n") #hTestToString(trackFeaturePlot()$stat)
+				statOutText = paste(statOutText, paste(trackPlot()$stat[[i]], collapse = "\n"), sep = "\n") #hTestToString(trackPlot()$stat)
 			}
 			
 			statOutText
 		}
 		})
 	output$track_data_replicates_Out = renderTable(spacing = "xs", striped = TRUE, {
-		trackFeaturePlot()$replicates
+		trackPlot()$replicates
 	})
 	output$track_data_tracks_Out = renderTable(spacing = "xs", striped = TRUE, {
-		trackFeaturePlot()$tracks
+		trackPlot()$tracks
 	})
 	
 	output$track_stat_histogram_Out = renderPlot({
-		trackFeaturePlotOut = trackFeaturePlot()
-		if(is.list(trackFeaturePlotOut)){
-			trackFeaturePlotOut$histogram
+		trackPlotOut = trackPlot()
+		if(is.list(trackPlotOut)){
+			trackPlotOut$histogram
 		}else{
 			NULL
 		}
 	})
 	
 	output$track_stat_qq_Out = renderPlot({
-		trackFeaturePlotOut = trackFeaturePlot()
-		if(is.list(trackFeaturePlotOut)){
-			trackFeaturePlotOut$qq
+		trackPlotOut = trackPlot()
+		if(is.list(trackPlotOut)){
+			trackPlotOut$qq
 		}else{
 			NULL
 		}
 	})
 	
 	output$track_stat_normality_Out = renderTable(spacing = "xs", striped = TRUE, {
-		trackFeaturePlotOut = trackFeaturePlot()
-		if(is.list(trackFeaturePlotOut)){
-			trackFeaturePlotOut$normality
+		trackPlotOut = trackPlot()
+		if(is.list(trackPlotOut)){
+			trackPlotOut$normality
 		}else{
 			NULL
 		}
 	})
 	
 	output$track_stat_levene_Out = renderText({
-		trackFeaturePlotOut = trackFeaturePlot()
-		if(is.list(trackFeaturePlotOut)){
-			trackFeaturePlotOut$levene
+		trackPlotOut = trackPlot()
+		if(is.list(trackPlotOut)){
+			trackPlotOut$levene
 		}else{
 			NULL
 		}
@@ -2379,7 +2431,7 @@ server = function(input, output, session) {
 			for(i in 1:length(directionalityPlot()$stat)){
 				statName = names(directionalityPlot()$stat)[i]
 				statOutText = paste(statOutText, statName, sep = "\n\n")
-				statOutText = paste(statOutText, paste(directionalityPlot()$stat[[i]], collapse = "\n"), sep = "\n") #hTestToString(trackFeaturePlot()$stat)
+				statOutText = paste(statOutText, paste(directionalityPlot()$stat[[i]], collapse = "\n"), sep = "\n") #hTestToString(trackPlot()$stat)
 			}
 			
 			statOutText
@@ -2793,7 +2845,7 @@ server = function(input, output, session) {
 		content = function(file) {
 			print("Downloading track feature plot in SVG.")
 			size = track_export_size()
-			ggsave(filename = file, plot = trackFeaturePlot()$plot, size$width = width, height = size$height, 
+			ggsave(filename = file, plot = trackPlot()$plot, width = size$width, height = size$height, 
 				   dpi = 300, units = "cm", fix_text_size = FALSE)
 		},
 		contentType = paste("image", "svg", sep = "/")
@@ -2805,7 +2857,7 @@ server = function(input, output, session) {
 		content = function(file) {
 			print("Downloading track feature plot in PNG.")
 			size = track_export_size()
-			ggsave(filename = file, plot = trackFeaturePlot()$plot, width = size$width, height = size$height, 
+			ggsave(filename = file, plot = trackPlot()$plot, width = size$width, height = size$height, 
 				   dpi = 300, units = "cm")
 		},
 		contentType = paste("image", "png", sep = "/")
