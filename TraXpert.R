@@ -710,7 +710,9 @@ tabPanelPlotTrajectories = function(title, tabColor){
 			 			   #statDataDetails("track"),
 			 			   #tags$style(type="text/css", "#track_stat_text_Out {white-space: pre-wrap;}"), hr(),
 			 			   fluidPage(fluidRow(column(6, actionButton(inputId = "plotTrajIn", label = "Plot Trajectories")),
-			 			   				   column(6, plotExportSection("traj"))))
+			 			   				   column(6, plotExportSection("traj")))),
+			 			   h3("Preview (1:4)"),
+			 			   imageOutput(outputId = "trajectoryPlotPreviewOut")
 			 		)
 			 	)
 			 )
@@ -803,7 +805,9 @@ tabPanelDirectionality = function(title, tabColor){
 			 			   plotOutput(outputId = "directionalityPlotOut"),
 			 			   statCircDataDetails("dir"),
 			 			   tags$style(type="text/css", "#dir_circstat_text_Out {white-space: pre-wrap;}"), hr(),
-			 			   plotExportSection("dir")
+			 			   plotExportSection("dir"),
+			 			   h3("Preview (1:4)"),
+			 			   imageOutput(outputId = "directionalityPlotPreviewOut")
 			 		)
 			 	)
 			 )
@@ -963,7 +967,9 @@ tabPanelPlotTrajectoryFeatures = function(title, tabColor){
 			 			   statDataDetails("traj_feat"),
 			 			   tags$style(type="text/css", "#traj_feat_stat_text_Out {white-space: pre-wrap;}"), hr(),
 			 			   fluidPage(fluidRow(column(6, actionButton(inputId = "plotTrajFeatIn", label = "Plot Trajectory Festures")),
-			 			   				   column(6, plotExportSection("traj_feat"))))
+			 			   				   column(6, plotExportSection("traj_feat")))),
+			 			   h3("Preview (1:4)"),
+			 			   imageOutput(outputId = "trajFeaturePlotPreviewOut")
 			 		)
 			 	)
 			 )
@@ -2071,6 +2077,33 @@ server = function(input, output, session) {
 	# 	imageOutput(outputId = "trackFeaturePlotExportOut", width = width_px, height = height_px)
 	# 	
 	# })
+	track_export_size = reactive({
+		width = input$track_width_In; height = input$track_height_In
+		if(input$track_auto_width_In){width = NA}
+		if(input$track_auto_height_In){height = NA}
+		return(list(width = width, height = height))
+	})
+	
+	traj_export_size = reactive({
+		width = input$traj_width_In; height = input$traj_height_In
+		if(input$traj_auto_width_In){width = NA}
+		if(input$traj_auto_height_In){height = NA}
+		return(list(width = width, height = height))
+	})
+	
+	dir_export_size = reactive({
+		width = input$dir_width_In; height = input$dir_height_In
+		if(input$dir_auto_width_In){width = NA}
+		if(input$dir_auto_height_In){height = NA}
+		return(list(width = width, height = height))
+	})
+	
+	traj_feat_export_size = reactive({
+		width = input$traj_feat_width_In; height = input$traj_feat_height_In
+		if(input$traj_feat_auto_width_In){width = NA}
+		if(input$traj_feat_auto_height_In){height = NA}
+		return(list(width = width, height = height))
+	})
 	
 	output$trackFeaturePlotPreviewOut = renderImage({
 		#browser()
@@ -2078,13 +2111,11 @@ server = function(input, output, session) {
 		if(is.list(trackFeaturePlotOut)){
 			temp_png_file = tempfile(fileext = ".png")
 			
-			#TODO make this reactive
-			width = input$track_width_In; height = input$track_height_In
-			if(input$track_auto_width_In){width = NA}
-			if(input$track_auto_height_In){height = NA}
+			size = track_export_size()
 			
-			ggsave(temp_png_file, trackFeaturePlotOut$plot, width = width, height = height, dpi = 300, units = "cm")
-			dim = ggplot2:::plot_dim(dim = c(width, height), dpi = 300, units = "cm") * 300
+			ggsave(temp_png_file, trackFeaturePlotOut$plot, width = size$width, height = size$height, 
+				   dpi = 300, units = "cm")
+			dim = ggplot2:::plot_dim(dim = unlist(size, use.names = F), dpi = 300, units = "cm") * 300
 			#browser()
 			list(
 				src = temp_png_file,
@@ -2761,10 +2792,9 @@ server = function(input, output, session) {
 		},
 		content = function(file) {
 			print("Downloading track feature plot in SVG.")
-			width = input$track_width_In; height = input$track_height_In
-			if(input$track_auto_width_In){width = NA}
-			if(input$track_auto_height_In){height = NA}
-			ggsave(filename = file, plot = trackFeaturePlot()$plot, width = width, height = height, dpi = 300, units = "cm", fix_text_size = FALSE)
+			size = track_export_size()
+			ggsave(filename = file, plot = trackFeaturePlot()$plot, size$width = width, height = size$height, 
+				   dpi = 300, units = "cm", fix_text_size = FALSE)
 		},
 		contentType = paste("image", "svg", sep = "/")
 	)
@@ -2774,10 +2804,9 @@ server = function(input, output, session) {
 		},
 		content = function(file) {
 			print("Downloading track feature plot in PNG.")
-			width = input$track_width_In; height = input$track_height_In
-			if(input$track_auto_width_In){width = NA}
-			if(input$track_auto_height_In){height = NA}
-			ggsave(filename = file, plot = trackFeaturePlot()$plot, width = width, height = height, dpi = 300, units = "cm")
+			size = track_export_size()
+			ggsave(filename = file, plot = trackFeaturePlot()$plot, width = size$width, height = size$height, 
+				   dpi = 300, units = "cm")
 		},
 		contentType = paste("image", "png", sep = "/")
 	)
@@ -2787,10 +2816,9 @@ server = function(input, output, session) {
 		},
 		content = function(file) {
 			print("Downloading trajectories plot in SVG.")
-			width = input$traj_width_In; height = input$traj_height_In
-			if(input$traj_auto_width_In){width = NA}
-			if(input$traj_auto_height_In){height = NA}
-			ggsave(filename = file, plot = trajectoryPlot()$plot, width = width, height = height, dpi = 300, units = "cm", fix_text_size = FALSE)
+			size = traj_export_size()
+			ggsave(filename = file, plot = trajectoryPlot()$plot, width = size$width, height = size$height, dpi = 300, 
+				   units = "cm", fix_text_size = FALSE)
 		},
 		contentType = paste("image", "svg", sep = "/")
 	)
@@ -2800,10 +2828,9 @@ server = function(input, output, session) {
 		},
 		content = function(file) {
 			print("Downloading trajectories plot in PNG.")
-			width = input$traj_width_In; height = input$traj_height_In
-			if(input$traj_auto_width_In){width = NA}
-			if(input$traj_auto_height_In){height = NA}
-			ggsave(filename = file, plot = trajectoryPlot()$plot, width = width, height = height, dpi = 300, units = "cm")
+			size = traj_export_size()
+			ggsave(filename = file, plot = trajectoryPlot()$plot, width = size$width, height = size$height, dpi = 300, 
+				   units = "cm")
 		},
 		contentType = paste("image", "png", sep = "/")
 	)
@@ -2813,10 +2840,9 @@ server = function(input, output, session) {
 		},
 		content = function(file) {
 			print("Downloading directionality plot in SVG.")
-			width = input$dir_width_In; height = input$dir_height_In
-			if(input$dir_auto_width_In){width = NA}
-			if(input$dir_auto_height_In){height = NA}
-			ggsave(filename = file, plot = directionalityPlot()$plot, width = width, height = height, dpi = 300, units = "cm", fix_text_size = FALSE)
+			size = dir_export_size()
+			ggsave(filename = file, plot = directionalityPlot()$plot, width = size$width, height = size$height, 
+				   dpi = 300, units = "cm", fix_text_size = FALSE)
 		},
 		contentType = paste("image", "svg", sep = "/")
 	)
@@ -2826,10 +2852,9 @@ server = function(input, output, session) {
 		},
 		content = function(file) {
 			print("Downloading directionality plot in PNG.")
-			width = input$dir_width_In; height = input$dir_height_In
-			if(input$dir_auto_width_In){width = NA}
-			if(input$dir_auto_height_In){height = NA}
-			ggsave(filename = file, plot = directionalityPlot()$plot, width = width, height = height, dpi = 300, units = "cm")
+			size = dir_export_size()
+			ggsave(filename = file, plot = directionalityPlot()$plot, width = size$width, height = size$height, 
+				   dpi = 300, units = "cm")
 		},
 		contentType = paste("image", "png", sep = "/")
 	)
@@ -2839,10 +2864,9 @@ server = function(input, output, session) {
 		},
 		content = function(file) {
 			print("Downloading trajectory features plot in SVG.")
-			width = input$traj_feat_width_In; height = input$traj_feat_height_In
-			if(input$traj_feat_auto_width_In){width = NA}
-			if(input$traj_feat_auto_height_In){height = NA}
-			ggsave(filename = file, plot = trajFeaturePlot()$plot, width = width, height = height, dpi = 300, units = "cm", fix_text_size = FALSE)
+			size = traj_feat_export_size()
+			ggsave(filename = file, plot = trajFeaturePlot()$plot, width = size$width, height = size$height, dpi = 300, 
+				   units = "cm", fix_text_size = FALSE)
 		},
 		contentType = paste("image", "svg", sep = "/")
 	)
@@ -2852,10 +2876,9 @@ server = function(input, output, session) {
 		},
 		content = function(file) {
 			print("Downloading trajectory features plot in PNG.")
-			width = input$traj_feat_width_In; height = input$traj_feat_height_In
-			if(input$traj_feat_auto_width_In){width = NA}
-			if(input$traj_feat_auto_height_In){height = NA}
-			ggsave(filename = file, plot = trajFeaturePlot()$plot, width = width, height = height, dpi = 300, units = "cm")
+			size = traj_feat_export_size()
+			ggsave(filename = file, plot = trajFeaturePlot()$plot, width = size$width, height = size$height, dpi = 300, 
+				   units = "cm")
 		},
 		contentType = paste("image", "png", sep = "/")
 	)
