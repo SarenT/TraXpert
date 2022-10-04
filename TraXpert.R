@@ -826,7 +826,7 @@ tabPanelAbout = function(title){
 			 	fluidRow(
 			 		column(4),
 			 		column(4, 
-			 h1("About TraXplorer"),
+			 h1("About TraXpert"),
 			 p(paste("TraXplorer is a particle tracking analyzing software developed by me (Saren Tasciyan).",
 			 "Particle tracking data contains a lot of information about the motion of particles.", 
 			 "Such data can be very useful in life sciences. As I am studying cell migration,", 
