@@ -622,9 +622,9 @@ tabPanelPlotTrackFeatures = function(title, tabColor){
 			 			   		   brush = brushOpts(id = "trackPlotOut_brush", resetOnNew = TRUE)),
 			 			   statDataDetails("track"),
 			 			   tags$style(type="text/css", "#track_stat_text_Out {white-space: pre-wrap;}"), hr(),
-			 			   plotExportSection("track"),
-			 			   h3("Export Preview (1:4)"),
-			 			   imageOutput(outputId = "trackPlotPreviewOut")
+			 			   plot_export_UI("track_export"), # plotExportSection("track"),
+			 			   # h3("Export Preview (1:4)"),
+			 			   # imageOutput(outputId = "trackPlotPreviewOut")
 			 			   )
 			 		)
 			 	)
@@ -2047,6 +2047,7 @@ server = function(input, output, session) {
 		}
 		
 	})
+	
 	output$trackPlotOut = renderPlot({
 		trackPlotOut = trackPlot()
 		if(is.list(trackPlotOut)){
@@ -2054,13 +2055,6 @@ server = function(input, output, session) {
 		}else{
 			NULL
 		}
-	})
-	
-	track_export_size = reactive({
-		width = input$track_width_In; height = input$track_height_In
-		if(input$track_auto_width_In){width = NA}
-		if(input$track_auto_height_In){height = NA}
-		return(list(width = width, height = height))
 	})
 	
 	traj_export_size = reactive({
@@ -2083,30 +2077,6 @@ server = function(input, output, session) {
 		if(input$traj_feat_auto_height_In){height = NA}
 		return(list(width = width, height = height))
 	})
-	
-	output$trackPlotPreviewOut = renderImage({
-		#browser()
-		trackPlotOut = trackPlot()
-		if(is.list(trackPlotOut)){
-			temp_png_file = tempfile(fileext = ".png")
-			
-			size = track_export_size()
-			
-			ggsave(temp_png_file, trackPlotOut$plot, width = size$width, height = size$height, 
-				   dpi = 300, units = "cm")
-			dim = ggplot2:::plot_dim(dim = unlist(size, use.names = F), dpi = 300, units = "cm") * 300
-			#browser()
-			list(
-				src = temp_png_file,
-				contentType = "image/png",
-				width = dim[1]/4,
-				height = dim[2]/4,
-				alt = "Track feature plot"
-			)
-		}else{
-			NULL
-		}
-	}, deleteFile = FALSE)
 	
 	output$trajectoryPlotPreviewOut = renderImage({
 		#browser()
@@ -2838,30 +2808,8 @@ server = function(input, output, session) {
 		contentType = paste("text", "csv", sep = "/")
 	)
 	
-	output$track_download_SVG_In = downloadHandler(
-		filename = function() {
-			paste("Track Features", "svg", sep = ".")
-		},
-		content = function(file) {
-			print("Downloading track feature plot in SVG.")
-			size = track_export_size()
-			ggsave(filename = file, plot = trackPlot()$plot, width = size$width, height = size$height, 
-				   dpi = 300, units = "cm", fix_text_size = FALSE)
-		},
-		contentType = paste("image", "svg", sep = "/")
-	)
-	output$track_download_PNG_In = downloadHandler(
-		filename = function() {
-			paste("Track Features", "png", sep = ".")
-		},
-		content = function(file) {
-			print("Downloading track feature plot in PNG.")
-			size = track_export_size()
-			ggsave(filename = file, plot = trackPlot()$plot, width = size$width, height = size$height, 
-				   dpi = 300, units = "cm")
-		},
-		contentType = paste("image", "png", sep = "/")
-	)
+	plot_export_server("track_export", "Track Feature", trackPlot)
+	
 	output$traj_download_SVG_In = downloadHandler(
 		filename = function() {
 			paste("Trajectories", "svg", sep = ".")

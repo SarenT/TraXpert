@@ -4246,8 +4246,6 @@ toolTips = list(
 	title_check_In = "Main title of the plot to be displayed on top",
 	subtitle_In = "Subtitle appears below main title. If empty and a subtitle needs to be displayed, an automatic one will be generated.",
 	subtitle_check_In = "Whether or not to display subtitle",
-	download_PNG_In = "Download plot in PNG format. This format is for quick diplays. Use SVG for vector graphic format.",
-	download_SVG_In = "Download track feature plot in SVG format. This format is more suitable for print and presentations. Also you can edit it easily in a vector graphic application.",
 	subtitle_hjust_In = "Subtitle alignment (left/center/right)",
 	subtitle_size_In = "Subtitle text size",
 	subtitle_text_style_In = "Subtitle text style (italic/bold)",
@@ -4420,6 +4418,11 @@ WallraffTest = function(cdats){
 	TestRes = kruskal.test(distdat, g=groupID)
 	return(TestRes)
 }
+
+tool_tip = function(id, message, placement = "bottom", trigger = "hover", options = NULL){
+	bsTooltip(id, message, placement = placement, trigger = trigger, options = options)
+}
+
 # 
 # WallraffTest2 <- function(cdat, ndat, g) {
 # 	N <- length(cdat) ; ndatcsum <- cumsum(ndat) ; tbar <- circular(0) ; distdat <- 0
