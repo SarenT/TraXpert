@@ -810,12 +810,6 @@ tabPanelDirectionality = function(title, tabColor){
 	)
 }
 
-tabPanelTable = function(title, dtID, downloadButtonID, label, tabColor){
-	tabPanel(title, 
-			 tags$style(HTML(tabBGColorCSS(title, tabColor))),
-			 DTOutput(outputId = dtID), downloadButton(outputId = downloadButtonID, label = label))
-}
-
 tabPanelAbout = function(title){
 	tabPanel(title,
 			 fluidPage(
@@ -990,10 +984,18 @@ ui = function(request){
 					   #tabsetPanel(type = "tabs",
 						tabPanelImport(title = titleImportGroupings, tabColor = tabColorImport),
 						tabPanelOperations(titleOperations, tabColorOperations),
-						tabPanelTable(titleFiles, "filesOut", "downloadFilesTable", "Download files table as CSV", tabColorTables),
-						tabPanelTable(titleFeatures, "featuresOut", "downloadFeaturesTable", "Download features table as CSV", tabColorTables),
-						tabPanelTable(titleTracks, "tracksOut", "downloadTracksTable", "Download tracks table as CSV", tabColorTables),
-						tabPanelTable(titleTrajectories, "trajectoriesOut", "downloadTrajectoriesTable", "Download trajectories table as CSV", tabColorTables),
+						tabPanel(titleFiles, 
+								 tags$style(HTML(tabBGColorCSS(titleFiles, tabColorTables))),
+								 table_output_UI("filesOut")),
+						tabPanel(titleFeatures, 
+								 tags$style(HTML(tabBGColorCSS(titleFeatures, tabColorTables))),
+								 table_output_UI("featuresOut")),
+						tabPanel(titleTracks, 
+								 tags$style(HTML(tabBGColorCSS(titleTracks, tabColorTables))),
+								 table_output_UI("tracksOut")),
+						tabPanel(titleTrajectories, 
+								 tags$style(HTML(tabBGColorCSS(titleTrajectories, tabColorTables))),
+								 table_output_UI("trajectoriesOut")),
 						tabPanelPlotTrackFeatures(titlePlotTrackFeatures, tabColorPlots),
 						tabPanelPlotTrajectories(titlePlotTrajectories, tabColorPlots),
 						tabPanelDirectionality(titlePlotDirectionality, tabColorPlots),
@@ -1933,10 +1935,10 @@ server = function(input, output, session) {
 		data(dataDF)
 	})
 	
-	output$filesOut = renderDT({files()}, filter = 'top', rownames = FALSE, editable = "cell", selection = 'single', class = "compact")
-	output$featuresOut = renderDT({features()}, filter = 'top', rownames = FALSE, editable = "cell", selection = 'single', class = "compact")
-	output$tracksOut = renderDT({tracks()}, filter = 'top', rownames = FALSE, editable = "cell", selection = 'single', class = "compact")
-	output$trajectoriesOut = renderDT({trajectories()}, filter = 'top', rownames = FALSE, editable = "cell", selection = 'single', class = "compact")
+	table_output_server("filesOut", files)
+	table_output_server("featuresOut", features)
+	table_output_server("tracksOut", tracks)
+	table_output_server("trajectoriesOut", trajectories)
 	
 	trackQQPlot = reactive({
 		
@@ -2734,43 +2736,6 @@ server = function(input, output, session) {
 			dataObjSerial = serialize(dataObj, NULL)
 			writeBin(object = dataObjSerial, con = file)
 		}
-	)
-
-	output$downloadFilesTable = downloadHandler(
-		filename = function() {
-			paste("files", "csv", sep = ".")
-		},
-		content = function(file) {
-			write.csv(x = files(), file = file, append = FALSE, quote = TRUE, sep = "\t", dec = ".", row.names = FALSE, col.names = TRUE)
-		},
-		contentType = paste("text", "csv", sep = "/")
-	)
-	output$downloadFeaturesTable = downloadHandler(
-		filename = function() {
-			paste("features", "csv", sep = ".")
-		},
-		content = function(file) {
-			write.csv(x = features(), file = file, append = FALSE, quote = TRUE, sep = "\t", dec = ".", row.names = FALSE, col.names = TRUE)
-		},
-		contentType = paste("text", "csv", sep = "/")
-	)
-	output$downloadTracksTable = downloadHandler(
-		filename = function() {
-			paste("tracks", "csv", sep = ".")
-		},
-		content = function(file) {
-			write.csv(x = tracks(), file = file, append = FALSE, quote = TRUE, sep = "\t", dec = ".", row.names = FALSE, col.names = TRUE)
-		},
-		contentType = paste("text", "csv", sep = "/")
-	)
-	output$downloadTrajectoriesTable = downloadHandler(
-		filename = function() {
-			paste("trajectories", "csv", sep = ".")
-		},
-		content = function(file) {
-			write.csv(x = trajectories(), file = file, append = FALSE, quote = TRUE, sep = "\t", dec = ".", row.names = FALSE, col.names = TRUE)
-		},
-		contentType = paste("text", "csv", sep = "/")
 	)
 	
 	output$pointSourceTemplateIn = downloadHandler(
