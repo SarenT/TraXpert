@@ -709,10 +709,8 @@ tabPanelPlotTrajectories = function(title, tabColor){
 			 			   plotOutput(outputId = "trajectoryPlotOut"),
 			 			   #statDataDetails("track"),
 			 			   #tags$style(type="text/css", "#track_stat_text_Out {white-space: pre-wrap;}"), hr(),
-			 			   fluidPage(fluidRow(column(6, actionButton(inputId = "plotTrajIn", label = "Plot Trajectories")),
-			 			   				   column(6, plotExportSection("traj")))),
-			 			   h3("Export Preview (1:4)"),
-			 			   imageOutput(outputId = "trajectoryPlotPreviewOut")
+			 			   actionButton(inputId = "plotTrajIn", label = "Plot Trajectories"),
+			 			   plot_export_UI("traj_export")
 			 		)
 			 	)
 			 )
@@ -805,9 +803,7 @@ tabPanelDirectionality = function(title, tabColor){
 			 			   plotOutput(outputId = "directionalityPlotOut"),
 			 			   statCircDataDetails("dir"),
 			 			   tags$style(type="text/css", "#dir_circstat_text_Out {white-space: pre-wrap;}"), hr(),
-			 			   plotExportSection("dir"),
-			 			   h3("Export Preview (1:4)"),
-			 			   imageOutput(outputId = "directionalityPlotPreviewOut")
+			 			   plot_export_UI("dir_export")
 			 		)
 			 	)
 			 )
@@ -966,10 +962,8 @@ tabPanelPlotTrajectoryFeatures = function(title, tabColor){
 			 			   plotOutput(outputId = "trajFeaturePlotOut"),
 			 			   statDataDetails("traj_feat"),
 			 			   tags$style(type="text/css", "#traj_feat_stat_text_Out {white-space: pre-wrap;}"), hr(),
-			 			   fluidPage(fluidRow(column(6, actionButton(inputId = "plotTrajFeatIn", label = "Plot Trajectory Festures")),
-			 			   				   column(6, plotExportSection("traj_feat")))),
-			 			   h3("Export Preview (1:4)"),
-			 			   imageOutput(outputId = "trajFeaturePlotPreviewOut")
+			 			   actionButton(inputId = "plotTrajFeatIn", label = "Plot Trajectory Festures"),
+			 			   plot_export_UI("traj_feat_export")
 			 		)
 			 	)
 			 )
@@ -2491,21 +2485,6 @@ server = function(input, output, session) {
 			}
 		}
 	})
-	# output$dir_circstat_histogram_qqplot_Out = renderPlot({
-	# 	histogramData = dirHistogramData()
-	# 	if(!is.null(histogramData)){
-	# 		nGroups = length(histogramData)
-	# 		par(mfrow=c(nGroups * 2, 1))
-	# 		titles = names(histogramData)
-	# 		for(title in titles){
-	# 			circdat = histogramData[[title]]
-	# 			circularHistogram(circdat, title = title)
-	# 			vMQQ(circdat, title = title)
-	# 		}
-	# 	}
-	# })
-	
-	
 	
 	trajFeaturePlot = eventReactive(input$plotTrajFeatIn, {#trajFeaturePlot = reactive({
 		
@@ -2809,78 +2788,8 @@ server = function(input, output, session) {
 	)
 	
 	plot_export_server("track_export", "Track Feature", trackPlot)
-	
-	output$traj_download_SVG_In = downloadHandler(
-		filename = function() {
-			paste("Trajectories", "svg", sep = ".")
-		},
-		content = function(file) {
-			print("Downloading trajectories plot in SVG.")
-			size = traj_export_size()
-			ggsave(filename = file, plot = trajectoryPlot()$plot, width = size$width, height = size$height, dpi = 300, 
-				   units = "cm", fix_text_size = FALSE)
-		},
-		contentType = paste("image", "svg", sep = "/")
-	)
-	output$traj_download_PNG_In = downloadHandler(
-		filename = function() {
-			paste("Trajectories", "png", sep = ".")
-		},
-		content = function(file) {
-			print("Downloading trajectories plot in PNG.")
-			size = traj_export_size()
-			ggsave(filename = file, plot = trajectoryPlot()$plot, width = size$width, height = size$height, dpi = 300, 
-				   units = "cm")
-		},
-		contentType = paste("image", "png", sep = "/")
-	)
-	output$dir_download_SVG_In = downloadHandler(
-		filename = function() {
-			paste("Directionality", "svg", sep = ".")
-		},
-		content = function(file) {
-			print("Downloading directionality plot in SVG.")
-			size = dir_export_size()
-			ggsave(filename = file, plot = directionalityPlot()$plot, width = size$width, height = size$height, 
-				   dpi = 300, units = "cm", fix_text_size = FALSE)
-		},
-		contentType = paste("image", "svg", sep = "/")
-	)
-	output$dir_download_PNG_In = downloadHandler(
-		filename = function() {
-			paste("Directionality", "png", sep = ".")
-		},
-		content = function(file) {
-			print("Downloading directionality plot in PNG.")
-			size = dir_export_size()
-			ggsave(filename = file, plot = directionalityPlot()$plot, width = size$width, height = size$height, 
-				   dpi = 300, units = "cm")
-		},
-		contentType = paste("image", "png", sep = "/")
-	)
-	output$traj_feat_download_SVG_In = downloadHandler(
-		filename = function() {
-			paste("Trajectory Features", "svg", sep = ".")
-		},
-		content = function(file) {
-			print("Downloading trajectory features plot in SVG.")
-			size = traj_feat_export_size()
-			ggsave(filename = file, plot = trajFeaturePlot()$plot, width = size$width, height = size$height, dpi = 300, 
-				   units = "cm", fix_text_size = FALSE)
-		},
-		contentType = paste("image", "svg", sep = "/")
-	)
-	output$traj_feat_download_PNG_In = downloadHandler(
-		filename = function() {
-			paste("Trajectory Features", "png", sep = ".")
-		},
-		content = function(file) {
-			print("Downloading trajectory features plot in PNG.")
-			size = traj_feat_export_size()
-			ggsave(filename = file, plot = trajFeaturePlot()$plot, width = size$width, height = size$height, dpi = 300, 
-				   units = "cm")
-		},
-		contentType = paste("image", "png", sep = "/")
-	)
+	plot_export_server("traj_export", "Trajectory", trajectoryPlot)
+	plot_export_server("dir_export", "Directionality", directionalityPlot)
+	plot_export_server("traj_feat_export", "Trajectory Feature", trajFeaturePlot)
 }
 shinyApp(ui = ui, server = server, enableBookmarking = "server")
