@@ -356,23 +356,6 @@ plotExportSection = function(context){
 	)
 }
 
-facetPanel = function(context){
-	tagList(
-		tipify(selectInput(paste0(context, "_facet_row_In"), "Facet Row", choices = list()), toolTips$facet_row_In, placement = "top"),
-		tipify(selectInput(paste0(context, "_facet_col_In"), "Facet Column", choices = list()), toolTips$facet_col_In, placement = "top"),
-		selectInput(paste0(context, "_facet_label_face_In"), "Facet Label Style", choices = textFaceChoices),
-		conditionalPanel(paste0("(input.", context, "_facet_row_In == \"NULL\") != (input.", context, "_facet_col_In == \"NULL\")"), 
-						 checkboxInput(paste0(context, "_facet_wrap_In"), "Wrap Facets", value = TRUE)),
-		colourInput(paste0(context, "_facet_label_fill_color_In"), "Facet Label Background", value = "#FFFFFFFF", allowTransparent = TRUE),
-		
-		#bsTooltip(paste0(context, "_facet_row_In"), "Facets divide plots into a grid (Rows in this case). This is useful for multidimensional data e.g. when you have genotpyes, drug treatments and temperature treatment. But you are more interested in the genotypes. So you can use facets to divide plots into sections for the treatments.", placement = "bottom", trigger = "hover"),
-		#bsTooltip(paste0(context, "_facet_col_In"), "Facets divide plots into a grid (Columns in this case). This is useful for multidimensional data e.g. when you have genotpyes, drug treatments and temperature treatment. But you are more interested in the genotypes. So you can use facets to divide plots into sections for the treatments.", placement = "bottom", trigger = "hover"),
-		bsTooltip(paste0(context, "_facet_label_face_In"), toolTips$facet_label_face_In, placement = "top", trigger = "hover"),
-		bsTooltip(paste0(context, "_facet_wrap_In"), toolTips$facet_wrap_In, placement = "bottom", trigger = "hover"),
-		bsTooltip(paste0(context, "_facet_label_fill_color_In"), toolTips$facet_label_fill_color_In, placement = "bottom", trigger = "hover")
-	)
-}
-
 titleSubtitlePanel = function(context){
 	tagList(
 		textInput(paste0(context, "_title_In"), "Main Title"),
@@ -569,7 +552,7 @@ tabPanelPlotTrackFeatures = function(title, tabColor){
 			 			   		   								 
 			 			   		   				)
 			 			   		   				),
-			 			   		   bsCollapsePanel("Facets", facetPanel("track")),
+			 			   		   facet_control_UI("track", textFaceChoices),
 			 			   		   bsCollapsePanel("Ranges, Units & Labels", 
 			 			   		   				fluidPage(fluidRow(
 			 			   		   					column(10, tipify(sliderInput("track_y_range_In", "y Axis Range", min = 0, max = 1, step = 0.1, value = c(0, 1), dragRange = TRUE), "y axis range. Slide the knobs or the line between the knobs to set what range to be displayed. You can also select an area and double click on the plot to set the range (only y axis selection is registered).", "top")), 
@@ -668,7 +651,7 @@ tabPanelPlotTrajectories = function(title, tabColor){
 			 			   		   				bsTooltip("traj_track_reduced_In", "Reduce number of trajectories displayed by this number. e.g. 2 means every second track to be displayed for quicker and more clean plotting.", "bottom", "hover"),
 			 			   		   				bsTooltip("traj_spot_reduced_In", "Reduce number of trajectories displayed by this number. e.g. 2 means every second track to be displayed for quicker and smoother plotting.", "bottom", "hover")
 			 			   		   ),
-			 			   		   bsCollapsePanel("Facets", facetPanel("traj")),
+			 			   		   facet_control_UI("traj", textFaceChoices),
 			 			   		   bsCollapsePanel("Ranges, Units & Labels", 
 			 			   		   				fluidPage(fluidRow(column(6, checkboxInput("traj_inverse_In", "Invert y axis", value = TRUE)),
 			 			   		   								   column(6, checkboxInput("traj_equal_range_In", "Equal x/y ranges", value = TRUE)))),
@@ -774,7 +757,7 @@ tabPanelDirectionality = function(title, tabColor){
 			 			   		   								 tags$div(id = 'placeholderDirPairwiseGroupSelect')
 			 			   		   				)
 			 			   		   ),
-			 			   		   bsCollapsePanel("Facets",  facetPanel("dir")),
+			 			   		   facet_control_UI("dir", textFaceChoices),
 			 			   		   bsCollapsePanel("Ranges, Units & Labels", 
 			 			   		   				checkboxInput("dir_show_y_axis_In", "Show y axis", value = FALSE),
 			 			   		   				bsTooltip("dir_show_y_axis_In", "Displays a y axis, which is a vertical line to indicate y scale.", "bottom", "hover"),
@@ -895,7 +878,7 @@ tabPanelPlotTrajectoryFeatures = function(title, tabColor){
 			 			   		   # bsCollapsePanel("Tests", 
 			 			   		   # 				
 			 			   		   # ),
-			 			   		   bsCollapsePanel("Facets",  facetPanel("traj_feat")),
+			 			   		   facet_control_UI("traj_feat", textFaceChoices),
 			 			   		   bsCollapsePanel("Ranges, Units & Labels", 
 			 			   		   				fluidPage(fluidRow(
 			 			   		   					column(10, tipify(sliderInput("traj_feat_y_range_In", "y Axis Range", min = 0, max = 1, step = 0.1, value = c(0, 1), dragRange = TRUE), "y axis range. Slide the knobs or the line between the knobs to set what range to be displayed. You can also select an area and double click on the plot to set the range (only y axis selection is registered).", "top")), 
@@ -1295,9 +1278,7 @@ server = function(input, output, session) {
 							   selected = "TRACK_MEAN_SPEED")})
 	observe({updateSelectInput(session, "track_fill_In", choices = groupingsChoiceswithEmpty())})
 	observe({updateSelectInput(session, "track_color_In", choices = groupingsChoiceswithEmpty())})
-	observe({updateSelectInput(session, "track_facet_row_In", choices = groupingsChoiceswithEmpty())})
-	observe({updateSelectInput(session, "track_facet_col_In", choices = groupingsChoiceswithEmpty())})
-	#observe({updateSelectInput(session, "track_stat_In", choices = groupingsChoiceswithEmpty())})
+	# observe({updateSelectInput(session, "track_stat_In", choices = groupingsChoiceswithEmpty())})
 	observe({updateSelectInput(session, "track_replicate_In", choices = groupingsChoiceswithEmpty())})
 	observe({updateSelectInput(session, "track_stat_comparison_control_In", choices = trackStatGroups(), 
 							   selected = safeSelect(trackStatGroups()))})
@@ -1311,8 +1292,6 @@ server = function(input, output, session) {
 	observe({updateSelectInput(session, "traj_start_point_In", choices = groupingsChoiceswithEmptywithDoNotDisplay())})
 	observe({updateSelectInput(session, "traj_end_point_In", choices = groupingsChoiceswithEmptywithDoNotDisplay())})
 	#observe({updateSelectInput(session, "traj_alpha_In", choices = groupingsChoiceswithEmpty())})
-	observe({updateSelectInput(session, "traj_facet_row_In", choices = groupingsChoiceswithEmpty())})
-	observe({updateSelectInput(session, "traj_facet_col_In", choices = groupingsChoiceswithEmpty())})
 	observe({updateSelectInput(session, "traj_replicate_In", choices = groupingsChoiceswithEmpty())})
 	
 	#observe({updateSelectInput(session, "dir_track_direction_In", choices = trackDirectionChoiceswithoutEmpty())})
@@ -1322,8 +1301,6 @@ server = function(input, output, session) {
 	observe({updateSelectInput(session, "dir_color_In", choices = groupingsChoiceswithoutEmpty())})
 	observe({updateSelectInput(session, "dir_fill_In", choices = groupingsChoiceswithEmpty())})
 	observe({updateSelectInput(session, "dir_alpha_In", choices = groupingsChoiceswithEmpty())})
-	observe({updateSelectInput(session, "dir_facet_row_In", choices = groupingsChoiceswithEmpty())})
-	observe({updateSelectInput(session, "dir_facet_col_In", choices = groupingsChoiceswithEmpty())})
 	observe({updateSelectInput(session, "dir_replicate_In", choices = groupingsChoiceswithEmpty())})
 	
 	observe({updateSelectInput(session, "traj_feat_x_In", choices = trajChoiceswithoutEmpty(), selected = "EDGE_TIME")})
@@ -1334,8 +1311,6 @@ server = function(input, output, session) {
 	observe({updateSelectInput(session, "traj_feat_linetype_In", choices = groupingsChoiceswithEmpty())})
 	observe({updateSelectInput(session, "traj_feat_size_In", choices = trajChoiceswithEmpty())})
 	
-	observe({updateSelectInput(session, "traj_feat_facet_row_In", choices = groupingsChoiceswithEmpty())})
-	observe({updateSelectInput(session, "traj_feat_facet_col_In", choices = groupingsChoiceswithEmpty())})
 	observe({updateSelectInput(session, "traj_feat_stat_In", choices = groupingsChoiceswithEmpty())})
 	observe({updateSelectInput(session, "traj_feat_replicate_In", choices = groupingsChoiceswithEmpty())})
 	observe({updateSelectInput(session, "traj_feat_disp_fun_In", choices = dispersionChoices())})
@@ -1951,8 +1926,9 @@ server = function(input, output, session) {
 			fillGroup = input$track_fill_In; if(fillGroup == "NULL") {fillGroup = NULL}
 			#statGroup = input$track_pairwise_stat_In; if(statGroup == "NULL") {statGroup = NULL}
 			replicateGroup = input$track_replicate_In; if(replicateGroup == "NULL") {replicateGroup = NULL}
-			facetRowGroup = input$track_facet_row_In; if(facetRowGroup == "NULL") {facetRowGroup = NULL}
-			facetColGroup = input$track_facet_col_In; if(facetColGroup == "NULL") {facetColGroup = NULL}
+			
+			facetRowGroup = track_facet$row_group()
+			facetColGroup = track_facet$col_group()
 
 			#if(input$track_x_range_check_In){xRange = input$track_x_range_In}else{xRange = NULL}
 			if(input$track_y_range_check_In){yRange = input$track_y_range_In}else{yRange = NULL}
@@ -2005,9 +1981,9 @@ server = function(input, output, session) {
 							statSignSymbols = symnum.args,
 							fillAlpha = input$track_fill_alpha_In, colorAlpha = input$track_color_alpha_In, 
 							x.lab = xlab, y.lab = ylab, is.dark = input$track_dark_In,
-							facet.text.face = input$track_facet_label_face_In, 
-							facet.label.fill.color = input$track_facet_label_fill_color_In,
-							facet.wrap = input$track_facet_wrap_In,
+							facet.text.face = track_facet$label_face(), 
+							facet.label.fill.color = track_facet$label_fill_color(),
+							facet.wrap = track_facet$wrap(),
 							plot.subtitle.hjust = input$track_subtitle_hjust_In, 
 							plot.subtitle.size = input$track_subtitle_size_In, 
 							plot.subtitle.face = input$track_subtitle_text_style_In,
@@ -2206,8 +2182,8 @@ server = function(input, output, session) {
 		endPointGroup = input$traj_end_point_In; if(endPointGroup == "NA") {endPointGroup = NA} else if(endPointGroup == "NULL") {endPointGroup = NULL}
 		
 		replicateGroup = input$traj_replicate_In; if(replicateGroup == "NULL") {replicateGroup = NULL}
-		facetRowGroup = input$traj_facet_row_In; if(facetRowGroup == "NULL") {facetRowGroup = NULL}
-		facetColGroup = input$traj_facet_col_In; if(facetColGroup == "NULL") {facetColGroup = NULL}
+		facetRowGroup = traj_facet$row_group()
+		facetColGroup = traj_facet$col_group()
 		
 		initializeProgress = function(max, message){
 			progress <<- shiny::Progress$new(max = max)
@@ -2242,7 +2218,7 @@ server = function(input, output, session) {
 						 coord_equal = input$traj_coord_equal_In, #inverse = input$traj_invert_y_axis_In,
 						 #fill.legend = fillLegend, color.legend = colorLegend, alpha.legend = alphaLegend, 
 						 inverse = input$traj_inverse_In, equalRange = input$traj_equal_range_In,
-						 facet.row = facetRowGroup, facet.col = facetColGroup, facet.wrap = input$traj_facet_wrap_In,
+						 facet.row = facetRowGroup, facet.col = facetColGroup, facet.wrap = traj_facet$wrap(),
 						 title = titles$title, subtitle = titles$subtitle, 
 						 replicateGroupName = replicateGroup, 
 						 hide.ns = input$traj_stat_hidens_In,
@@ -2258,8 +2234,8 @@ server = function(input, output, session) {
 						 h.line = input$traj_h_line_In, v.line = input$traj_v_line_In, 
 						 panel.border = input$traj_panel_border_In, 
 						 panel.grid.major = input$traj_panel_grid_major_In, 
-						 facet.label.fill.color = input$traj_facet_label_fill_color_In, 
-						 facet.text.face = input$traj_facet_label_face_In, 
+						 facet.label.fill.color = traj_facet$label_fill_color(), 
+						 facet.text.face = traj_facet$label_face(), 
 						 linesize = input$traj_line_size_In, x.lab = xlab, y.lab = ylab,
 						 browse = input$traj_browse_In, benchmark = input$traj_benchmark_In, 
 						 verbose = input$traj_verbose_In,
@@ -2305,8 +2281,8 @@ server = function(input, output, session) {
 		fillGroup = input$dir_fill_In; if(fillGroup == "NULL") {fillGroup = NULL}
 		
 		replicateGroup = input$dir_replicate_In; if(replicateGroup == "NULL") {replicateGroup = NULL}
-		facetRowGroup = input$dir_facet_row_In; if(facetRowGroup == "NULL") {facetRowGroup = NULL}
-		facetColGroup = input$dir_facet_col_In; if(facetColGroup == "NULL") {facetColGroup = NULL}
+		facetRowGroup = dir_facet$row_group()
+		facetColGroup = dir_facet$col_group()
 		
 		start.angle = ud.convert(input$dir_start_angle_In, "degree", "radian"); start.angle[is.nan(start.angle)] = 0
 		statMeasure = input$dir_multisample_measure_In
@@ -2343,9 +2319,9 @@ server = function(input, output, session) {
 						 title = titles$title, subtitle = titles$subtitle, 
 						 fillAlpha = input$dir_fill_alpha_In, colorAlpha = input$dir_color_alpha_In, 
 						 is.dark = input$dir_dark_In, line.size = input$dir_line_size_In,
-						 facet.label.fill.color = input$dir_facet_label_fill_color_In, 
-						 facet.text.face = input$dir_facet_label_face_In, 
-						 facet.wrap = input$dir_facet_wrap_In,
+						 facet.label.fill.color = dir_facet$label_fill_color(), 
+						 facet.text.face = dir_facet$label_face(), 
+						 facet.wrap = dir_facet$wrap(),
 						 show.y.axis = input$dir_show_y_axis_In, 
 						 plot.subtitle.hjust = input$dir_subtitle_hjust_In, 
 						 plot.subtitle.size = input$dir_subtitle_size_In, 
@@ -2488,8 +2464,8 @@ server = function(input, output, session) {
 		fillGroup = input$traj_feat_fill_In; if(fillGroup == "NULL") {fillGroup = NULL}
 		
 		replicateGroup = input$traj_feat_replicate_In; if(replicateGroup == "NULL") {replicateGroup = NULL}
-		facetRowGroup = input$traj_feat_facet_row_In; if(facetRowGroup == "NULL") {facetRowGroup = NULL}
-		facetColGroup = input$traj_feat_facet_col_In; if(facetColGroup == "NULL") {facetColGroup = NULL}
+		facetRowGroup = traj_feat_facet$row_group()
+		facetColGroup = traj_feat_facet$col_group()
 		
 		if(input$traj_feat_disp_fun_In == "NULL"){dispersion.fun = NULL}else{dispersion.fun = match.fun(input$traj_feat_disp_fun_In)}
 		if(input$traj_feat_aggr_fun_In == "NULL"){aggregate.fun = NULL}else{aggregate.fun = match.fun(input$traj_feat_aggr_fun_In)}
@@ -2503,7 +2479,7 @@ server = function(input, output, session) {
 								lineTypeGroupName = lineTypeGroup, shapeGroupName = shapeGroup,
 								groupings = groupings()$groupings, #colorReverseOrder = input$traj_feat_reverse_order_In, 
 								facet.row = facetRowGroup, facet.col = facetColGroup, 
-								facet.wrap = input$traj_feat_facet_wrap_In,
+								facet.wrap = traj_feat_facet$wrap(),
 								title = titles$title, subtitle = titles$subtitle, replicateGroupName = replicateGroup, 
 								#groupTracks = input$traj_feat_group_tracks_In, 
 								aggregate.fun = aggregate.fun, 
@@ -2514,8 +2490,8 @@ server = function(input, output, session) {
 								smooth.window = smoothWindow,
 								dispAlpha = input$traj_feat_disp_alpha_In, colorAlpha = input$traj_feat_color_alpha_In, 
 								x.lab = xlab, y.lab = ylab, is.dark = input$traj_feat_dark_In,
-								facet.text.face = input$traj_feat_facet_label_face_In, 
-								facet.label.fill.color = input$traj_feat_facet_label_fill_color_In,
+								facet.text.face = traj_feat_facet$label_face(), 
+								facet.label.fill.color = traj_feat_facet$label_fill_color(),
 								plot.subtitle.hjust = input$traj_feat_subtitle_hjust_In, 
 								plot.subtitle.size = input$traj_feat_subtitle_size_In, 
 								plot.subtitle.face = input$traj_feat_subtitle_text_style_In, 
@@ -2731,6 +2707,11 @@ server = function(input, output, session) {
 		},
 		contentType = paste("text", "csv", sep = "/")
 	)
+	
+	track_facet = facet_control_server("track", groupingsChoiceswithEmpty)
+	traj_facet = facet_control_server("traj", groupingsChoiceswithEmpty)
+	dir_facet = facet_control_server("dir", groupingsChoiceswithEmpty)
+	traj_feat_facet = facet_control_server("traj_feat", groupingsChoiceswithEmpty)
 	
 	plot_export_server("track_export", "Track Feature", trackPlot)
 	plot_export_server("traj_export", "Trajectory", trajectoryPlot)
