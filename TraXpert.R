@@ -312,14 +312,20 @@ tabPanelOperations = function(title, tabColor){
 			 	pointSourcePanel()
 			 	)),
 			 fluidPage(fluidRow( 
-			 	newFeaturePanel("New Track Feature", "Calculate a new track feature based on an existing feature. With this, you can calculate new measures by entering the formula.",
-			 					"track", list(`Track` = "Track")),
-			 	newFeaturePanel("New Trajectory (Spot/Edge) Feature", "Calculate a new spot or edge feature based on an existing feature. With this, you can calculate new measures by entering the formula.",
-			 					"traj", list(`Spot` = "Spot", `Edge` = "Edge"))
+			 	feature_calculator_UI("tracks", "New Track Feature", 
+			 						  "Calculate a new track feature based on an existing feature. With this, you can calculate new measures by entering the formula.",
+			 						  # "track", 
+			 						  featureDimensionChoices, list(`Track` = "Track")),
+			 	feature_calculator_UI("trajs", "New Trajectory (Spot/Edge) Feature", 
+			 						  "Calculate a new spot or edge feature based on an existing feature. With this, you can calculate new measures by entering the formula.",
+			 						  # "traj", 
+			 						  featureDimensionChoices, list(`Spot` = "Spot", `Edge` = "Edge"))
 			 )),
 			 fluidPage(fluidRow(
-			 	newFeaturePanel("New Track Feature from Trajectories", "Calculate a new track feature based on existing trajectory features. This summarises trajectory information (spots and edges of a track) into a single value per track. e.g. mean track speed is the average of all speeds between spots of a track.",
-			 					"track_from_traj", list(`Track` = "Track"))
+			 	feature_calculator_UI("track_from_traj", "New Track Feature from Trajectories", 
+			 						  "Calculate a new track feature based on existing trajectory features. This summarises trajectory information (spots and edges of a track) into a single value per track. e.g. mean track speed is the average of all speeds between spots of a track.",
+			 						  # "track_from_traj", 
+			 						  featureDimensionChoices, list(`Track` = "Track"))
 			 ))
 			 		   
 	)
@@ -1334,33 +1340,7 @@ server = function(input, output, session) {
 	observe({updateSelectInput(session, "traj_feat_replicate_In", choices = groupingsChoiceswithEmpty())})
 	observe({updateSelectInput(session, "traj_feat_disp_fun_In", choices = dispersionChoices())})
 	
-	observe({updateSelectInput(session, "new_track_feat_vars_In", choices = allTrackMeasures())})
-	observe({updateSelectInput(session, "new_traj_feat_vars_In", choices = allTrajectoryMeasures())})
-	observe({updateSelectInput(session, "new_track_from_traj_feat_vars_In", choices = allTrajectoryMeasures())})
-	
-	
 	#trackRanges = reactiveValues(y = NULL)
-	
-	observeEvent(input$new_track_feat_vars_In, {
-		#browser()
-		formula = input$new_track_feat_formula_In
-		formula = paste0(formula, input$new_track_feat_vars_In)
-		updateTextInput(session = session, inputId = "new_track_feat_formula_In", value = formula)
-	})
-	
-	observeEvent(input$new_traj_feat_vars_In, {
-		#browser()
-		formula = input$new_traj_feat_formula_In
-		formula = paste0(formula, input$new_traj_feat_vars_In)
-		updateTextInput(session = session, inputId = "new_traj_feat_formula_In", value = formula)
-	})
-	
-	observeEvent(input$new_track_from_traj_feat_vars_In, {
-		#browser()
-		formula = input$new_track_from_traj_feat_formula_In
-		formula = paste0(formula, input$new_track_from_traj_feat_vars_In)
-		updateTextInput(session = session, inputId = "new_track_from_traj_feat_formula_In", value = formula)
-	})
 	
 	#observe({updateSliderInput(session, "track_x_range_In", min = getXMin(), max = getXMax(), step = getXStep(), value = c(getXMin(), getXMax()))})
 	observe({updateSliderInput(session, "track_y_range_In", min = getTrackYMin(), max = getTrackYMax(), 
@@ -2756,5 +2736,12 @@ server = function(input, output, session) {
 	plot_export_server("traj_export", "Trajectory", trajectoryPlot)
 	plot_export_server("dir_export", "Directionality", directionalityPlot)
 	plot_export_server("traj_feat_export", "Trajectory Feature", trajFeaturePlot)
+	
+	feature_calculator_server("tracks", allTrackMeasures, data, features, groupings, 
+							  "tracks", "tracks", "TRACK_ID", "track_global_id")
+	feature_calculator_server("trajs", allTrajectoryMeasures, data, features, groupings, 
+							  "trajectories", "trajectories", "ID", "track_global_id")
+	feature_calculator_server("track_from_traj", allTrajectoryMeasures, data, features, groupings, 
+							  "trajectories", "tracks", "ID", "track_global_id")
 }
 shinyApp(ui = ui, server = server, enableBookmarking = "server")

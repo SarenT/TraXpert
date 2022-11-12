@@ -782,7 +782,10 @@ appendNewFeatures = function(oldFeatures, newFeatureColName, newFeatureName, new
 	newFeatDF = merge(newFeatDF, groupsDF)
 	#newFeatDF = cbind(newFeatDF, groupsDF)
 	newFeatDF$group_id = apply(newFeatDF[, as.character(groupingsNames), drop = F], 1, paste, collapse = "_")
-	oldFeatures = plyr::rbind.fill(oldFeatures, newFeatDF)
+	#browser()
+	oldFeatures = bind_rows(
+		tibble(oldFeatures) %>% filter(!(feature %in% newFeatDF$feature & group_id %in% newFeatDF$group_id)), 
+		newFeatDF)
 	
 	return(oldFeatures)
 }
