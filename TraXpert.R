@@ -458,30 +458,6 @@ statCircDataDetails = function(context){
 	))
 }
 
-colorFillSection = function(context, width = "100%"){
-	tagList(
-		fluidPage(fluidRow(
-			column(6, 
-				   tipify(selectInput(paste0(context, "_fill_In"), "Fill Color Variable", choices = list()), toolTips$fill_In, placement = "top")),
-			column(6, 
-				   tipify(selectInput(paste0(context, "_color_In"), "Line Color Variable", choices = list()), toolTips$color_In, placement = "top"))
-			)),
-		sliderInput(paste0(context, "_fill_alpha_In"), "Fill Transparency", min = 0, max = 1, value = 0.5, width = width),
-		sliderInput(paste0(context, "_color_alpha_In"), "Color Transparency", min = 0, max = 1, value = 1, width = width),
-		bsTooltip(paste0(context, "_fill_alpha_In"), toolTips$fill_alpha_In, placement = "bottom", trigger = "hover"),
-		bsTooltip(paste0(context, "_color_alpha_In"), toolTips$color_alpha_In, placement = "bottom", trigger = "hover")
-	)
-}
-
-darkPlot = function(context){
-	tagList(
-		checkboxInput(paste0(context, "_dark_In"), "Dark Plot", value = FALSE),
-		bsTooltip(paste0(context, "_dark_In"), toolTips$dark_In, placement = "bottom", trigger = "hover")
-	)
-}
-
-
-
 tabPanelPlotTrackFeatures = function(title, tabColor){
 	tabPanel(title,
 			 tags$style(HTML(tabBGColorCSS(title, tabColor))),
@@ -497,10 +473,7 @@ tabPanelPlotTrackFeatures = function(title, tabColor){
 			 			   		   				tipify(selectInput("track_replicate_In", "Replicates are grouped in", choices = list()), toolTips$replicate_In, "top"),
 			 			   		   				bsTooltip("track_type_In", "Display type of plot to use (violin, box plot, dot plot etc.)", placement = "top", trigger = "hover")
 			 			   		   				),
-			 			   		   bsCollapsePanel("Groupings and Colors", 
-			 			   		   				colorFillSection("track"),
-			 			   		   				darkPlot("track")
-			 			   		   ),
+			 			   		   groupings_colors_UI("groupings_colors_track", can_dark = TRUE),
 			 			   		   bsCollapsePanel("Tests", 
 			 			   		   				selectInput("track_multiple_stat_method_In", "Test - Multiple Groups", choices = trackMultipleStatChoices, selected = "kruskal.test"),
 			 			   		   				selectInput("track_pairwise_stat_method_In", "Test - Pairwise", choices = trackPairwiseStatChoices, selected = "wilcox.test"),
@@ -668,7 +641,7 @@ tabPanelPlotTrajectories = function(title, tabColor){
 			 			   		   										  bsTooltip("traj_panel_border_In", "", placement = "bottom", trigger = "hover"),
 			 			   		   										  bsTooltip("traj_h_line_In", "", placement = "bottom", trigger = "hover")
 			 			   		   				),
-			 			   		   				column(6, darkPlot("traj"),
+			 			   		   				column(6, dark_plot_UI("dark_traj"),
 			 			   		   					   checkboxInput("traj_panel_grid_major_In", "Panel major grid", value = FALSE),
 			 			   		   					   checkboxInput("traj_v_line_In", "Vertical line", value = TRUE),
 			 			   		   					   bsTooltip("traj_panel_grid_major_In", "", placement = "bottom", trigger = "hover"),
@@ -719,9 +692,7 @@ tabPanelDirectionality = function(title, tabColor){
 			 			   		   				bsTooltip("dir_summary_fun_length_percentage_In", "Display percentage of number of cells to the total number of cells.", "bottom", "hover"),
 			 			   		   				bsTooltip("dir_replicate_summary_fun_In", "Summarize replicates with the selected function.", "top", "hover")
 			 			   		   ),
-			 			   		   bsCollapsePanel("Groupings and Colors", 
-			 			   		   				colorFillSection("dir", width = "150%")
-			 			   		   ),
+			 			   		   groupings_colors_UI("groupings_colors_dir", width = "150%", can_dark = TRUE),
 			 			   		   bsCollapsePanel("Tests", 
 			 			   		   				tipify(selectInput("dir_multisample_measure_In", "Measure", choices = circMultiSampleTestMeasures), "Which measure to be used to compare groups. Mean/median direction, directionality (concentration) or distribution (are sample drawn from the same distribution?).", "top", "hover"),
 			 			   		   				conditionalPanel("input.dir_multisample_measure_In == 'mean'",
@@ -758,7 +729,6 @@ tabPanelDirectionality = function(title, tabColor){
 			 			   		   bsCollapsePanel("Display Options", 
 			 			   		   				sliderInput("dir_line_size_In", "Line Thickness", min = 0.01, max = 100, value = 0.5, width = "150%"),
 			 			   		   				sliderInput("dir_start_angle_In", "Angle Rotation", min = -180, max = 180, step = 15, value = 0, width = "150%"),
-			 			   		   				darkPlot("dir"),
 			 			   		   				
 			 			   		   				#bsTooltip("", "", "bottom", "hover")
 			 			   		   				bsTooltip("dir_line_size_In", "Line thickness relative to original size.", "bottom", "hover"),
@@ -899,7 +869,7 @@ tabPanelPlotTrajectoryFeatures = function(title, tabColor){
 			 			   		   bsCollapsePanel("Display Options", 
 			 			   		   				sliderInput("traj_feat_disp_alpha_In", "Error Transparency", min = 0, max = 1, value = 0.5),
 			 			   		   				sliderInput("traj_feat_color_alpha_In", "Color Transparency", min = 0, max = 1, value = 1),
-			 			   		   				darkPlot("traj_feat"),
+			 			   		   				dark_plot_UI("dark_traj_feat"),
 			 			   		   				
 			 			   		   				bsTooltip("traj_feat_disp_alpha_In", "Dispersion display transparency.", "bottom", "hover"),
 			 			   		   				bsTooltip("traj_feat_color_alpha_In", "Line/Point color transparency.", "bottom", "hover"),
@@ -1254,8 +1224,6 @@ server = function(input, output, session) {
 	observe({updateSelectInput(session, "track_x_In", choices = groupingsChoiceswithoutEmpty())})
 	observe({updateSelectInput(session, "track_y_In", choices = trackChoiceswithoutEmpty(), 
 							   selected = "TRACK_MEAN_SPEED")})
-	observe({updateSelectInput(session, "track_fill_In", choices = groupingsChoiceswithEmpty())})
-	observe({updateSelectInput(session, "track_color_In", choices = groupingsChoiceswithEmpty())})
 	# observe({updateSelectInput(session, "track_stat_In", choices = groupingsChoiceswithEmpty())})
 	observe({updateSelectInput(session, "track_replicate_In", choices = groupingsChoiceswithEmpty())})
 	observe({updateSelectInput(session, "track_stat_comparison_control_In", choices = trackStatGroups(), 
@@ -1276,8 +1244,6 @@ server = function(input, output, session) {
 	observe({updateSelectInput(session, "dir_track_direction_cat_In", choices = trackDirectionCatChoiceswithoutEmpty(), 
 							   selected = "DIRECTION_CARDINAL")})
 	observe({updateSelectInput(session, "dir_cumulation_In", choices = trackChoiceswithoutEmpty(), selected = "TRACK_ID")})
-	observe({updateSelectInput(session, "dir_color_In", choices = groupingsChoiceswithoutEmpty())})
-	observe({updateSelectInput(session, "dir_fill_In", choices = groupingsChoiceswithEmpty())})
 	observe({updateSelectInput(session, "dir_alpha_In", choices = groupingsChoiceswithEmpty())})
 	observe({updateSelectInput(session, "dir_replicate_In", choices = groupingsChoiceswithEmpty())})
 	
@@ -1900,8 +1866,8 @@ server = function(input, output, session) {
 			xlab = input$track_xlab_In; if(xlab == ""){xlab = NULL}
 			ylab = input$track_ylab_In; if(ylab == ""){ylab = getFeatureLab(features = features(), name = input$track_y_In)}
 			
-			colorGroup = input$track_color_In; if(colorGroup == "NULL") {colorGroup = NULL}
-			fillGroup = input$track_fill_In; if(fillGroup == "NULL") {fillGroup = NULL}
+			color_group = groupings_colors_track$color_group()
+			fill_group = groupings_colors_track$fill_group()
 			#statGroup = input$track_pairwise_stat_In; if(statGroup == "NULL") {statGroup = NULL}
 			replicateGroup = input$track_replicate_In; if(replicateGroup == "NULL") {replicateGroup = NULL}
 			
@@ -1942,9 +1908,10 @@ server = function(input, output, session) {
 				}
 			}
 			
-			plot = plotData(dataTracks = tracks(), x = input$track_x_In, y = input$track_y_In, type = input$track_type_In, 
+			plot = plotData(dataTracks = tracks(), x = input$track_x_In, y = input$track_y_In, 
+							type = input$track_type_In, 
 							y.range = yRange, y.unit = yUnit, 
-							colorGroupName = colorGroup, fillGroupName = fillGroup, groupings = groupings()$groupings,
+							colorGroupName = color_group, fillGroupName = fill_group, groupings = groupings()$groupings,
 							#xReverseOrder = input$track_reverse_order_In,
 							facet.row = facetRowGroup, facet.col = facetColGroup, 
 							title = titles$title, subtitle = titles$subtitle, replicateGroupName = replicateGroup, 
@@ -1957,8 +1924,9 @@ server = function(input, output, session) {
 							statPairwiseControl = input$track_stat_comparison_control_In, 
 							statPairwiseSelected = statPairwiseSelectedPairs, 
 							statSignSymbols = symnum.args,
-							fillAlpha = input$track_fill_alpha_In, colorAlpha = input$track_color_alpha_In, 
-							x.lab = xlab, y.lab = ylab, is.dark = input$track_dark_In,
+							fillAlpha = groupings_colors_track$fill_alpha(), 
+							colorAlpha = groupings_colors_track$color_alpha(), 
+							x.lab = xlab, y.lab = ylab, is.dark = groupings_colors_track$dark(),
 							facet.text.face = track_facet$label_face(), 
 							facet.label.fill.color = track_facet$label_fill_color(),
 							facet.wrap = track_facet$wrap(),
@@ -2203,7 +2171,7 @@ server = function(input, output, session) {
 						 replicateGroupName = replicateGroup, 
 						 hide.ns = input$traj_stat_hidens_In,
 						 colorAlpha = input$traj_color_alpha_In, #fillAlpha = input$traj_fill_alpha_In, 
-						 is.dark = input$traj_dark_In,
+						 is.dark = dark_plot_traj(),
 						 limitNTracks = input$traj_limit_to_smallest_In,
 						 #randomizeTrackSampling = input$traj_limit_to_smallest_In,
 						 trackReduced = input$traj_track_reduced_In,
@@ -2257,8 +2225,8 @@ server = function(input, output, session) {
 		xlab = input$dir_xlab_In; if(xlab == ""){xlab = NULL}
 		ylab = input$dir_ylab_In; if(ylab == ""){ylab = NULL}
 		
-		colorGroup = input$dir_color_In; if(colorGroup == "NULL") {colorGroup = NULL}
-		fillGroup = input$dir_fill_In; if(fillGroup == "NULL") {fillGroup = NULL}
+		color_group = groupings_colors_dir$color_group()
+		fill_group = groupings_colors_dir$fill_group()
 		
 		replicateGroup = input$dir_replicate_In; if(replicateGroup == "NULL") {replicateGroup = NULL}
 		facetRowGroup = dir_facet$row_group()
@@ -2292,13 +2260,14 @@ server = function(input, output, session) {
 						 percentage = input$dir_summary_fun_length_percentage_In,
 						 groupings = groupings()$groupings, start.angle = start.angle, 
 						 stat.method = statMethod, stat.measure = statMeasure, stat.extras = statExtras,
-						 colorGroupName = colorGroup, fillGroupName = fillGroup, #alphaGroupName = alphaGroup,
+						 colorGroupName = color_group, fillGroupName = fill_group, #alphaGroupName = alphaGroup,
 						 replicateGroupName = replicateGroup,
 						 replicate.summary.fun.name =  input$dir_replicate_summary_fun_In,
 						 facet.row = facetRowGroup, facet.col = facetColGroup, 
 						 title = titles$title, subtitle = titles$subtitle, 
-						 fillAlpha = input$dir_fill_alpha_In, colorAlpha = input$dir_color_alpha_In, 
-						 is.dark = input$dir_dark_In, line.size = input$dir_line_size_In,
+						 fillAlpha = groupings_colors_dir$fill_alpha(), 
+						 colorAlpha = groupings_colors_dir$color_alpha(), 
+						 is.dark = groupings_colors_dir$dark(), line.size = input$dir_line_size_In,
 						 facet.label.fill.color = dir_facet$label_fill_color(), 
 						 facet.text.face = dir_facet$label_face(), 
 						 facet.wrap = dir_facet$wrap(),
@@ -2469,7 +2438,7 @@ server = function(input, output, session) {
 								#statPairwise = input$traj_feat_stat_pairwise_In, 
 								smooth.window = smoothWindow,
 								dispAlpha = input$traj_feat_disp_alpha_In, colorAlpha = input$traj_feat_color_alpha_In, 
-								x.lab = xlab, y.lab = ylab, is.dark = input$traj_feat_dark_In,
+								x.lab = xlab, y.lab = ylab, is.dark = dark_plot_traj_feat(),
 								facet.text.face = traj_feat_facet$label_face(), 
 								facet.label.fill.color = traj_feat_facet$label_fill_color(),
 								plot.subtitle.hjust = input$traj_feat_subtitle_hjust_In, 
@@ -2709,5 +2678,11 @@ server = function(input, output, session) {
 	debugging_traj = debugging_server("traj_debug")
 	debugging_dir = debugging_server("dir_debug")
 	debugging_traj_feat = debugging_server("traj_feat_debug")
+	
+	groupings_colors_track = groupings_colors_server("groupings_colors_track", groupingsChoiceswithEmpty)
+	groupings_colors_dir = groupings_colors_server("groupings_colors_dir", groupingsChoiceswithoutEmpty)
+	
+	dark_plot_traj = dark_plot_server("dark_traj")
+	dark_plot_traj_feat = dark_plot_server("dark_traj_feat")
 }
 shinyApp(ui = ui, server = server, enableBookmarking = "server")
