@@ -1868,10 +1868,10 @@ server = function(input, output, session) {
 		data(dataDF)
 	})
 	
-	table_output_server("filesOut", files)
-	table_output_server("featuresOut", features)
-	table_output_server("tracksOut", tracks)
-	table_output_server("trajectoriesOut", trajectories)
+	table_output_server("files_table_out", files)
+	table_output_server("features_table_out", features)
+	table_output_server("tracks_table_out", tracks)
+	table_output_server("trajectories_table_out", trajectories)
 	
 	trackQQPlot = reactive({
 		
