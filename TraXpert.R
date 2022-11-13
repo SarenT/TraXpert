@@ -312,17 +312,17 @@ tabPanelOperations = function(title, tabColor){
 			 	pointSourcePanel()
 			 	)),
 			 fluidPage(fluidRow( 
-			 	feature_calculator_UI("tracks", "New Track Feature", 
+			 	feature_calculator_UI("track_new_feat", "New Track Feature", 
 			 						  "Calculate a new track feature based on an existing feature. With this, you can calculate new measures by entering the formula.",
 			 						  # "track", 
 			 						  featureDimensionChoices, list(`Track` = "Track")),
-			 	feature_calculator_UI("trajs", "New Trajectory (Spot/Edge) Feature", 
+			 	feature_calculator_UI("traj_new_feat", "New Trajectory (Spot/Edge) Feature", 
 			 						  "Calculate a new spot or edge feature based on an existing feature. With this, you can calculate new measures by entering the formula.",
 			 						  # "traj", 
 			 						  featureDimensionChoices, list(`Spot` = "Spot", `Edge` = "Edge"))
 			 )),
 			 fluidPage(fluidRow(
-			 	feature_calculator_UI("track_from_traj", "New Track Feature from Trajectories", 
+			 	feature_calculator_UI("track_from_traj_new_feat", "New Track Feature from Trajectories", 
 			 						  "Calculate a new track feature based on existing trajectory features. This summarises trajectory information (spots and edges of a track) into a single value per track. e.g. mean track speed is the average of all speeds between spots of a track.",
 			 						  # "track_from_traj", 
 			 						  featureDimensionChoices, list(`Track` = "Track"))
@@ -473,13 +473,6 @@ colorFillSection = function(context, width = "100%"){
 	)
 }
 
-plotDebugging = function(context){
-	tagList(h3("Debugging"),
-			checkboxInput(paste0(context, "_browse_In"), "Debug", value = FALSE),
-			checkboxInput(paste0(context, "_benchmark_In"), "Benchmark", value = FALSE),
-			checkboxInput(paste0(context, "_verbose_In"), "Verbose", value = FALSE))
-}
-
 darkPlot = function(context){
 	tagList(
 		checkboxInput(paste0(context, "_dark_In"), "Dark Plot", value = FALSE),
@@ -552,7 +545,7 @@ tabPanelPlotTrackFeatures = function(title, tabColor){
 			 			   		   								 
 			 			   		   				)
 			 			   		   				),
-			 			   		   facet_control_UI("track", textFaceChoices),
+			 			   		   facet_control_UI("track_facet", textFaceChoices),
 			 			   		   bsCollapsePanel("Ranges, Units & Labels", 
 			 			   		   				fluidPage(fluidRow(
 			 			   		   					column(10, tipify(sliderInput("track_y_range_In", "y Axis Range", min = 0, max = 1, step = 0.1, value = c(0, 1), dragRange = TRUE), "y axis range. Slide the knobs or the line between the knobs to set what range to be displayed. You can also select an area and double click on the plot to set the range (only y axis selection is registered).", "top")), 
@@ -598,9 +591,7 @@ tabPanelPlotTrackFeatures = function(title, tabColor){
 			 			   		   								 tags$div(id = 'placeholderPairwiseGroupSelect')
 			 			   		   				)
 			 			   		   ),
-			 			   		   bsCollapsePanel("Debugging", 
-			 			   		   				plotDebugging("track")
-			 			   		   )
+			 			   		   debugging_UI("track_debug")
 			 			   		   
 			 			   )
 			 		
@@ -651,7 +642,7 @@ tabPanelPlotTrajectories = function(title, tabColor){
 			 			   		   				bsTooltip("traj_track_reduced_In", "Reduce number of trajectories displayed by this number. e.g. 2 means every second track to be displayed for quicker and more clean plotting.", "bottom", "hover"),
 			 			   		   				bsTooltip("traj_spot_reduced_In", "Reduce number of trajectories displayed by this number. e.g. 2 means every second track to be displayed for quicker and smoother plotting.", "bottom", "hover")
 			 			   		   ),
-			 			   		   facet_control_UI("traj", textFaceChoices),
+			 			   		   facet_control_UI("traj_facet", textFaceChoices),
 			 			   		   bsCollapsePanel("Ranges, Units & Labels", 
 			 			   		   				fluidPage(fluidRow(column(6, checkboxInput("traj_inverse_In", "Invert y axis", value = TRUE)),
 			 			   		   								   column(6, checkboxInput("traj_equal_range_In", "Equal x/y ranges", value = TRUE)))),
@@ -686,10 +677,7 @@ tabPanelPlotTrajectories = function(title, tabColor){
 			 			   		   				bsTooltip("traj_color_alpha_In", "Should trajectories appear transparent? Particularly useful if there are too many trajectories,", "bottom", "hover"),
 			 			   		   				bsTooltip("traj_line_size_In", "Line thickness for either too crowded or sparse data.", "bottom", "hover")
 			 			   		   ),
-			 			   		   bsCollapsePanel("Debugging", 
-			 			   		   				plotDebugging("traj")
-			 			   		   )
-			 			   		   
+			 			   		   debugging_UI("traj_debug")
 			 			   )
 			 			   
 			 			   
@@ -757,7 +745,7 @@ tabPanelDirectionality = function(title, tabColor){
 			 			   		   								 tags$div(id = 'placeholderDirPairwiseGroupSelect')
 			 			   		   				)
 			 			   		   ),
-			 			   		   facet_control_UI("dir", textFaceChoices),
+			 			   		   facet_control_UI("dir_facet", textFaceChoices),
 			 			   		   bsCollapsePanel("Ranges, Units & Labels", 
 			 			   		   				checkboxInput("dir_show_y_axis_In", "Show y axis", value = FALSE),
 			 			   		   				bsTooltip("dir_show_y_axis_In", "Displays a y axis, which is a vertical line to indicate y scale.", "bottom", "hover"),
@@ -777,13 +765,9 @@ tabPanelDirectionality = function(title, tabColor){
 			 			   		   				bsTooltip("dir_start_angle_In", "Starting angle of the directions. This simply rotates the plots, if you want to fix the direction.", "bottom", "hover")
 			 			   		   				
 			 			   		   ),
-			 			   		   bsCollapsePanel("Debugging", 
-			 			   		   				plotDebugging("dir"),
-			 			   		   				checkboxInput("dir_skip_radar_In", "Skip Radar", value = FALSE),
-			 			   		   				checkboxInput("dir_skip_degrees_In", "Skip Degrees", value = FALSE)
-			 			   		   )
-			 			   		   
-			 			   		   
+			 			   		   debugging_UI("dir_debug", 
+			 			   		   			 list(skip_radar = list(label = "Skip Radar", value = FALSE),
+			 			   		   			 	 skip_degrees = list(label = "Skip Degrees", value = FALSE)))
 			 			   )
 			 			   
 			 			   
@@ -878,39 +862,39 @@ tabPanelPlotTrajectoryFeatures = function(title, tabColor){
 			 			   		   # bsCollapsePanel("Tests", 
 			 			   		   # 				
 			 			   		   # ),
-			 			   		   facet_control_UI("traj_feat", textFaceChoices),
+			 			   		   facet_control_UI("traj_feat_facet", textFaceChoices),
 			 			   		   bsCollapsePanel("Ranges, Units & Labels", 
 			 			   		   				fluidPage(fluidRow(
 			 			   		   					column(10, tipify(sliderInput("traj_feat_y_range_In", "y Axis Range", min = 0, max = 1, step = 0.1, value = c(0, 1), dragRange = TRUE), "y axis range. Slide the knobs or the line between the knobs to set what range to be displayed. You can also select an area and double click on the plot to set the range (only y axis selection is registered).", "top")), 
 			 			   		   					column(2, checkboxInput("traj_feat_y_range_check_In", "", value = TRUE))),
-			 			   		   				fluidRow(
-			 			   		   					column(6, textInput("traj_feat_xlab_In", "x axis label"),
-			 			   		   						   textInput("traj_feat_x_unit_In", "x Axis Unit")
-			 			   		   					),
-			 			   		   					column(6, textInput("traj_feat_ylab_In", "y axis label"),
-			 			   		   						   textInput("traj_feat_y_unit_In", "y Axis Unit")
-			 			   		   					)
-			 			   		   				)),
+			 			   		   					fluidRow(
+			 			   		   						column(6, textInput("traj_feat_xlab_In", "x axis label"),
+			 			   		   							   textInput("traj_feat_x_unit_In", "x Axis Unit")
+			 			   		   						),
+			 			   		   						column(6, textInput("traj_feat_ylab_In", "y axis label"),
+			 			   		   							   textInput("traj_feat_y_unit_In", "y Axis Unit")
+			 			   		   						)
+			 			   		   					)),
 			 			   		   				bsTooltip("traj_feat_xlab_In", "x axis label", "bottom", "hover"),
 			 			   		   				bsTooltip("traj_feat_ylab_In", "y axis label", "bottom", "hover"),
 			 			   		   				bsTooltip("traj_feat_x_unit_In", toolTips$unit_In, placement = "bottom", trigger = "hover"),
 			 			   		   				bsTooltip("traj_feat_y_unit_In", toolTips$unit_In, placement = "bottom", trigger = "hover")
 			 			   		   ),
 			 			   		   bsCollapsePanel("Transformations", 
-										selectInput("traj_feat_data_transform_In", "Transform data with", choices = dataTransformChoices, selected = "noneTransform"),
-										conditionalPanel("input.traj_feat_data_transform_In  == 'logTransform'",
-														 shinyWidgets::sliderTextInput("traj_feat_data_logTransform_In", "\\(\\log_a(x) \\) ... a", choices = c(2, exp(1), 10), selected = exp(1))
-										),
-										conditionalPanel("input.traj_feat_data_transform_In  == 'powerTransform'",
-														 sliderInput("traj_feat_data_powerTransform_In", "\\(x^a\\) ... a", min = 2, max = 5, step = 1, value = 3)
-										),
-										conditionalPanel("input.traj_feat_data_transform_In  == 'rootTransform'",
-														 sliderInput("traj_feat_data_rootTransform_In", "\\(\\sqrt[a]{x}\\) ... a", min = 2, max = 5, step = 1, value = 3)
-										),
-										conditionalPanel("input.traj_feat_data_transform_In  == ''",
-														 sliderInput("traj_feat_data_invTransform_In", "", min = 1, max = 2, step = 1, value = 1),
-														 sliderInput("traj_feat_data_noneTransform_In", "", min = 1, max = 2, step = 1, value = 1)
-										)
+			 			   		   				selectInput("traj_feat_data_transform_In", "Transform data with", choices = dataTransformChoices, selected = "noneTransform"),
+			 			   		   				conditionalPanel("input.traj_feat_data_transform_In  == 'logTransform'",
+			 			   		   								 shinyWidgets::sliderTextInput("traj_feat_data_logTransform_In", "\\(\\log_a(x) \\) ... a", choices = c(2, exp(1), 10), selected = exp(1))
+			 			   		   				),
+			 			   		   				conditionalPanel("input.traj_feat_data_transform_In  == 'powerTransform'",
+			 			   		   								 sliderInput("traj_feat_data_powerTransform_In", "\\(x^a\\) ... a", min = 2, max = 5, step = 1, value = 3)
+			 			   		   				),
+			 			   		   				conditionalPanel("input.traj_feat_data_transform_In  == 'rootTransform'",
+			 			   		   								 sliderInput("traj_feat_data_rootTransform_In", "\\(\\sqrt[a]{x}\\) ... a", min = 2, max = 5, step = 1, value = 3)
+			 			   		   				),
+			 			   		   				conditionalPanel("input.traj_feat_data_transform_In  == ''",
+			 			   		   								 sliderInput("traj_feat_data_invTransform_In", "", min = 1, max = 2, step = 1, value = 1),
+			 			   		   								 sliderInput("traj_feat_data_noneTransform_In", "", min = 1, max = 2, step = 1, value = 1)
+			 			   		   				)
 			 			   		   ),
 			 			   		   bsCollapsePanel("Display Options", 
 			 			   		   				sliderInput("traj_feat_disp_alpha_In", "Error Transparency", min = 0, max = 1, value = 0.5),
@@ -932,14 +916,8 @@ tabPanelPlotTrajectoryFeatures = function(title, tabColor){
 			 			   		   				bsTooltip("traj_feat_point_size_In", "Relative point size.", "bottom", "hover"),
 			 			   		   				bsTooltip("traj_feat_line_size_In", "Relative line thickness.", "bottom", "hover")
 			 			   		   ),
-			 			   		   bsCollapsePanel("Debugging", 
-			 			   		   				plotDebugging("traj_feat")
-			 			   		   )
-			 			   		   
-			 			   		   
+			 			   		   debugging_UI("traj_feat_debug")
 			 			   )
-			 			   
-			 			   
 			 		),
 			 		column(8, 
 			 			   plotOutput(outputId = "trajFeaturePlotOut"),
@@ -975,16 +953,16 @@ ui = function(request){
 						tabPanelOperations(titleOperations, tabColorOperations),
 						tabPanel(titleFiles, 
 								 tags$style(HTML(tabBGColorCSS(titleFiles, tabColorTables))),
-								 table_output_UI("filesOut")),
+								 table_output_UI("files_table_out")),
 						tabPanel(titleFeatures, 
 								 tags$style(HTML(tabBGColorCSS(titleFeatures, tabColorTables))),
-								 table_output_UI("featuresOut")),
+								 table_output_UI("features_table_out")),
 						tabPanel(titleTracks, 
 								 tags$style(HTML(tabBGColorCSS(titleTracks, tabColorTables))),
-								 table_output_UI("tracksOut")),
+								 table_output_UI("tracks_table_out")),
 						tabPanel(titleTrajectories, 
 								 tags$style(HTML(tabBGColorCSS(titleTrajectories, tabColorTables))),
-								 table_output_UI("trajectoriesOut")),
+								 table_output_UI("trajectories_table_out")),
 						tabPanelPlotTrackFeatures(titlePlotTrackFeatures, tabColorPlots),
 						tabPanelPlotTrajectories(titlePlotTrajectories, tabColorPlots),
 						tabPanelDirectionality(titlePlotDirectionality, tabColorPlots),
@@ -1910,7 +1888,7 @@ server = function(input, output, session) {
 	})
 	
 	trackPlot = reactive({
-		if(input$track_browse_In){
+		if(debugging_track$browse){
 			browser()
 		}
 		print("output$trackFeatureOut = renderPlot({")
@@ -1994,7 +1972,9 @@ server = function(input, output, session) {
 							dot.stackgroups = input$track_dot_stackgroups_In,
 							dot.method = input$track_dot_method_In,
 							dot.stackdir = input$track_dot_stackdir_In,
-							browse = input$track_browse_In, benchmark = input$track_benchmark_In, verbose = input$track_verbose_In)
+							browse = debugging_track$browse, 
+							benchmark = debugging_track$benchmark, 
+							verbose = debugging_track$verbose)
 			plot
 		}
 		
@@ -2170,7 +2150,7 @@ server = function(input, output, session) {
 	#trajectoryPlot = reactive({
 	#trajectoryPlot = renderPlot({
 	#observeEvent(input$plotTrajIn, {
-		if(input$traj_browse_In){
+		if(debugging_traj$browse){
 			browser()
 		}
 		titles = setTitleInputs(input$traj_title_In, input$traj_title_check_In, input$traj_subtitle_In, input$traj_subtitle_check_In)
@@ -2237,8 +2217,8 @@ server = function(input, output, session) {
 						 facet.label.fill.color = traj_facet$label_fill_color(), 
 						 facet.text.face = traj_facet$label_face(), 
 						 linesize = input$traj_line_size_In, x.lab = xlab, y.lab = ylab,
-						 browse = input$traj_browse_In, benchmark = input$traj_benchmark_In, 
-						 verbose = input$traj_verbose_In,
+						 browse = debugging_traj$browse, benchmark = debugging_traj$benchmark, 
+						 verbose = debugging_traj$verbose,
 						 initializeProg = initializeProgress, updateProg = updateProgress)
 		#browser()
 		closeProgress()
@@ -2270,7 +2250,7 @@ server = function(input, output, session) {
 		if(!is.list(groupings()) || length(groupings()) == 0){
 			return(NULL)
 		}
-		if(input$dir_browse_In){
+		if(debugging_dir$browse){
 			browser()
 		}
 		titles = setTitleInputs(input$dir_title_In, input$dir_title_check_In, input$dir_subtitle_In, input$dir_subtitle_check_In)
@@ -2326,9 +2306,9 @@ server = function(input, output, session) {
 						 plot.subtitle.hjust = input$dir_subtitle_hjust_In, 
 						 plot.subtitle.size = input$dir_subtitle_size_In, 
 						 plot.subtitle.face = input$dir_subtitle_text_style_In, 
-						 browse = input$dir_browse_In, benchmark = input$dir_benchmark_In, 
-						 verbose = input$dir_verbose_In, skip.radar = input$dir_skip_radar_In, 
-						 skip.degrees = input$dir_skip_degrees_In
+						 browse = debugging_dir$browse, benchmark = debugging_dir$benchmark, 
+						 verbose = debugging_dir$verbose, skip.radar = debugging_dir$skip_radar, 
+						 skip.degrees = debugging_dir$skip_degrees
 		)
 		#browser()
 		plot
@@ -2447,7 +2427,7 @@ server = function(input, output, session) {
 	trajFeaturePlot = eventReactive(input$plotTrajFeatIn, {#trajFeaturePlot = reactive({
 		
 		print("output$trajFeatureOut = renderPlot({")
-		if(input$traj_feat_browse_In){
+		if(debugging_traj_feat$browse){
 			browser()
 		}
 		titles = setTitleInputs(input$traj_feat_title_In, input$traj_feat_title_check_In, input$traj_feat_subtitle_In, input$traj_feat_subtitle_check_In)
@@ -2497,8 +2477,8 @@ server = function(input, output, session) {
 								plot.subtitle.face = input$traj_feat_subtitle_text_style_In, 
 								linesize = input$traj_feat_line_size_In,
 								pointsize = input$traj_feat_point_size_In,
-								browse = input$traj_feat_browse_In, benchmark = input$traj_feat_benchmark_In, 
-								verbose = input$traj_feat_verbose_In)
+								browse = debugging_traj_feat$browse, benchmark = debugging_traj_feat$benchmark, 
+								verbose = debugging_traj_feat$verbose)
 		plot	
 	})
 	output$trajFeaturePlotOut = renderPlot({trajFeaturePlot()$plot})
@@ -2708,21 +2688,26 @@ server = function(input, output, session) {
 		contentType = paste("text", "csv", sep = "/")
 	)
 	
-	track_facet = facet_control_server("track", groupingsChoiceswithEmpty)
-	traj_facet = facet_control_server("traj", groupingsChoiceswithEmpty)
-	dir_facet = facet_control_server("dir", groupingsChoiceswithEmpty)
-	traj_feat_facet = facet_control_server("traj_feat", groupingsChoiceswithEmpty)
+	track_facet = facet_control_server("track_facet", groupingsChoiceswithEmpty)
+	traj_facet = facet_control_server("traj_facet", groupingsChoiceswithEmpty)
+	dir_facet = facet_control_server("dir_facet", groupingsChoiceswithEmpty)
+	traj_feat_facet = facet_control_server("traj_feat_facet", groupingsChoiceswithEmpty)
 	
 	plot_export_server("track_export", "Track Feature", trackPlot)
 	plot_export_server("traj_export", "Trajectory", trajectoryPlot)
 	plot_export_server("dir_export", "Directionality", directionalityPlot)
 	plot_export_server("traj_feat_export", "Trajectory Feature", trajFeaturePlot)
 	
-	feature_calculator_server("tracks", allTrackMeasures, data, features, groupings, 
+	feature_calculator_server("track_new_feat", allTrackMeasures, data, features, groupings, 
 							  "tracks", "tracks", "TRACK_ID", "track_global_id")
-	feature_calculator_server("trajs", allTrajectoryMeasures, data, features, groupings, 
+	feature_calculator_server("traj_new_feat", allTrajectoryMeasures, data, features, groupings, 
 							  "trajectories", "trajectories", "ID", "track_global_id")
-	feature_calculator_server("track_from_traj", allTrajectoryMeasures, data, features, groupings, 
+	feature_calculator_server("track_from_traj_new_feat", allTrajectoryMeasures, data, features, groupings, 
 							  "trajectories", "tracks", "ID", "track_global_id")
+	
+	debugging_track = debugging_server("track_debug")
+	debugging_traj = debugging_server("traj_debug")
+	debugging_dir = debugging_server("dir_debug")
+	debugging_traj_feat = debugging_server("traj_feat_debug")
 }
 shinyApp(ui = ui, server = server, enableBookmarking = "server")
