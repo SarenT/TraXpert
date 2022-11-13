@@ -736,28 +736,6 @@ generateGroupColor = function(i, n){
 # 	return(customDownloadHandler)
 # }
 
-#' Prepares titles and subtitles according to user selection
-#'
-#' @param titleIn primary title
-#' @param titleCheckIn boolean option to exclude primary title
-#' @param subtitleIn secondary title
-#' @param subtitleCheckIn boolean option to exclude secondary title
-#'
-#' @return Returns a list with the chosen primary and secondary titles \code{list(title, subtitle)}
-#' @export
-#'
-#' @examples
-setTitleInputs = function(titleIn, titleCheckIn, subtitleIn, subtitleCheckIn){
-	titles = list()
-	if(titleCheckIn){title = NA}else{title = titleIn}
-	if(!is.na(title)){if(title == ""){title = NULL}}
-	if(subtitleCheckIn){subtitle = NA}else{subtitle = subtitleIn}
-	if(!is.na(subtitle)){if(subtitle == ""){subtitle = NULL}}
-	titles$title = title
-	titles$subtitle = subtitle
-	return(titles)
-}
-
 #' Appends new feature to the existing features data frame
 #'
 #' @param oldFeatures data frame

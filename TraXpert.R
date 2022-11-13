@@ -60,7 +60,6 @@ source("functions.R")
 
 try(detach("package:plyr", unload=TRUE), silent = TRUE)
 
-subtitleHjustChoices = list(Left = 0, Middle = 0.5, Right = 1)
 textFaceChoices = list(Plain = "plain", Italic = "italic", Bold = "bold", `Bold & Italic` = "bold.italic")
 aggregateFunctionChoices = list(`Do not aggregate` = "NULL", Sum = "sum", Mean = "mean", Median = "median", Mode = "single.mode", Min = "min", Max = "Max")
 summaryFunctionChoices = aggregateFunctionChoices
@@ -356,24 +355,6 @@ plotExportSection = function(context){
 	)
 }
 
-titleSubtitlePanel = function(context){
-	tagList(
-		textInput(paste0(context, "_title_In"), "Main Title"),
-		checkboxInput(paste0(context, "_title_check_In"), "Disable Main Title", value = FALSE),
-		textInput(paste0(context, "_subtitle_In"), "Subtitle", placeholder = "Leave empty for automatic subtitle"),
-		checkboxInput(paste0(context, "_subtitle_check_In"), "Disable Subtitle", value = FALSE),
-		selectInput(paste0(context, "_subtitle_hjust_In"), "Subtitle Alignment", choices = subtitleHjustChoices, selected = 0.5),	
-		sliderInput(paste0(context, "_subtitle_size_In"), "Subtitle Size", value = 10, min = 1, max = 100, step = 1),
-		selectInput(paste0(context, "_subtitle_text_style_In"), "Subtitle Text Style", choices = textFaceChoices),
-		
-		bsTooltip(paste0(context, "_subtitle_In"), toolTips$subtitle_In, placement = "bottom", trigger = "hover"),
-		bsTooltip(paste0(context, "_subtitle_check_In"), toolTips$subtitle_check_In, placement = "bottom", trigger = "hover"),
-		bsTooltip(paste0(context, "_subtitle_hjust_In"), toolTips$subtitle_hjust_In, placement = "bottom", trigger = "hover"),
-		bsTooltip(paste0(context, "_subtitle_size_In"), toolTips$subtitle_size_In, placement = "bottom", trigger = "hover"),
-		bsTooltip(paste0(context, "_subtitle_text_style_In"), toolTips$subtitle_text_style_In, placement = "bottom", trigger = "hover")
-	)
-}
-
 statDataDetails = function(context){
 	tagList(fluidRow(
 		column(6,
@@ -465,7 +446,7 @@ tabPanelPlotTrackFeatures = function(title, tabColor){
 			 	fluidRow(
 			 		column(4,
 			 			   bsCollapse(id = "track_settings",
-			 			   		   bsCollapsePanel("Titles", titleSubtitlePanel("track")),
+			 			   		   titles_UI("track_title", textFaceChoices),
 			 			   		   bsCollapsePanel("Plot Type and Variables", 
 			 			   		   				selectInput("track_type_In", "Plot Type", choices = trackFeaturesChoices, selected = "violin", multiple = TRUE),
 			 			   		   				tipify(selectInput("track_x_In", "Group by", choices = list()), "Main grouping. Select a grouping, which is most interesting to compare. Also used for statistics.", "top"),
@@ -592,7 +573,7 @@ tabPanelPlotTrajectories = function(title, tabColor){
 			 	fluidRow(
 			 		column(4,
 			 			   bsCollapse(id = "traj_settings",
-			 			   		   bsCollapsePanel("Titles", titleSubtitlePanel("traj")),
+			 			   		   titles_UI("traj_title", textFaceChoices),
 			 			   		   bsCollapsePanel("Plot Type and Variables",
 			 			   		   				selectInput("traj_xy_In", "Position", choices = list()),
 			 			   		   				tipify(selectInput("traj_replicate_In", "Replicates are grouped in", choices = list()), toolTips$replicate_In, "top", "hover"),
@@ -676,7 +657,7 @@ tabPanelDirectionality = function(title, tabColor){
 			 	fluidRow(
 			 		column(4,
 			 			   bsCollapse(id = "track_settings",
-			 			   		   bsCollapsePanel("Titles", titleSubtitlePanel("dir")),
+			 			   		   titles_UI("dir_title", textFaceChoices),
 			 			   		   bsCollapsePanel("Plot Type and Variables",
 			 			   		   				selectInput("dir_type_In", "Plot Type", choices = list(`Bar/Radar` = "bar", Polygon = "polygon"), selected = "bar"),
 			 			   		   				tipify(selectInput("dir_replicate_In", "Replicates are grouped in", choices = list()), toolTips$replicate_In, "top"),
@@ -798,7 +779,7 @@ tabPanelPlotTrajectoryFeatures = function(title, tabColor){
 			 	fluidRow(
 			 		column(4,
 			 			   bsCollapse(id = "traj_feat_settings",
-			 			   		   bsCollapsePanel("Titles", titleSubtitlePanel("traj_feat")),
+			 			   		   titles_UI("traj_feat_title", textFaceChoices),
 			 			   		   bsCollapsePanel("Plot Type and Variables",
 			 			   		   				tipify(selectInput("traj_feat_type_In", "Plot Type", choices = trajFeaturesChoices, selected = "point", multiple = TRUE), "Display method. Smooth plot displays a fit to the data to help with overplotting (too many data points, which overcrowds the space).", "top"),
 			 			   		   				tipify(selectInput("traj_feat_replicate_In", "Replicates are grouped in", choices = list()), toolTips$replicate_In, "top"),
@@ -1861,7 +1842,7 @@ server = function(input, output, session) {
 		if(input$track_x_In == "" || input$track_y_In == ""){
 			"Please select both x and y axis variables."
 		}else{
-			titles = setTitleInputs(input$track_title_In, input$track_title_check_In, input$track_subtitle_In, input$track_subtitle_check_In)
+			titles = lapply(track_titles, function(x){x()})
 			yUnit = input$track_unit_In; if(yUnit == ""){yUnit = NULL}
 			xlab = input$track_xlab_In; if(xlab == ""){xlab = NULL}
 			ylab = input$track_ylab_In; if(ylab == ""){ylab = getFeatureLab(features = features(), name = input$track_y_In)}
@@ -1930,9 +1911,9 @@ server = function(input, output, session) {
 							facet.text.face = track_facet$label_face(), 
 							facet.label.fill.color = track_facet$label_fill_color(),
 							facet.wrap = track_facet$wrap(),
-							plot.subtitle.hjust = input$track_subtitle_hjust_In, 
-							plot.subtitle.size = input$track_subtitle_size_In, 
-							plot.subtitle.face = input$track_subtitle_text_style_In,
+							plot.subtitle.hjust = titles$subtitle_hjust, 
+							plot.subtitle.size = titles$subtitle_size, 
+							plot.subtitle.face = titles$subtitle_text_style,
 							violin.scale = input$track_violin_scale_In,
 							box.notch = input$track_box_notch_In,
 							box.varwidth = input$track_box_varwidth_In,
@@ -2121,7 +2102,7 @@ server = function(input, output, session) {
 		if(debugging_traj$browse){
 			browser()
 		}
-		titles = setTitleInputs(input$traj_title_In, input$traj_title_check_In, input$traj_subtitle_In, input$traj_subtitle_check_In)
+		titles = titles = lapply(traj_titles, function(x){x()})
 		xlab = input$traj_xlab_In; if(xlab == ""){xlab = NULL}
 		ylab = input$traj_ylab_In; if(ylab == ""){ylab = NULL}
 		
@@ -2176,9 +2157,9 @@ server = function(input, output, session) {
 						 #randomizeTrackSampling = input$traj_limit_to_smallest_In,
 						 trackReduced = input$traj_track_reduced_In,
 						 spotReduced = input$traj_spot_reduced_In,
-						 plot.subtitle.hjust = input$traj_subtitle_hjust_In, 
-						 plot.subtitle.size = input$traj_subtitle_size_In, 
-						 plot.subtitle.face = input$traj_subtitle_text_style_In,
+						 plot.subtitle.hjust = titles$subtitle_hjust, 
+						 plot.subtitle.size = titles$subtitle_size, 
+						 plot.subtitle.face = titles$subtitle_text_style,
 						 h.line = input$traj_h_line_In, v.line = input$traj_v_line_In, 
 						 panel.border = input$traj_panel_border_In, 
 						 panel.grid.major = input$traj_panel_grid_major_In, 
@@ -2221,7 +2202,7 @@ server = function(input, output, session) {
 		if(debugging_dir$browse){
 			browser()
 		}
-		titles = setTitleInputs(input$dir_title_In, input$dir_title_check_In, input$dir_subtitle_In, input$dir_subtitle_check_In)
+		titles = titles = lapply(dir_titles, function(x){x()})
 		xlab = input$dir_xlab_In; if(xlab == ""){xlab = NULL}
 		ylab = input$dir_ylab_In; if(ylab == ""){ylab = NULL}
 		
@@ -2272,9 +2253,9 @@ server = function(input, output, session) {
 						 facet.text.face = dir_facet$label_face(), 
 						 facet.wrap = dir_facet$wrap(),
 						 show.y.axis = input$dir_show_y_axis_In, 
-						 plot.subtitle.hjust = input$dir_subtitle_hjust_In, 
-						 plot.subtitle.size = input$dir_subtitle_size_In, 
-						 plot.subtitle.face = input$dir_subtitle_text_style_In, 
+						 plot.subtitle.hjust = titles$subtitle_hjust, 
+						 plot.subtitle.size = titles$subtitle_size, 
+						 plot.subtitle.face = titles$subtitle_text_style,
 						 browse = debugging_dir$browse, benchmark = debugging_dir$benchmark, 
 						 verbose = debugging_dir$verbose, skip.radar = debugging_dir$skip_radar, 
 						 skip.degrees = debugging_dir$skip_degrees
@@ -2399,7 +2380,10 @@ server = function(input, output, session) {
 		if(debugging_traj_feat$browse){
 			browser()
 		}
-		titles = setTitleInputs(input$traj_feat_title_In, input$traj_feat_title_check_In, input$traj_feat_subtitle_In, input$traj_feat_subtitle_check_In)
+		
+		# Converting title reactives to list of values
+		titles = lapply(traj_feat_titles, function(x){x()})
+		
 		xlab = input$traj_feat_xlab_In; if(xlab == ""){xlab = getFeatureLab(features = features(), name = input$traj_feat_x_In)}
 		ylab = input$traj_feat_ylab_In; if(ylab == ""){ylab = getFeatureLab(features = features(), name = input$traj_feat_y_In)}
 		
@@ -2441,9 +2425,9 @@ server = function(input, output, session) {
 								x.lab = xlab, y.lab = ylab, is.dark = dark_plot_traj_feat(),
 								facet.text.face = traj_feat_facet$label_face(), 
 								facet.label.fill.color = traj_feat_facet$label_fill_color(),
-								plot.subtitle.hjust = input$traj_feat_subtitle_hjust_In, 
-								plot.subtitle.size = input$traj_feat_subtitle_size_In, 
-								plot.subtitle.face = input$traj_feat_subtitle_text_style_In, 
+								plot.subtitle.hjust = titles$subtitle_hjust, 
+								plot.subtitle.size = titles$subtitle_size, 
+								plot.subtitle.face = titles$subtitle_text_style, 
 								linesize = input$traj_feat_line_size_In,
 								pointsize = input$traj_feat_point_size_In,
 								browse = debugging_traj_feat$browse, benchmark = debugging_traj_feat$benchmark, 
@@ -2684,5 +2668,10 @@ server = function(input, output, session) {
 	
 	dark_plot_traj = dark_plot_server("dark_traj")
 	dark_plot_traj_feat = dark_plot_server("dark_traj_feat")
+	
+	track_titles = titles_server("track_title")
+	traj_titles = titles_server("traj_title")
+	dir_titles = titles_server("dir_title")
+	traj_feat_titles = titles_server("traj_feat_title")
 }
 shinyApp(ui = ui, server = server, enableBookmarking = "server")
