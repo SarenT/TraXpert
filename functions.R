@@ -2092,7 +2092,6 @@ plotTrajectories = function(dataTraj, x, y, trackGlobalIDName, groupings, x.unit
 							color.legend = NULL, alpha.legend = NULL, #fill.legend = NULL, 
 							inverse = TRUE, facet.row = NULL, facet.col = NULL, facet.wrap = FALSE,
 							title = NA, subtitle = NULL,
-							#statGroupName = NULL, stat.label = "..p.signif..", stat.method = "wilcox.test", 
 							hide.ns = FALSE, 
 							replicateGroupName = NULL, is.dark = FALSE, 
 							limitNTracks = FALSE, randomizeTrackSampling = FALSE,
@@ -2247,8 +2246,12 @@ plotTrajectories = function(dataTraj, x, y, trackGlobalIDName, groupings, x.unit
 	if(is.null(x.unit)) x.unit = default.x.Unit
 	if(is.null(y.unit)) y.unit = default.y.Unit
 	if(verbose) cat("x/y labels...\n")
-	if(is.null(x.lab)) x.lab = paste0(getGLab(groupings, x), " [", x.unit, "]")
-	if(is.null(y.lab)) y.lab = paste0(getGLab(groupings, y), " [", y.unit, "]")
+	
+	if(is.null(x.lab)) x.lab = getGLab(groupings, x)
+	if(is.null(y.lab)) y.lab = getGLab(groupings, y)
+	
+	x.lab = paste0(x.lab, " [", x.unit, "]")
+	y.lab = paste0(y.lab, " [", y.unit, "]")
 	
 	if(verbose) cat("Generating the plot...\n")
 	

@@ -505,14 +505,16 @@ tabPanelPlotTrackFeatures = function(title, tabColor){
 			 			   		   					column(10, tipify(sliderInput("track_y_range_In", "y Axis Range", min = 0, max = 1, step = 0.1, value = c(0, 1), dragRange = TRUE), "y axis range. Slide the knobs or the line between the knobs to set what range to be displayed. You can also select an area and double click on the plot to set the range (only y axis selection is registered).", "top")), 
 			 			   		   					column(2, checkboxInput("track_y_range_check_In", "", value = TRUE))
 			 			   		   				)),
-			 			   		   				textInput("track_unit_In", "Measure Unit"),
-			 			   		   				textInput("track_xlab_In", "Grouping axis label"),
-			 			   		   				textInput("track_ylab_In", "Measure axis label"),
 			 			   		   				
-			 			   		   				bsTooltip("track_y_range_check_In", "Should the range selected come into effect? Quick way of enable/disable the range. If unchecked, whole data (default range) will be displayed.", placement = "bottom", trigger = "hover"),
-			 			   		   				bsTooltip("track_unit_In", toolTips$unit_In, placement = "bottom", trigger = "hover"),
-			 			   		   				bsTooltip("track_xlab_In", toolTips$xlab_In, placement = "bottom", trigger = "hover"),
-			 			   		   				bsTooltip("track_ylab_In", toolTips$ylab_In, placement = "bottom", trigger = "hover")),
+			 			   		   				axis_labels_UI("track_axis_labs", 
+			 			   		   							   list(x = list(title = "Grouping axis",
+			 			   		   							   			  unit = FALSE,
+			 			   		   							   			  tooltip = toolTips$xlab_In),
+			 			   		   							   	 y = list(title = "Measure axis",
+			 			   		   							   	 		 unit = TRUE,
+			 			   		   							   	 		 tooltip = toolTips$ylab_In)
+			 			   		   							   )),
+			 			   		   				bsTooltip("track_y_range_check_In", "Should the range selected come into effect? Quick way of enable/disable the range. If unchecked, whole data (default range) will be displayed.", placement = "bottom", trigger = "hover")),
 			 			   		   bsCollapsePanel("Specific Options", 
 			 			   		   				conditionalPanel("input.track_type_In.indexOf('violin') > -1",
 			 			   		   								 tipify(selectInput("track_violin_scale_In", "Scale", choices = list(Area = "area", Count = "count", Width = "width"), selected = "area"),"Area: all violins will have the same area (before trimming the tails)\\n Width: same maximum width\\n Count: violins are proportionally large to the number of observations.", placement = "top", trigger = "hover")
@@ -600,17 +602,12 @@ tabPanelPlotTrajectories = function(title, tabColor){
 			 			   		   bsCollapsePanel("Ranges, Units & Labels", 
 			 			   		   				fluidPage(fluidRow(column(6, checkboxInput("traj_inverse_In", "Invert y axis", value = TRUE)),
 			 			   		   								   column(6, checkboxInput("traj_equal_range_In", "Equal x/y ranges", value = TRUE)))),
-			 			   		   				fluidPage(fluidRow(column(6, textInput("traj_xlab_In", "x axis label")),
-			 			   		   								   column(6, textInput("traj_ylab_In", "y axis label")))),
-			 			   		   				textInput("traj_unit_In", "Unit"),
+			 			   		   				axis_labels_UI("traj_axis_labs"),
 			 			   		   				
 			 			   		   				#bsTooltip("", "", "bottom", "hover")
 			 			   		   				bsTooltip("traj_xy_In", "How should trajectories be placed? Either absolute position, fixed (all tracks start from origin or fixed and rotated (tracks are rotated in the \"Operations\" tab).", "top", "hover"),
 			 			   		   				bsTooltip("traj_inverse_In", "Should the y axis be inverted? Imaging y coordinates increase downwards, which is opposite of the cartesian coordinate system. Inverting y axis will make trajectories oriented same way as in the image.", "bottom", "hover"),
-			 			   		   				bsTooltip("traj_equal_range_In", "Should the x and y axis have equal ranges? If false, plots will be stretched (maybe useful for highly asymmetric imaging daata).", "bottom", "hover"),
-			 			   		   				bsTooltip("traj_xlab_In", "Label to be displayed on the x axis.", "bottom", "hover"),
-			 			   		   				bsTooltip("traj_ylab_In", "Label to be displayed on the y axis.", "bottom", "hover"),
-			 			   		   				bsTooltip("traj_unit_In", toolTips$unit_In, placement = "bottom", trigger = "hover")
+			 			   		   				bsTooltip("traj_equal_range_In", "Should the x and y axis have equal ranges? If false, plots will be stretched (maybe useful for highly asymmetric imaging daata).", "bottom", "hover")
 			 			   		   			),
 			 			   		   bsCollapsePanel("Display Options", 
 			 			   		   				sliderInput("traj_color_alpha_In", "Color Transparency", min = 0, max = 1, value = 1),
@@ -701,11 +698,14 @@ tabPanelDirectionality = function(title, tabColor){
 			 			   		   bsCollapsePanel("Ranges, Units & Labels", 
 			 			   		   				checkboxInput("dir_show_y_axis_In", "Show y axis", value = FALSE),
 			 			   		   				bsTooltip("dir_show_y_axis_In", "Displays a y axis, which is a vertical line to indicate y scale.", "bottom", "hover"),
-			 			   		   				textInput("dir_xlab_In", "x axis label"),
-			 			   		   				textInput("dir_ylab_In", "y axis label"),
-			 			   		   				
-			 			   		   				bsTooltip("dir_xlab_In", "x axis label", "bottom", "hover"),
-			 			   		   				bsTooltip("dir_ylab_In", "y axis label", "bottom", "hover")
+			 			   		   				axis_labels_UI("dir_axis_labs", 
+			 			   		   							   list(x = list(title = "x axis",
+			 			   		   							   			  unit = FALSE,
+			 			   		   							   			  tooltip = toolTips$xlab_In),
+			 			   		   							   	 y = list(title = "y axis",
+			 			   		   							   	 		 unit = FALSE,
+			 			   		   							   	 		 tooltip = toolTips$ylab_In)
+			 			   		   							   ))
 			 			   		   ),
 			 			   		   bsCollapsePanel("Display Options", 
 			 			   		   				sliderInput("dir_line_size_In", "Line Thickness", min = 0.01, max = 100, value = 0.5, width = "150%"),
@@ -729,44 +729,6 @@ tabPanelDirectionality = function(title, tabColor){
 			 			   tags$style(type="text/css", "#dir_circstat_text_Out {white-space: pre-wrap;}"), hr(),
 			 			   plot_export_UI("dir_export")
 			 		)
-			 	)
-			 )
-	)
-}
-
-tabPanelAbout = function(title){
-	tabPanel(title,
-			 fluidPage(
-			 	fluidRow(
-			 		column(4),
-			 		column(4, 
-			 h1("About TraXpert"),
-			 p(paste("traxpert is a particle tracking analyzing software developed by me (Saren Tasciyan).",
-			 "Particle tracking data contains a lot of information about the motion of particles.", 
-			 "Such data can be very useful in life sciences. As I am studying cell migration,", 
-			 "I have realized the lack of a data analysis tool for tracking data.", 
-			 "There have been already numoreous tools for tracking objects in imaging data.",  
-			 "But making sense of this tracking data requires an extra step: data analysis.",
-			 "This can be tricky and often requires advanced programming skills for data analysis (e.g. R or python).", 
-			 "Combined with suboptimal data analysis with simpler tools (e.g. Excel) can be dangerous.", 
-			 "And of course not everyone must know how to program.", 
-			 "This was my motivation to create this application.", 
-			 "To help scientists to analyze their tracking data as easily as possible.", 
-			 "Therefore, most of the functions in TraXpert are as automatic as possible.")),
-			 p(paste("It relies on grouped and well named, calibrated files.", 
-			 "Main goal was to make it compatible with TrackMate but Imaris and text files (e.g. for Chemotaxis Tool) ", 
-			 "are also somewhat supported.", 
-			 "Simple import your named files into TraXpert and it should recognize your groupings and groups.", 
-			 "Most common plot types and features are already available (e.g. trajectory plots, radar plots...).", 
-			 "For simple statistics, you can use track feature plots.", 
-			 "For dynamics or relationships, you can use trajectory feature plots.", 
-			 "You may as well calculate new features or point source directionality under operations.")),
-			 p(paste("If you want to use your own code to do more advanced analysis, you can also simply use TraXpert as", 
-			 "a conversion tool!", "Then simply download the table files to avoid dealing with XML structures.", 
-			 "Finally, if you need some more features, please don't hesitate to contact me:")), 
-			 a("saren.tasciyan@ist.ac.at", href = "mailto:saren.tasciyan@ist.ac.at")
-			 		),
-			 column(4)
 			 	)
 			 )
 	)
@@ -818,18 +780,7 @@ tabPanelPlotTrajectoryFeatures = function(title, tabColor){
 			 			   		   				fluidPage(fluidRow(
 			 			   		   					column(10, tipify(sliderInput("traj_feat_y_range_In", "y Axis Range", min = 0, max = 1, step = 0.1, value = c(0, 1), dragRange = TRUE), "y axis range. Slide the knobs or the line between the knobs to set what range to be displayed. You can also select an area and double click on the plot to set the range (only y axis selection is registered).", "top")), 
 			 			   		   					column(2, checkboxInput("traj_feat_y_range_check_In", "", value = TRUE))),
-			 			   		   					fluidRow(
-			 			   		   						column(6, textInput("traj_feat_xlab_In", "x axis label"),
-			 			   		   							   textInput("traj_feat_x_unit_In", "x Axis Unit")
-			 			   		   						),
-			 			   		   						column(6, textInput("traj_feat_ylab_In", "y axis label"),
-			 			   		   							   textInput("traj_feat_y_unit_In", "y Axis Unit")
-			 			   		   						)
-			 			   		   					)),
-			 			   		   				bsTooltip("traj_feat_xlab_In", "x axis label", "bottom", "hover"),
-			 			   		   				bsTooltip("traj_feat_ylab_In", "y axis label", "bottom", "hover"),
-			 			   		   				bsTooltip("traj_feat_x_unit_In", toolTips$unit_In, placement = "bottom", trigger = "hover"),
-			 			   		   				bsTooltip("traj_feat_y_unit_In", toolTips$unit_In, placement = "bottom", trigger = "hover")
+			 			   		   					axis_labels_UI("traj_feat_axis_labs"))
 			 			   		   ),
 			 			   		   bsCollapsePanel("Transformations", 
 			 			   		   				selectInput("traj_feat_data_transform_In", "Transform data with", choices = dataTransformChoices, selected = "noneTransform"),
@@ -918,7 +869,7 @@ ui = function(request){
 						tabPanelPlotTrajectories(titlePlotTrajectories, tabColorPlots),
 						tabPanelDirectionality(titlePlotDirectionality, tabColorPlots),
 						tabPanelPlotTrajectoryFeatures(titlePlotTrajFeatures, tabColorPlots),
-						tabPanelAbout(titleAbout)
+						about_UI("about", titleAbout)
 					)
 			#)
 		),
@@ -1282,7 +1233,7 @@ server = function(input, output, session) {
 				unit = ""
 			}
 			
-			unitToConvert = input$track_unit_In
+			unitToConvert = track_axis_labs$y_unit()
 			if(unitToConvert == ""){
 				unitToConvert = unit
 			}
@@ -1344,7 +1295,7 @@ server = function(input, output, session) {
 				unit = ""
 			}
 			
-			unitToConvert = input$traj_feat_y_unit_In
+			unitToConvert = track_axis_labs$y_unit()
 			if(unitToConvert == ""){
 				unitToConvert = unit
 			}
@@ -1391,31 +1342,6 @@ server = function(input, output, session) {
 			y[2] - y[1]
 		}
 	})
-	
-	# Setting default unit upon y axis selection
-	observe({
-		#browser()
-		#print(input$track_y_In)
-		req(input$track_y_In)
-		updateTextInput(session = session, inputId = "track_unit_In", 
-						value = attr(tracks()[[input$track_y_In]], "unit"))
-	})
-	
-	observe({
-		#browser()
-		#print(input$track_y_In)
-		req(input$traj_feat_x_In)
-		updateTextInput(session = session, inputId = "traj_feat_x_unit_In", 
-						value = attr(trajectories()[[input$traj_feat_x_In]], "unit"))
-	})
-	
-	observe({
-		#browser()
-		req(input$traj_feat_y_In)
-		updateTextInput(session = session, inputId = "traj_feat_y_unit_In", 
-						value = attr(trajectories()[[input$traj_feat_y_In]], "unit"))
-	})
-	
 	
 	trackChoiceswithEmpty = reactive({
 		#featuresToNamedList("Track", data()$features, empty = TRUE)
@@ -1843,9 +1769,9 @@ server = function(input, output, session) {
 			"Please select both x and y axis variables."
 		}else{
 			titles = lapply(track_titles, function(x){x()})
-			yUnit = input$track_unit_In; if(yUnit == ""){yUnit = NULL}
-			xlab = input$track_xlab_In; if(xlab == ""){xlab = NULL}
-			ylab = input$track_ylab_In; if(ylab == ""){ylab = getFeatureLab(features = features(), name = input$track_y_In)}
+			yUnit = track_axis_labs$y_unit(); if(yUnit == ""){yUnit = NULL}
+			xlab = track_axis_labs$x_lab()
+			ylab = track_axis_labs$y_lab()
 			
 			color_group = groupings_colors_track$color_group()
 			fill_group = groupings_colors_track$fill_group()
@@ -2031,6 +1957,14 @@ server = function(input, output, session) {
 		}
 	}, deleteFile = FALSE)
 	
+	traj_xy_names = reactive({
+		posTypeInd = which(input$traj_xy_In == unlist(positionTypes))
+		if(length(posTypeInd) > 0){
+			return(list(xVarName = allPositionTypes[[posTypeInd]][1], yVarName = allPositionTypes[[posTypeInd]][2]))
+		}else{
+			return(list(xVarName = NULL, yVarName = NULL))
+		}
+	})
 	
 	output$track_stat_DF_Out = renderTable(spacing = "xs", striped = TRUE, {
 		#browser()
@@ -2103,8 +2037,8 @@ server = function(input, output, session) {
 			browser()
 		}
 		titles = titles = lapply(traj_titles, function(x){x()})
-		xlab = input$traj_xlab_In; if(xlab == ""){xlab = NULL}
-		ylab = input$traj_ylab_In; if(ylab == ""){ylab = NULL}
+		xlab = traj_axis_labs$x_lab()
+		ylab = traj_axis_labs$y_lab()
 		
 		colorGroup = input$traj_color_In; if(colorGroup == "NULL") {colorGroup = NULL}
 		startPointGroup = input$traj_start_point_In; if(startPointGroup == "NA") {startPointGroup = NA} else if(startPointGroup == "NULL") {startPointGroup = NULL}
@@ -2133,25 +2067,21 @@ server = function(input, output, session) {
 		
 		closeProgress = function(){progress$close()}
 		
-		
-		posTypeInd = which(input$traj_xy_In == unlist(positionTypes))
-		xVarName = allPositionTypes[[posTypeInd]][1]; yVarName = allPositionTypes[[posTypeInd]][2]
-		
-		plot = plotTrajectories(data = trajectories(), x = xVarName, y = yVarName, 
+		plot = plotTrajectories(data = trajectories(), x = traj_xy_names()$xVarName, y = traj_xy_names()$yVarName, 
 						 trackGlobalIDName = "track_global_id", 
-						 #colorReverseOrder = input$traj_reverse_order_In,
-						 groupings = groupings()$groupings, x.unit = input$traj_x_unit_In, y.unit = input$traj_y_unit_In, 
-						 colorGroupName = colorGroup, #alphaGroupName = alphaGroup, #fillGroupName = fillGroup, alphaGroupName = alphaGroup,
+						 groupings = groupings()$groupings, 
+						 x.unit = traj_axis_labs$x_unit(), y.unit = traj_axis_labs$y_unit(),
+						 colorGroupName = colorGroup,
 						 startPointGroupName = startPointGroup, endPointGroupName = endPointGroup, 
 						 colorTrajectories = input$traj_color_tracks_In, 
-						 coord_equal = input$traj_coord_equal_In, #inverse = input$traj_invert_y_axis_In,
+						 coord_equal = input$traj_coord_equal_In, 
 						 #fill.legend = fillLegend, color.legend = colorLegend, alpha.legend = alphaLegend, 
 						 inverse = input$traj_inverse_In, equalRange = input$traj_equal_range_In,
 						 facet.row = facetRowGroup, facet.col = facetColGroup, facet.wrap = traj_facet$wrap(),
 						 title = titles$title, subtitle = titles$subtitle, 
 						 replicateGroupName = replicateGroup, 
 						 hide.ns = input$traj_stat_hidens_In,
-						 colorAlpha = input$traj_color_alpha_In, #fillAlpha = input$traj_fill_alpha_In, 
+						 colorAlpha = input$traj_color_alpha_In, 
 						 is.dark = dark_plot_traj(),
 						 limitNTracks = input$traj_limit_to_smallest_In,
 						 #randomizeTrackSampling = input$traj_limit_to_smallest_In,
@@ -2203,8 +2133,8 @@ server = function(input, output, session) {
 			browser()
 		}
 		titles = titles = lapply(dir_titles, function(x){x()})
-		xlab = input$dir_xlab_In; if(xlab == ""){xlab = NULL}
-		ylab = input$dir_ylab_In; if(ylab == ""){ylab = NULL}
+		xlab = dir_axis_labs$x_lab()
+		ylab = dir_axis_labs$y_lab()
 		
 		color_group = groupings_colors_dir$color_group()
 		fill_group = groupings_colors_dir$fill_group()
@@ -2384,8 +2314,8 @@ server = function(input, output, session) {
 		# Converting title reactives to list of values
 		titles = lapply(traj_feat_titles, function(x){x()})
 		
-		xlab = input$traj_feat_xlab_In; if(xlab == ""){xlab = getFeatureLab(features = features(), name = input$traj_feat_x_In)}
-		ylab = input$traj_feat_ylab_In; if(ylab == ""){ylab = getFeatureLab(features = features(), name = input$traj_feat_y_In)}
+		xlab = traj_feat_axis_labs$x_lab()
+		ylab = traj_feat_axis_labs$y_lab()
 		
 		if(input$traj_feat_y_range_check_In){yRange = input$traj_feat_y_range_In}else{yRange = NULL}
 		
@@ -2407,19 +2337,16 @@ server = function(input, output, session) {
 		if(input$traj_feat_smooth_In){smoothWindow = input$traj_feat_smooth_windowIn}else{smoothWindow = 1}
 		plot = plotTrajFeatures(dataTraj = trajectories(), x = input$traj_feat_x_In, y = input$traj_feat_y_In, 
 								type = input$traj_feat_type_In, trackGlobalIDName = "track_global_id",
-								x.unit = input$traj_feat_x_unit_In, y.unit = input$traj_feat_y_unit_In, y.Range = yRange,
+								x.unit = traj_feat_axis_labs$x_unit(), y.unit = traj_feat_axis_labs$y_unit(), 
+								y.Range = yRange,
 								colorGroupName = colorGroup, fillGroupName = fillGroup, sizeVarName = sizeVar,
 								lineTypeGroupName = lineTypeGroup, shapeGroupName = shapeGroup,
-								groupings = groupings()$groupings, #colorReverseOrder = input$traj_feat_reverse_order_In, 
+								groupings = groupings()$groupings, 
 								facet.row = facetRowGroup, facet.col = facetColGroup, 
 								facet.wrap = traj_feat_facet$wrap(),
 								title = titles$title, subtitle = titles$subtitle, replicateGroupName = replicateGroup, 
-								#groupTracks = input$traj_feat_group_tracks_In, 
 								aggregate.fun = aggregate.fun, 
 								dispersion.fun = dispersion.fun, dispersion.type = dispersion.fun.type,
-								#stat.label = input$traj_feat_stat_label_In, hide.ns = input$traj_feat_stat_hidens_In, 
-								#statGroupName = statGroup, stat.method = input$traj_feat_stat_method_In, 
-								#statPairwise = input$traj_feat_stat_pairwise_In, 
 								smooth.window = smoothWindow,
 								dispAlpha = input$traj_feat_disp_alpha_In, colorAlpha = input$traj_feat_color_alpha_In, 
 								x.lab = xlab, y.lab = ylab, is.dark = dark_plot_traj_feat(),
@@ -2485,11 +2412,6 @@ server = function(input, output, session) {
 					feats = features()
 					feats = appendNewFeatures(feats, feat, featName, featShortName, featDimension, FALSE, featType, 
 									  groupings()$groups, groupings()$groupings$names)
-					# groupsDF = groupings()$groups
-					# newFeatDF = data.frame(feature = feat,  name = featName, shortname = featShortName, dimension = featDimension, isint = FALSE, type = featType)
-					# newFeatDF = cbind(newFeatDF, groupsDF)
-					# newFeatDF$group_id = apply(newFeatDF[, as.character(groupings()$groupings$names), drop = F], 1, paste, collapse = "_")
-					# feats = plyr::rbind.fill(feats, newFeatDF)
 					
 					data$tracks = tracks
 					data$features = feats
@@ -2673,5 +2595,23 @@ server = function(input, output, session) {
 	traj_titles = titles_server("traj_title")
 	dir_titles = titles_server("dir_title")
 	traj_feat_titles = titles_server("traj_feat_title")
+	
+	track_axis_labs = axis_labels_server("track_axis_labs", features, tracks, 
+										 groups = list(x = reactive({input$track_x_In}), 
+										 			  y = reactive({input$track_y_In})),
+										 default_labels = list(x = NULL, y = reactive({input$track_y_In})))
+	traj_axis_labs = axis_labels_server("traj_axis_labs", features, trajectories, 
+										groups = list(x = reactive({traj_xy_names()$xVarName}), 
+													  y = reactive({traj_xy_names()$yVarName})),
+										default_labels = list(x = reactive({traj_xy_names()$xVarName}), 
+															  y = reactive({traj_xy_names()$yVarName})))
+	dir_axis_labs = axis_labels_server("dir_axis_labs", features, tracks, 
+									   groups = list(x = NULL, y = NULL),
+									   default_labels = list(x = NULL, y = NULL))
+	traj_feat_axis_labs = axis_labels_server("traj_feat_axis_labs", features, trajectories,
+											 groups = list(x = reactive({input$traj_feat_x_In}), 
+											 			  y = reactive({input$traj_feat_y_In})),
+											 default_labels = list(x = reactive({input$traj_feat_x_In}), 
+											 					  y = reactive({input$traj_feat_y_In})))
 }
 shinyApp(ui = ui, server = server, enableBookmarking = "server")
