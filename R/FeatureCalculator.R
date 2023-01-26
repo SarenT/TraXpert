@@ -1,14 +1,12 @@
-feature_calculator_UI = function(id, title, description, featureDimensionChoices, typeChoices){
+feature_calculator_UI = function(id, title, description, featureDimensionChoices, typeChoices, column_size = 4){
 	ns = NS(id)
 	
 	#newFeaturePanel = function(title, description, feature, typeChoices){
 	tagList(
-		column(6, fluidPage(class = "shiny-input-panel", fluidRow(
-			column(4, h4(title),
-				   p(description),
-				   actionButton(ns("calculate"), label = "Calculate"),
-				   checkboxInput(ns("debug"), label = "Debug")),
-			column(8, fluidPage(
+		column(column_size, fluidPage(class = "shiny-input-panel", fluidRow(
+			column(12, h4(title),
+				   p(description))),
+			fluidRow(column(12, fluidPage(
 				fluidRow(
 					column(6, textInput(ns("feat"), "Feature"),
 						   textInput(ns("shortname"), "Short Name")),
@@ -28,7 +26,9 @@ feature_calculator_UI = function(id, title, description, featureDimensionChoices
 					column(6, tipify(textInput(ns("formula"), "Formula"),#, choices = formulaChoices, selected = NULL, multiple = TRUE, options = list(create = TRUE)), 
 									 "Formula to calculate the new feature. Every item needs to be selected or added. Plain text will be ignored. The formula needs to be correctly written (all paranthesis closed, mathematical operator between variables etc.).", 
 									 "top"))
-				)
+				),
+				fluidRow(column(6,actionButton(ns("calculate"), label = "Calculate")),
+						 column(6, checkboxInput(ns("debug"), label = "Debug")))
 			))
 		)),
 		bsTooltip(ns("btn"), "Start calculation. All fields must be filled."),

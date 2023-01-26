@@ -306,9 +306,9 @@ tabPanelOperations = function(title, tabColor){
 			 	feature_calculator_UI("traj_new_feat", "New Trajectory (Spot/Edge) Feature", 
 			 						  "Calculate a new spot or edge feature based on an existing feature. With this, you can calculate new measures by entering the formula.",
 			 						  # "traj", 
-			 						  featureDimensionChoices, list(`Spot` = "Spot", `Edge` = "Edge"))
-			 )),
-			 fluidPage(fluidRow(
+			 						  featureDimensionChoices, list(`Spot` = "Spot", `Edge` = "Edge")),
+			 # )),
+			 # fluidPage(fluidRow(
 			 	feature_calculator_UI("track_from_traj_new_feat", "New Track Feature from Trajectories", 
 			 						  "Calculate a new track feature based on existing trajectory features. This summarises trajectory information (spots and edges of a track) into a single value per track. e.g. mean track speed is the average of all speeds between spots of a track.",
 			 						  # "track_from_traj", 
