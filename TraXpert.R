@@ -208,15 +208,6 @@ tabPanelImport = function(title = titleImportGroupings, tabColor){
 	)
 }
 
-rotationPanel = function(){
-	fluidPage(class = "shiny-input-panel", 
-			  fluidRow(column(12, h4("Rotate"), p("Select XY-Rotation angle (pitch) and Z-rotation angle (yaw) and click \"rotate\" button."))),
-			  fluidRow(column(12, sliderInput("processRotationFixIn", "Rotation (Pitch) Fix Angle", min = -180, max = 180, step = 15, value = 0))),
-			  fluidRow(column(12, sliderInput("processZRotationFixIn", "Z Rotation (Yaw) Fix Angle", min = -180, max = 180, step = 15, value = 0))),
-			  fluidRow(column(12, checkboxInput("rotate_browse_In", label = "Debug", value = FALSE), actionButton(inputId = "rotateIn", label = "Process Files")))
-	)
-}
-
 generateBucketList = function(choices, context){
 	ui = tagList(fluidPage(fluidRow(
 			column(6,
@@ -295,7 +286,7 @@ tabPanelOperations = function(title, tabColor){
 	tabPanel(title,
 			 tags$style(HTML(tabBGColorCSS(title, tabColor))),
 			 fluidPage(fluidRow( 
-			 	column(3, rotationPanel()),
+			 	column(3, rotation_UI("rotation")),
 			 	column(9, point_source_UI("point_source"))
 			 	)),
 			 fluidPage(fluidRow( 
@@ -959,31 +950,7 @@ server = function(input, output, session) {
 	files = reactive({data()$files}); features = reactive({data()$features})
 	
 	parseParameters = reactiveVal(NULL)
-	observeEvent(input$rotateIn, {
-		initializeProgress = function(max, message){
-			progress <<- shiny::Progress$new(max = max)
-			if(!is.null(message)){
-				progress$set(message = message, value = 0)
-			}else{
-				progress$set(value = 0)
-			}
-		}
-		
-		# Close the progress when this reactive exits (even if there's an error)
-		#on.exit({progress$close()})
-		
-		updateProgress = function(value, detail = NULL) {
-			if(is.null(detail)){progress$set(value = value)}else{progress$set(value = value, detail = detail)}
-		}
-		
-		closeProgress = function(){progress$close()}
-		
-		dataDF = data()
-		
-		data(rotateTracktms(dataDF, updateProgress, initializeProgress, closeProgress, 
-							rotation_fix = input$processRotationFixIn, rotation_z_fix = input$processZRotationFixIn, 
-							browse = input$rotate_browse_In))
-	})
+	
 	observeEvent(input$processFilesIn, {
 	#dataTMFiles = eventReactive(input$processFilesIn, {
 		# Create a Progress object
@@ -2493,6 +2460,8 @@ server = function(input, output, session) {
 	plot_export_server("traj_export", "Trajectory", trajectoryPlot)
 	plot_export_server("dir_export", "Directionality", directionalityPlot)
 	plot_export_server("traj_feat_export", "Trajectory Feature", trajFeaturePlot)
+	
+	rotation_server("rotation", data)
 	
 	feature_calculator_server("track_new_feat", allTrackMeasures, data, features, groupings, 
 							  "tracks", "tracks", "TRACK_ID", "track_global_id")
