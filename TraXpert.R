@@ -209,24 +209,12 @@ tabPanelImport = function(title = titleImportGroupings, tabColor){
 }
 
 rotationPanel = function(){
-	column(3,
-		   fluidPage(class = "shiny-input-panel", 
-		   		  fluidRow(column(12, h4("Rotate"), p("Select XY-Rotation angle (pitch) and Z-rotation angle (yaw) and click \"rotate\" button."))),
-		   		  fluidRow(column(12, sliderInput("processRotationFixIn", "Rotation (Pitch) Fix Angle", min = -180, max = 180, step = 15, value = 0))),
-		   		  fluidRow(column(12, sliderInput("processZRotationFixIn", "Z Rotation (Yaw) Fix Angle", min = -180, max = 180, step = 15, value = 0))),
-		   		  fluidRow(column(12, checkboxInput("rotate_browse_In", label = "Debug", value = FALSE), actionButton(inputId = "rotateIn", label = "Process Files")))
-		   		  ))
-}
-pointSourcePanel = function(){
-	column(9, fluidPage(class = "shiny-input-panel", fluidRow(
-		column(3, h4("Point Source"), p("Calculate point source directionality by a providing point source location (physical units NOT pixels)."),
-			   checkboxInput("point_source_browse_In", label = "Debug", value = FALSE), 
-			   tipify(fileInput(inputId = "pointSourceDefUploadIn", label = "Upload"), 
-			   	   "Upload a file to fill up the database", "top", "hover"),
-			   downloadButton(outputId = "pointSourceTemplateIn", label = "Download Template"),
-			   actionButton(inputId = "pointSourceIn", label = "Calculate")),
-		column(9, DTOutput(outputId = "files_point_source_Out", width = "60%"))
-	)))
+	fluidPage(class = "shiny-input-panel", 
+			  fluidRow(column(12, h4("Rotate"), p("Select XY-Rotation angle (pitch) and Z-rotation angle (yaw) and click \"rotate\" button."))),
+			  fluidRow(column(12, sliderInput("processRotationFixIn", "Rotation (Pitch) Fix Angle", min = -180, max = 180, step = 15, value = 0))),
+			  fluidRow(column(12, sliderInput("processZRotationFixIn", "Z Rotation (Yaw) Fix Angle", min = -180, max = 180, step = 15, value = 0))),
+			  fluidRow(column(12, checkboxInput("rotate_browse_In", label = "Debug", value = FALSE), actionButton(inputId = "rotateIn", label = "Process Files")))
+	)
 }
 
 generateBucketList = function(choices, context){
@@ -307,8 +295,8 @@ tabPanelOperations = function(title, tabColor){
 	tabPanel(title,
 			 tags$style(HTML(tabBGColorCSS(title, tabColor))),
 			 fluidPage(fluidRow( 
-			 	rotationPanel(),
-			 	pointSourcePanel()
+			 	column(3, rotationPanel()),
+			 	column(9, point_source_UI("point_source"))
 			 	)),
 			 fluidPage(fluidRow( 
 			 	feature_calculator_UI("track_new_feat", "New Track Feature", 
@@ -970,60 +958,7 @@ server = function(input, output, session) {
 	tracks = reactive({data()$tracks}); trajectories = reactive({data()$trajectories}); 
 	files = reactive({data()$files}); features = reactive({data()$features})
 	
-	pointSourceColumnDisable = reactive({
-		colsToShow = c("name", pointSourceColumns)
-		colsToDisable = which(!(colnames(files()) %in% colsToShow)) - 1
-		#print(colsToDisable)
-		colsToDisable
-		
-	})
 	parseParameters = reactiveVal(NULL)
-	
-	#userUnitInputs = reactiveVal(NULL)
-	observeEvent(input$pointSourceDefUploadIn, {
-		
-		if(endsWith(input$pointSourceDefUploadIn$datapath[1], ".csv")){
-			psData = read.csv(input$pointSourceDefUploadIn$datapath[1])
-			psData = psData %>% select_at(vars("name", pointSourceColumns))
-			
-			if((psData %>% summarise_all(is.numeric) %>% select(-name) %>% 
-				mutate(all = all(c_across())) %>% select(all))$all[1]){
-				
-				dataList = data()
-				dataList$files = dataList$files %>% select_at(vars(!contains(pointSourceColumns))) %>% 
-					left_join(psData, by = "name")
-				data(dataList)
-			}
-		}
-		#dataList = data()
-	})
-	
-	observeEvent(input$pointSourceIn, {
-		if(input$point_source_browse_In){
-			browser()
-		}
-		initializeProgress = function(max, message){
-			progress <<- shiny::Progress$new(max = max)
-			if(!is.null(message)){
-				progress$set(message = message, value = 0)
-			}else{
-				progress$set(value = 0)
-			}
-		}
-		updateProgress = function(value, detail = NULL) {
-			if(is.null(detail)){progress$set(value = value)}else{progress$set(value = value, detail = detail)}
-		}
-		closeProgress = function(){progress$close()}
-		
-		dataList = data()
-		#TODO  remove below line
-		#dataList$files[pointSourceColumns] = 1000
-		if(sum(is.na(dataList$files[pointSourceColumns])) == 0){
-			data(pointSource(dataList, updateProgress, initializeProgress, closeProgress, 
-							 browse = input$point_source_browse_In))
-		}
-	})
-	
 	observeEvent(input$rotateIn, {
 		initializeProgress = function(max, message){
 			progress <<- shiny::Progress$new(max = max)
@@ -1046,10 +981,9 @@ server = function(input, output, session) {
 		dataDF = data()
 		
 		data(rotateTracktms(dataDF, updateProgress, initializeProgress, closeProgress, 
-						  rotation_fix = input$processRotationFixIn, rotation_z_fix = input$processZRotationFixIn, 
-						  browse = input$rotate_browse_In))
+							rotation_fix = input$processRotationFixIn, rotation_z_fix = input$processZRotationFixIn, 
+							browse = input$rotate_browse_In))
 	})
-	
 	observeEvent(input$processFilesIn, {
 	#dataTMFiles = eventReactive(input$processFilesIn, {
 		# Create a Progress object
@@ -2549,19 +2483,6 @@ server = function(input, output, session) {
 		}
 	)
 	
-	output$pointSourceTemplateIn = downloadHandler(
-		filename = function() {
-			paste("Point_Source_Coordinates", "csv", sep = ".")
-		},
-		content = function(file) {
-			write.csv(x = files() %>% 
-					  	ungroup() %>% 
-					  	select(name, pointSourceColumns), 
-					  file = file, append = FALSE, quote = TRUE, sep = "\t", dec = ".", 
-					  row.names = FALSE, col.names = TRUE)
-		},
-		contentType = paste("text", "csv", sep = "/")
-	)
 	
 	track_facet = facet_control_server("track_facet", groupingsChoiceswithEmpty)
 	traj_facet = facet_control_server("traj_facet", groupingsChoiceswithEmpty)
@@ -2613,5 +2534,7 @@ server = function(input, output, session) {
 											 			  y = reactive({input$traj_feat_y_In})),
 											 default_labels = list(x = reactive({input$traj_feat_x_In}), 
 											 					  y = reactive({input$traj_feat_y_In})))
+	
+	point_source = point_source_server("point_source", data)
 }
 shinyApp(ui = ui, server = server, enableBookmarking = "server")
