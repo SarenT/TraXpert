@@ -479,8 +479,6 @@ tabPanelPlotTrajectories = function(title, tabColor){
 	)
 }
 
-
-
 tabPanelDirectionality = function(title, tabColor){
 	tabPanel(title,
 			 tags$style(HTML(tabBGColorCSS(title, tabColor))),
@@ -1497,11 +1495,6 @@ server = function(input, output, session) {
 		data(dataDF)
 	})
 	
-	table_output_server("files_table_out", files)
-	table_output_server("features_table_out", features)
-	table_output_server("tracks_table_out", tracks)
-	table_output_server("trajectories_table_out", trajectories)
-	
 	trackQQPlot = reactive({
 		
 	})
@@ -1953,170 +1946,6 @@ server = function(input, output, session) {
 	})
 	output$trajFeaturePlotOut = renderPlot({trajFeaturePlot()$plot})
 	
-	output$traj_feat_stat_DF_Out = renderTable(spacing = "xs", striped = TRUE, {
-		if("tbl" %in% class(trajFeaturePlot()$stat)){
-			trajFeaturePlot()$stat
-		}
-	})
-	output$traj_feat_stat_text_Out = renderText({
-		if("character" %in% class(trajFeaturePlot()$stat)){
-			statOutText = paste(trajFeaturePlot()$stat, collapse = "\n") #hTestToString(trajectoryPlot()$stat)
-			statOutText
-		}
-	})
-	output$traj_feat_data_replicates_Out = renderTable(spacing = "xs", striped = TRUE, {
-		trajFeaturePlot()$replicates
-	})
-	output$traj_feat_data_tracks_Out = renderTable(spacing = "xs", striped = TRUE, {
-		trajFeaturePlot()$tracks
-	})
-	
-	observeEvent(input$new_track_feat_btn_In, {
-		#plyr::rbind.fill?
-		if(input$new_track_feat_debug_In){
-			browser()
-		}
-		
-		feat = input$new_track_feat_In
-		
-		# The feature identifier needs to be compliant with variable names
-		if(isSuitableVarName(feat)){
-			featName = input$new_track_feat_name_In
-			featShortName = input$new_track_feat_shortname_In
-			featDimension = input$new_track_feat_dimension_In
-			featType = "Track"
-			formula = paste(input$new_track_feat_formula_In, collapse = " ")
-			
-			if(!isEmpty(featName) && !isEmpty(featShortName) && !isEmpty(featDimension) && !isEmpty(featType) && !isEmpty(formula)){
-				data = data()
-				tracks = data()$tracks
-				
-				tracks = tryCatch({
-					tracks %>% group_by(track_global_id) %>% mutate(!!feat := !!parse_expr(formula))
-				}, error = function(e){
-					print(e)
-					NULL
-				})
-				if(!is.null(tracks)){
-					# Adding feature definition to the features df
-					feats = features()
-					feats = appendNewFeatures(feats, feat, featName, featShortName, featDimension, FALSE, featType, 
-									  groupings()$groups, groupings()$groupings$names)
-					
-					data$tracks = tracks
-					data$features = feats
-					
-					data(data)
-				}else{
-					#TODO report error
-				}
-			}
-		}
-		
-	})
-	
-	observeEvent(input$new_traj_feat_btn_In, {
-		#plyr::rbind.fill?
-		if(input$new_traj_feat_debug_In){
-			browser()
-		}
-		
-		feat = input$new_traj_feat_In
-		
-		
-		if(isSuitableVarName(feat)){
-			featName = input$new_traj_feat_name_In
-			featShortName = input$new_traj_feat_shortname_In
-			featDimension = input$new_traj_feat_dimension_In
-			featType = input$new_traj_feat_type_In
-			formula = paste(input$new_traj_feat_formula_In, collapse = " ")
-			
-			if(!isEmpty(featName) && !isEmpty(featShortName) && !isEmpty(featDimension) && !isEmpty(featType) && !isEmpty(formula)){
-				data = data()
-				trajectories = trajectories()
-				
-				trajectories = tryCatch({
-					trajectories %>% select_at(vars(-one_of(feat))) %>% group_by(track_global_id) %>% mutate(!!feat := !!parse_expr(formula))
-				}, error = function(e){
-					print(e)
-					NULL
-				})
-				
-				if(!is.null(trajectories)){
-					feats = features()
-					feats = appendNewFeatures(feats, feat, featName, featShortName, featDimension, FALSE, featType, 
-											  groupings()$groups, groupings()$groupings$names)
-					
-					# groupsDF = groupings()$groups
-					# newFeatDF = data.frame(feature = feat,  name = featName, shortname = featShortName, dimension = featDimension, isint = FALSE, type = featType)
-					# newFeatDF = cbind(newFeatDF, groupsDF)
-					# newFeatDF$group_id = apply(newFeatDF[, as.character(groupings()$groupings$names), drop = F], 1, paste, collapse = "_")
-					# feats = plyr::rbind.fill(feats, newFeatDF)
-					
-					data$trajectories = trajectories
-					data$features = feats
-					
-					data(data)
-				}else{
-					#TODO error report
-				}
-			}
-		}
-		
-	})
-	
-	observeEvent(input$new_track_from_traj_feat_btn_In, {
-		#plyr::rbind.fill?
-		if(input$new_track_from_traj_feat_debug_In){
-			browser()
-		}
-		
-		feat = input$new_track_from_traj_feat_In
-		
-		
-		if(isSuitableVarName(feat)){
-			featName = input$new_track_from_traj_feat_name_In
-			featShortName = input$new_track_from_traj_feat_shortname_In
-			featDimension = input$new_track_from_traj_feat_dimension_In
-			featType = input$new_track_from_traj_feat_type_In
-			formula = paste(input$new_track_from_traj_feat_formula_In, collapse = " ")
-			
-			if(!isEmpty(featName) && !isEmpty(featShortName) && !isEmpty(featDimension) && !isEmpty(featType) && !isEmpty(formula)){
-				data = data()
-				tracks = tracks()
-				
-				tracks = tryCatch({
-					tracks %>% select_at(vars(-one_of(feat))) %>% 
-						left_join(trajectories() %>% group_by(track_global_id) %>% summarise(!!feat := !!parse_expr(formula)), by = "track_global_id")
-					
-				}, error = function(e){
-					print(e)
-					NULL
-				})
-				
-				if(!is.null(tracks)){
-					feats = features()
-					feats = appendNewFeatures(feats, feat, featName, featShortName, featDimension, FALSE, featType, 
-											  groupings()$groups, groupings()$groupings$names)
-					
-					# groupsDF = groupings()$groups
-					# newFeatDF = data.frame(feature = feat,  name = featName, shortname = featShortName, dimension = featDimension, isint = FALSE, type = featType)
-					# newFeatDF = cbind(newFeatDF, groupsDF)
-					# newFeatDF$group_id = apply(newFeatDF[, as.character(groupings()$groupings$names), drop = F], 1, paste, collapse = "_")
-					# feats = plyr::rbind.fill(feats, newFeatDF)
-					
-					data$tracks = tracks
-					data$features = feats
-					
-					data(data)
-				}else{
-					#TODO error report
-				}
-			}
-		}
-		
-	})
-	
 	output$sessionOut = downloadHandler(
 		
 		# This function returns a string which tells the client
@@ -2139,6 +1968,10 @@ server = function(input, output, session) {
 		}
 	)
 	
+	table_output_server("files_table_out", files)
+	table_output_server("features_table_out", features)
+	table_output_server("tracks_table_out", tracks)
+	table_output_server("trajectories_table_out", trajectories)
 	
 	track_facet = facet_control_server("track_facet", groupingsChoiceswithEmpty)
 	traj_facet = facet_control_server("traj_facet", groupingsChoiceswithEmpty)

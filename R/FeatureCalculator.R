@@ -27,7 +27,7 @@ feature_calculator_UI = function(id, title, description, featureDimensionChoices
 									 "Formula to calculate the new feature. Every item needs to be selected or added. Plain text will be ignored. The formula needs to be correctly written (all paranthesis closed, mathematical operator between variables etc.).", 
 									 "top"))
 				),
-				fluidRow(column(6,actionButton(ns("calculate"), label = "Calculate")),
+				fluidRow(column(6, actionButton(ns("calculate"), label = "Calculate")),
 						 column(6, checkboxInput(ns("debug"), label = "Debug")))
 			))
 		)),
