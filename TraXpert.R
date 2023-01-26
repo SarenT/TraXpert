@@ -246,42 +246,6 @@ generateBucketList = function(choices, context){
 	return(ui)
 }
 
-newFeaturePanel = function(title, description, feature, typeChoices){
-	column(6, fluidPage(class = "shiny-input-panel", fluidRow(
-		column(4, h4(title),
-			   p(description),
-			   actionButton(inputId = paste("new", feature, "feat_btn_In", sep = "_"), label = "Calculate"),
-			   checkboxInput(inputId = paste("new", feature, "feat_debug_In", sep = "_"), label = "Debug")),
-		column(8, fluidPage(
-			fluidRow(
-				column(6, textInput(inputId = paste("new", feature, "feat_In", sep = "_"), label = "Feature"),
-					   textInput(inputId = paste("new", feature, "feat_shortname_In", sep = "_"), label = "Short Name")),
-				column(6, textInput(inputId = paste("new", feature, "feat_name_In", sep = "_"), label = "Name"),
-					   fluidPage(fluidRow(
-					   	column(6, tipify(selectInput(inputId = paste("new", feature, "feat_dimension_In", sep = "_"), label = "Dimension", 
-					   								 choices = featureDimensionChoices), 
-					   					 "Feature dimenion. This indicates the type of physical information the feature will contain. e.g. displacement is a length, change of displacement over time is velocity etc.", "top")),
-					   	column(6, tipify(selectInput(inputId = paste("new", feature, "feat_type_In", sep = "_"), label = "Type", 
-					   								 choices = typeChoices), 
-					   					 "Type of feature. Options are Track, Spot or Edge. This selection may be limited.", "top"))
-					   )))
-				), hr(),
-			fluidRow(
-				column(6, tipify(selectInput(inputId = paste("new", feature, "feat_vars_In", sep = "_"), label = "Variables", 
-											 choices = list()), "Existing variables to choose from to include in the formula.", "top")),
-				column(6, tipify(textInput(inputId = paste("new", feature, "feat_formula_In", sep = "_"), "Formula"),#, choices = formulaChoices, selected = NULL, multiple = TRUE, options = list(create = TRUE)), 
-								 "Formula to calculate the new feature. Every item needs to be selected or added. Plain text will be ignored. The formula needs to be correctly written (all paranthesis closed, mathematical operator between variables etc.).", 
-								 "top"))
-				)
-			))
-	)),
-	bsTooltip(paste("new", feature, "feat_btn_In", sep = "_"), "Start calculation. All fields must be filled."),
-	bsTooltip(paste("new", feature, "feat_In", sep = "_"), "Feature identifier. This needs to start with a letter (a-z or A-Z), may contain letters or numbers and \"_\"."),
-	bsTooltip(paste("new", feature, "feat_name_In", sep = "_"), "Visible title/name for the feature."),
-	bsTooltip(paste("new", feature, "feat_shortname_In", sep = "_"), "Visible short name for the feature."))
-}
-
-
 tabPanelOperations = function(title, tabColor){
 	tabPanel(title,
 			 tags$style(HTML(tabBGColorCSS(title, tabColor))),
