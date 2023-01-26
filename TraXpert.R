@@ -273,90 +273,6 @@ tabPanelOperations = function(title, tabColor){
 	)
 }
 
-statDataDetails = function(context){
-	tagList(fluidRow(
-		column(6,
-			   bsCollapse(id = paste("collapse", context, "data", sep = "_"),
-			   		   bsCollapsePanel("Data Structure",
-			   		   				tableOutput(outputId = paste0(context, "_data_replicates_Out")),
-			   		   				tableOutput(outputId = paste0(context, "_data_tracks_Out")),
-			   		   				style = "default")
-			   		   )
-			   ),
-		column(6, 
-			   bsCollapse(id = paste("collapse", context, "statistics", sep = "_"),
-			   					  bsCollapsePanel("Statistics",
-			   					  				tableOutput(outputId = paste0(context, "_stat_DF_Out")),
-			   					  				textOutput(outputId = paste0(context, "_stat_text_Out")),
-			   					  				style = "default")
-			   		   )
-			   )
-		),
-	fluidRow(
-		column(12,
-			   bsCollapse(id = paste("collapse", context, "normality", sep = "_"),
-			   		   bsCollapsePanel("Data Distribution, Normality and Variances",
-			   		   				fluidPage(fluidRow(
-			   		   					column(6, plotOutput(outputId = paste0(context, "_stat_histogram_Out")),
-			   		   						   plotOutput(outputId = paste0(context, "_stat_qq_Out"))),
-			   		   					column(6, h2("Shapiro-Wilk Test and Distribution Shape"),
-			   		   						   withMathJax("Shapiro-Wilk test is a test of normality of data. Null hypothesis is that the sample came from a normally distributed population. If p-value is below a cutoff value (usually 0.05) null hypothesis can be rejected. Otherwise, there is not enough evidence to reject the null hypothesis. Small W values indicate a non-normality. However, only extreme deviations reduce W values. In general, Shapiro-Wilk test is highly sensitive to small deviations from normality with very large sample sizes (n > 200). Refer to Q-Q plots for thorough inspection. Skewness is measured with \\( g_1\\ =\\ m_3\\ / m_2^{3/2}\\ \\) (positive numbers mean right tail long) and kurtosis with \\( g_2\\ =\\ m_4\\ / m_2^{2} - 3\\ \\) (Positive kurtosis means more values are closer to the mean.)."),
-			   		   						   tableOutput(outputId = paste0(context, "_stat_normality_Out")),
-			   		   						   h2("Levene's Test"),
-			   		   						   p("Levene's test is a statistic to test equality of variances. Null hypothesis is that the population variances are equal. If p value is below a certain threshold (typically 0.5), null hypothesis can be rejected and it can be assumed that there is a difference between variances of groups."),
-			   		   						   verbatimTextOutput(outputId = paste0(context, "_stat_levene_Out")))
-			   		   				)),
-			   		   				style = "default")
-			   		   )
-			   )
-	))
-}
-
-statCircDataDetails = function(context){
-	tagList(fluidRow(
-		column(6,
-			   bsCollapse(id = paste("collapse", context, "data", sep = "_"),
-			   		   bsCollapsePanel("Data Structure",
-			   		   				tableOutput(outputId = paste0(context, "_circdata_replicates_Out")),
-			   		   				tableOutput(outputId = paste0(context, "_circdata_tracks_Out")),
-			   		   				style = "default")
-			   )
-		),
-		column(6, 
-			   bsCollapse(id = paste("collapse", context, "statistics", sep = "_"),
-			   		   bsCollapsePanel("Statistics",
-			   		   				tableOutput(outputId = paste0(context, "_circstat_DF_Out")),
-			   		   				textOutput(outputId = paste0(context, "_circstat_text_Out")),
-			   		   				style = "default")
-			   )
-		)
-	),
-	fluidRow(
-		column(12,
-			   bsCollapse(id = paste("collapse", context, "uniformity", sep = "_"),
-			   		   bsCollapsePanel("Data Distribution and Uniformity",
-			   		   				#h2("Distribution & Spread"),
-			   		   				uiOutput(outputId = paste0(context, "_circstat_histogram_qqplot_Out"))#, plotOutput(outputId = paste0(context, "_circstat_histogram_Out")), # circ package type histogram
-			   		   				#plotOutput(outputId = paste0(context, "_circstat_histogram_qqplot_Out"))
-			   		   				)
-			   		   ),
-			   bsCollapse(id = paste("collapse", context, "variances", sep = "_"),
-			   		   bsCollapsePanel("Variances & other Measures",
-			   		   				#h2("Summary Statistics"),
-			   		   				withMathJax("von Mises distribution is analogous to Gaussian distribution for circular data. Most simply circular data can be uniformly distributed. If not it may or may not follow a von Mises distrition. Similar to non-circular data, it may be skewed or have high/low kurtosis."),
-			   		   				tableOutput(outputId = paste0(context, "_stat_shape_Out")),
-			   		   				h2("Uniformity, von Mises"),
-			   		   				p("Rayleigh test can only be applied to single peak (unimodal) deviation from uniformity. Null hypothesis states that the data is uniformly distributed. For low p-values one can reject this. For cell migration, this can be interpreted as directionality. Watson's test is more powerful for non-unimodal deviations from uniformity. Although this would be a very rare use case scenario for migrating cells, directionality in opposite sides have been reported in some assays (e.g. force coupling on nano structures shown here Reversat et al. 2020)."),
-			   		   				tableOutput(outputId = paste0(context, "_stat_uniformity_DF_Out")),
-			   		   				verbatimTextOutput(outputId = paste0(context, "_stat_uniformity_text_Out")),
-			   		   				verbatimTextOutput(outputId = paste0(context, "_stat_vonMisesFit_Out"))
-			   		   				)
-			   		   )
-		)
-		
-	))
-}
-
 tabPanelPlotTrackFeatures = function(title, tabColor){
 	tabPanel(title,
 			 tags$style(HTML(tabBGColorCSS(title, tabColor))),
@@ -474,7 +390,7 @@ tabPanelPlotTrackFeatures = function(title, tabColor){
 			 		column(8, 
 			 			   plotOutput(outputId = "trackPlotOut", dblclick = "trackPlotOut_dblclick", 
 			 			   		   brush = brushOpts(id = "trackPlotOut_brush", resetOnNew = TRUE)),
-			 			   statDataDetails("track"),
+			 			   stat_details_UI("track_stats"),
 			 			   tags$style(type="text/css", "#track_stat_text_Out {white-space: pre-wrap;}"), hr(),
 			 			   plot_export_UI("track_export"), # plotExportSection("track"),
 			 			   # h3("Export Preview (1:4)"),
@@ -643,7 +559,7 @@ tabPanelDirectionality = function(title, tabColor){
 			 		),
 			 		column(8, 
 			 			   plotOutput(outputId = "directionalityPlotOut"),
-			 			   statCircDataDetails("dir"),
+			 			   circ_stat_details_UI("dir_stats"),
 			 			   tags$style(type="text/css", "#dir_circstat_text_Out {white-space: pre-wrap;}"), hr(),
 			 			   plot_export_UI("dir_export")
 			 		)
@@ -741,7 +657,7 @@ tabPanelPlotTrajectoryFeatures = function(title, tabColor){
 			 		),
 			 		column(8, 
 			 			   plotOutput(outputId = "trajFeaturePlotOut"),
-			 			   statDataDetails("traj_feat"),
+			 			   stat_details_UI("traj_feat_stats"),
 			 			   tags$style(type="text/css", "#traj_feat_stat_text_Out {white-space: pre-wrap;}"), hr(),
 			 			   actionButton(inputId = "plotTrajFeatIn", label = "Plot Trajectory Festures"),
 			 			   plot_export_UI("traj_feat_export")
@@ -1806,69 +1722,6 @@ server = function(input, output, session) {
 		}
 	})
 	
-	output$track_stat_DF_Out = renderTable(spacing = "xs", striped = TRUE, {
-		#browser()
-		if("tbl" %in% class(trackPlot()$stat[[1]])){
-			trackPlot()$stat
-		}
-		})
-	output$track_stat_text_Out = renderText({
-		#browser()
-		if("character" %in% class(trackPlot()$stat[[1]])){
-			#browser()
-			statOutText = ""
-			for(i in 1:length(trackPlot()$stat)){
-				statName = names(trackPlot()$stat)[i]
-				statOutText = paste(statOutText, statName, sep = "\n\n")
-				statOutText = paste(statOutText, paste(trackPlot()$stat[[i]], collapse = "\n"), sep = "\n") #hTestToString(trackPlot()$stat)
-			}
-			
-			statOutText
-		}
-		})
-	output$track_data_replicates_Out = renderTable(spacing = "xs", striped = TRUE, {
-		trackPlot()$replicates
-	})
-	output$track_data_tracks_Out = renderTable(spacing = "xs", striped = TRUE, {
-		trackPlot()$tracks
-	})
-	
-	output$track_stat_histogram_Out = renderPlot({
-		trackPlotOut = trackPlot()
-		if(is.list(trackPlotOut)){
-			trackPlotOut$histogram
-		}else{
-			NULL
-		}
-	})
-	
-	output$track_stat_qq_Out = renderPlot({
-		trackPlotOut = trackPlot()
-		if(is.list(trackPlotOut)){
-			trackPlotOut$qq
-		}else{
-			NULL
-		}
-	})
-	
-	output$track_stat_normality_Out = renderTable(spacing = "xs", striped = TRUE, {
-		trackPlotOut = trackPlot()
-		if(is.list(trackPlotOut)){
-			trackPlotOut$normality
-		}else{
-			NULL
-		}
-	})
-	
-	output$track_stat_levene_Out = renderText({
-		trackPlotOut = trackPlot()
-		if(is.list(trackPlotOut)){
-			trackPlotOut$levene
-		}else{
-			NULL
-		}
-	})
-	
 	trajectoryPlot = eventReactive(input$plotTrajIn, {#renderPlot({
 	#trajectoryPlot = reactive({
 	#trajectoryPlot = renderPlot({
@@ -2039,109 +1892,6 @@ server = function(input, output, session) {
 		plot = directionalityPlot()$plot
 		
 		plot
-	})
-	
-	output$dir_circstat_DF_Out = renderTable(spacing = "xs", striped = TRUE, {
-		if("tbl" %in% class(directionalityPlot()$stat)){
-			directionalityPlot()$stat
-		}
-	})
-	output$dir_circstat_text_Out = renderText({
-		#browser()
-		if("list" %in% class(directionalityPlot()$stat)){
-			statOutText = ""
-			for(i in 1:length(directionalityPlot()$stat)){
-				statName = names(directionalityPlot()$stat)[i]
-				statOutText = paste(statOutText, statName, sep = "\n\n")
-				statOutText = paste(statOutText, paste(directionalityPlot()$stat[[i]], collapse = "\n"), sep = "\n") #hTestToString(trackPlot()$stat)
-			}
-			
-			statOutText
-		}else if("character" %in% class(directionalityPlot()$stat)){
-			#browser()
-			statOutText = paste(directionalityPlot()$stat, collapse = "\n\n") #hTestToString(trajectoryPlot()$stat)
-			statOutText
-		}
-		
-	})
-	
-	output$dir_stat_shape_Out = renderTable(spacing = "xs", striped = TRUE, {
-		#browser()
-		if("tbl" %in% class(directionalityPlot()$summaryStats)){
-			directionalityPlot()$summaryStats
-		}
-	})
-	
-	output$dir_stat_uniformity_DF_Out = renderTable(spacing = "xs", striped = TRUE, {
-		#browser()
-		if("tbl" %in% class(directionalityPlot()$uniformityDF)){
-			directionalityPlot()$uniformityDF
-		}
-	})
-	
-	output$dir_stat_uniformity_text_Out = renderText({
-		#browser()
-		if(is.list(directionalityPlot())){
-			directionalityPlot()$uniformityText
-		}
-	})
-	
-	output$dir_stat_vonMisesFit_Out = renderText({
-		#browser()
-		
-		if(is.list(directionalityPlot())){
-			directionalityPlot()$vonMisesFit
-		}
-	})
-	
-	output$dir_circdata_replicates_Out = renderTable(spacing = "xs", striped = TRUE, {
-		directionalityPlot()$replicates
-	})
-	output$dir_circdata_tracks_Out = renderTable(spacing = "xs", striped = TRUE, {
-		directionalityPlot()$tracks
-	})
-	
-	
-	dir_circstat_histogram_qqplot_Height = function() {
-		directionalityHistPlotOut = directionalityPlot()
-		browser()
-		if(is.list(directionalityHistPlotOut)){
-			return(circHistQQCellSize * 2 * directionalityHistPlotOut$circDataModel$nGroups)
-		}else{
-			return(circHistQQCellSize)
-		}
-		
-	}
-	
-	output$dir_circstat_histogram_qqplot_Out = renderUI({
-		#browser()
-		cat(paste(c("plotsize:", circHistQQCellSize, circHistQQCellSize * 0.5 * length(dirHistogramData())), collapse="\t")); cat("\n")
-		plotOutput("dir_circstat_histogram_qqplot_Contents", width = circHistQQCellSize, height = circHistQQCellSize * 0.5 * length(dirHistogramData()))
-	})
-	
-	dirHistogramData = reactive({
-		directionalityHistPlotOut = directionalityPlot()
-		
-		if(is.list(directionalityHistPlotOut)){
-			directionalityHistPlotOut$circDataModel
-		}else{
-			NULL
-		}
-	})
-	output$dir_circstat_histogram_qqplot_Contents = renderPlot({
-		#browser()
-		
-		histogramData = dirHistogramData()
-		if(!is.null(histogramData)){
-			nGroups = length(histogramData)
-			par(mfrow=c(nGroups, 2))
-			titles = names(histogramData)
-			for(title in titles){
-				circdat = histogramData[[title]]
-				circularHistogram(circdat, title = title, shrink = 1.5, browse = input$dir_browse_In)
-				vMQQ(circdat, title = title)
-			}
-		}
 	})
 	
 	trajFeaturePlot = eventReactive(input$plotTrajFeatIn, {#trajFeaturePlot = reactive({
@@ -2399,6 +2149,11 @@ server = function(input, output, session) {
 	plot_export_server("traj_export", "Trajectory", trajectoryPlot)
 	plot_export_server("dir_export", "Directionality", directionalityPlot)
 	plot_export_server("traj_feat_export", "Trajectory Feature", trajFeaturePlot)
+	
+	stat_details_server("track_stats", trackPlot)
+	stat_details_server("traj_feat_stats", trajFeaturePlot)
+	
+	circ_stat_details_server("dir_stats", directionalityPlot)
 	
 	rotation_server("rotation", data)
 	
