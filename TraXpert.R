@@ -273,31 +273,6 @@ tabPanelOperations = function(title, tabColor){
 	)
 }
 
-autoSizeGeneric = function(context, dim){
-	tagList(
-		fluidPage(fluidRow(
-			column(6, checkboxInput(paste(context, "auto", dim,"In", sep = "_"), label = paste("Auto", dim), value = TRUE)),
-			column(6, conditionalPanel(paste0("!input.", context, "_auto_", dim, "_In"), 
-									   numericInput(paste(context, dim, "In", sep = "_"), label = paste("Plot", dim, "[cm]"), 
-									   			 min = 1, step = 1, max = 100, value = 10)))
-		)),
-		bsTooltip(paste(context, "auto", dim, "In", sep = "_"), paste("Whether or not output image", dim, "(both for SVG and PNG) needs to be automatic or not."), placement = "bottom", trigger = "hover"),
-		bsTooltip(paste(context, dim, "In", sep = "_"), paste("If not automatic, image", dim, "in cm at 300dpi."), placement = "bottom", trigger = "hover")
-	)
-}
-
-plotExportSection = function(context){
-	tagList(
-		downloadButton(outputId = paste0(context, "_download_PNG_In"), label = "PNG"),
-		downloadButton(outputId = paste0(context, "_download_SVG_In"), label = "SVG"),
-		autoSizeGeneric(context, "width"),
-		autoSizeGeneric(context, "height"),
-		bsTooltip(paste0(context, "_download_PNG_In"), toolTips$download_PNG_In, placement = "bottom", trigger = "hover"),
-		bsTooltip(paste0(context, "_download_SVG_In"), toolTips$download_SVG_In, placement = "bottom", trigger = "hover"),
-		
-	)
-}
-
 statDataDetails = function(context){
 	tagList(fluidRow(
 		column(6,
