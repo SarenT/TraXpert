@@ -273,135 +273,6 @@ tabPanelOperations = function(title, tabColor){
 	)
 }
 
-tabPanelPlotTrackFeatures = function(title, tabColor){
-	tabPanel(title,
-			 tags$style(HTML(tabBGColorCSS(title, tabColor))),
-			 fluidPage(
-			 	fluidRow(
-			 		column(4,
-			 			   bsCollapse(id = "track_settings",
-			 			   		   titles_UI("track_title", textFaceChoices),
-			 			   		   bsCollapsePanel("Plot Type and Variables", 
-			 			   		   				selectInput("track_type_In", "Plot Type", choices = trackFeaturesChoices, selected = "violin", multiple = TRUE),
-			 			   		   				tipify(selectInput("track_x_In", "Group by", choices = list()), "Main grouping. Select a grouping, which is most interesting to compare. Also used for statistics.", "top"),
-			 			   		   				tipify(selectInput("track_y_In", "Measure", choices = list()), "Select the measure you are interested in to compare.", "top"),
-			 			   		   				tipify(selectInput("track_replicate_In", "Replicates are grouped in", choices = list()), toolTips$replicate_In, "top"),
-			 			   		   				bsTooltip("track_type_In", "Display type of plot to use (violin, box plot, dot plot etc.)", placement = "top", trigger = "hover")
-			 			   		   				),
-			 			   		   groupings_colors_UI("groupings_colors_track", can_dark = TRUE),
-			 			   		   bsCollapsePanel("Tests", 
-			 			   		   				selectInput("track_multiple_stat_method_In", "Test - Multiple Groups", choices = trackMultipleStatChoices, selected = "kruskal.test"),
-			 			   		   				selectInput("track_pairwise_stat_method_In", "Test - Pairwise", choices = trackPairwiseStatChoices, selected = "wilcox.test"),
-			 			   		   				selectInput("track_data_transform_In", "Transform data with", choices = dataTransformChoices, selected = "noneTransform"),
-			 			   		   				conditionalPanel("input.track_data_transform_In  == 'logTransform'",
-			 			   		   								 shinyWidgets::sliderTextInput("track_data_logTransform_In", "\\(\\log_a(x) \\) ... a", choices = c(2, exp(1), 10), selected = exp(1))
-			 			   		   				),
-			 			   		   				conditionalPanel("input.track_data_transform_In  == 'powerTransform'",
-			 			   		   								 sliderInput("track_data_powerTransform_In", "\\(x^a\\) ... a", min = 2, max = 5, step = 1, value = 3)
-			 			   		   				),
-			 			   		   				conditionalPanel("input.track_data_transform_In  == 'rootTransform'",
-			 			   		   								 sliderInput("track_data_rootTransform_In", "\\(\\sqrt[a]{x}\\) ... a", min = 2, max = 5, step = 1, value = 3)
-			 			   		   				),
-			 			   		   				
-			 			   		   				conditionalPanel("input.track_data_transform_In  == ''",
-			 			   		   								 sliderInput("track_data_invTransform_In", "", min = 1, max = 2, step = 1, value = 1),
-			 			   		   								 sliderInput("track_data_noneTransform_In", "", min = 1, max = 2, step = 1, value = 1)
-			 			   		   				),
-			 			   		   				
-			 			   		   				tipify(selectInput("track_stat_label_In", "Stat. Label", choices = statLabelChoices), "Label type of pairwise comparisons (stars or p values).", "top"),
-			 			   		   				tipify(selectInput("track_stat_comparison_type_In", "Pairwise comparisons", choices = trackPairwStatComparisonTypeChoices, selected = "all_combinations"), "Select which pairs need to be selected. Either all combinations of pairs, all groups to a control group or selected pairs.", placement = "top", trigger = "hover"),
-			 			   		   				fluidPage(fluidRow(
-			 			   		   					column(6, checkboxInput("track_stat_hidens_In", "Hide Non-Sign.", value = FALSE))#,
-			 			   		   					
-			 			   		   					#column(6, checkboxInput("track_stat_pairwise_In", "Pairwise Comparisons", value = TRUE))
-			 			   		   				)),
-			 			   		   				bsTooltip("track_stat_method_In", toolTips$stat_method_In, placement = "top", trigger = "hover"),
-			 			   		   				bsTooltip("track_stat_label_In", toolTips$stat_label_In, placement = "top", trigger = "hover"),
-			 			   		   				bsTooltip("track_stat_hidens_In", toolTips$stat_hidens_In, placement = "bottom", trigger = "hover"),
-			 			   		   				#bsTooltip("track_stat_pairwise_In", toolTips$stat_pairwise_In, placement = "bottom", trigger = "hover"),
-			 			   		   				
-			 			   		   				conditionalPanel("input.track_multiple_stat_method_In  == 'kruskal.test'",
-			 			   		   								 
-			 			   		   				),
-			 			   		   				conditionalPanel("input.track_multiple_stat_method_In  == 'anova'",
-			 			   		   								 
-			 			   		   				),
-			 			   		   				conditionalPanel("input.track_pairwise_stat_method_In  == 'wilcox.test'",
-			 			   		   								 
-			 			   		   				),
-			 			   		   				conditionalPanel("input.track_pairwise_stat_method_In  == 't.test'",
-			 			   		   								 
-			 			   		   				)
-			 			   		   				),
-			 			   		   facet_control_UI("track_facet", textFaceChoices),
-			 			   		   bsCollapsePanel("Ranges, Units & Labels", 
-			 			   		   				fluidPage(fluidRow(
-			 			   		   					column(10, tipify(sliderInput("track_y_range_In", "y Axis Range", min = 0, max = 1, step = 0.1, value = c(0, 1), dragRange = TRUE), "y axis range. Slide the knobs or the line between the knobs to set what range to be displayed. You can also select an area and double click on the plot to set the range (only y axis selection is registered).", "top")), 
-			 			   		   					column(2, checkboxInput("track_y_range_check_In", "", value = TRUE))
-			 			   		   				)),
-			 			   		   				
-			 			   		   				axis_labels_UI("track_axis_labs", 
-			 			   		   							   list(x = list(title = "Grouping axis",
-			 			   		   							   			  unit = FALSE,
-			 			   		   							   			  tooltip = toolTips$xlab_In),
-			 			   		   							   	 y = list(title = "Measure axis",
-			 			   		   							   	 		 unit = TRUE,
-			 			   		   							   	 		 tooltip = toolTips$ylab_In)
-			 			   		   							   )),
-			 			   		   				bsTooltip("track_y_range_check_In", "Should the range selected come into effect? Quick way of enable/disable the range. If unchecked, whole data (default range) will be displayed.", placement = "bottom", trigger = "hover")),
-			 			   		   bsCollapsePanel("Specific Options", 
-			 			   		   				conditionalPanel("input.track_type_In.indexOf('violin') > -1",
-			 			   		   								 tipify(selectInput("track_violin_scale_In", "Scale", choices = list(Area = "area", Count = "count", Width = "width"), selected = "area"),"Area: all violins will have the same area (before trimming the tails)\\n Width: same maximum width\\n Count: violins are proportionally large to the number of observations.", placement = "top", trigger = "hover")
-			 			   		   				),
-			 			   		   				conditionalPanel("input.track_type_In.indexOf('box') > -1", 
-			 			   		   								 checkboxInput("track_box_notch_In", "Notch", value = TRUE), 
-			 			   		   								 checkboxInput("track_box_varwidth_In", "Variable Width", value = FALSE),
-			 			   		   								 bsTooltip("track_box_notch_In", "Whether or not a notch should be displayed at median.", placement = "bottom", trigger = "hover"),
-			 			   		   								 bsTooltip("track_box_varwidth_In", "If checked, boxes are drawn with widths proportional to the square-roots of the number of observations in the groups.", placement = "bottom", trigger = "hover")
-			 			   		   				),
-			 			   		   				conditionalPanel("input.track_type_In.indexOf('dot') > -1",
-			 			   		   								 sliderInput("track_dot_binwidth_In", "Bin Width", min = -0.1, max = 5, value = 0, step = 0.1),
-			 			   		   								 checkboxInput("track_dot_stackgroups_In", "Stack Groups", value = FALSE),
-			 			   		   								 tipify(selectInput("track_dot_method_In", "Method", choices = list(`Dot-density binning` = "dotdensity", `Fixed bin widths` = "histodot"), selected = "dotdensity"), "Dot-density binning, or fixed bin widths (like stat_bin)", placement = "top", trigger = "hover"),
-			 			   		   								 tipify(selectInput("track_dot_stackdir_In", "Stack Direction", choices = list(`Up` = "up", `Down` = "down", `Center` = "center", `Centered with aligned dots` = "centerwhole"), selected = "up"), "Which direction to stack the dots. \"up\" (default), \"down\", \"center\", \"centerwhole\" (centered, but with dots aligned)", placement = "top", trigger = "hover"),
-			 			   		   								 
-			 			   		   								 bsTooltip("track_dot_binwidth_In", "Dot size", placement = "bottom", trigger = "hover"),
-			 			   		   								 bsTooltip("track_dot_stackgroups_In", "Whether or not dots should be stacked across groups", placement = "bottom", trigger = "hover"),
-			 			   		   								 tags$div(h4("Dot Plot - Options"), p("Bin Width: Dot density (maximum bin width).\n"))
-			 			   		   				),
-			 			   		   				conditionalPanel("input.track_stat_label_In  == 'p.signif'",
-			 			   		   								 fluidPage(fluidRow(
-			 			   		   								 	column(2, shinyjs::disabled(textInput("track_stat_label_symbols0_In", label = "-", value = "0 < "))),
-			 			   		   								 	column(8, tipify(textInput("track_stat_label_symbols_In", label = "significance symbols", value = "**** < 0.0001 < *** < 0.001 < ** < 0.01 < * < 0.05 < ns", width = "100%"), "Use the following format: \"0 < *** < 0.001 < ** < 0.01 < 0.5 < ns < 1\"", placement = "top", trigger = "hover")),
-			 			   		   								 	column(2, shinyjs::disabled(textInput("track_stat_label_symbols1_In", label = "-", value = " < 1")))
-			 			   		   								 ))),
-			 			   		   				conditionalPanel("input.track_stat_comparison_type_In  == 'to_control'",
-			 			   		   								 tipify(selectInput("track_stat_comparison_control_In", "Control Group", choices = list()), "Select the control group to compare with other groups.", placement = "top", trigger = "hover")),
-			 			   		   				conditionalPanel("input.track_stat_comparison_type_In  == 'selected'",
-			 			   		   								 tags$div(id = 'placeholderPairwiseGroupSelect')
-			 			   		   				)
-			 			   		   ),
-			 			   		   debugging_UI("track_debug")
-			 			   		   
-			 			   )
-			 		
-			 		
-			 			   ),
-			 		column(8, 
-			 			   plotOutput(outputId = "trackPlotOut", dblclick = "trackPlotOut_dblclick", 
-			 			   		   brush = brushOpts(id = "trackPlotOut_brush", resetOnNew = TRUE)),
-			 			   stat_details_UI("track_stats"),
-			 			   tags$style(type="text/css", "#track_stat_text_Out {white-space: pre-wrap;}"), hr(),
-			 			   plot_export_UI("track_export"), # plotExportSection("track"),
-			 			   # h3("Export Preview (1:4)"),
-			 			   # imageOutput(outputId = "trackPlotPreviewOut")
-			 			   )
-			 		)
-			 	)
-			 )
-}
-
-
 tabPanelPlotTrajectories = function(title, tabColor){
 	tabPanel(title,
 			 tags$style(HTML(tabBGColorCSS(title, tabColor))),
@@ -697,7 +568,7 @@ ui = function(request){
 						tabPanel(titleTrajectories, 
 								 tags$style(HTML(tabBGColorCSS(titleTrajectories, tabColorTables))),
 								 table_output_UI("trajectories_table_out")),
-						tabPanelPlotTrackFeatures(titlePlotTrackFeatures, tabColorPlots),
+						track_features_UI("tracks", titlePlotTrackFeatures, tabColorPlots),
 						tabPanelPlotTrajectories(titlePlotTrajectories, tabColorPlots),
 						tabPanelDirectionality(titlePlotDirectionality, tabColorPlots),
 						tabPanelPlotTrajectoryFeatures(titlePlotTrajFeatures, tabColorPlots),
@@ -907,14 +778,6 @@ server = function(input, output, session) {
 		}
 	})
 	
-	observe({updateSelectInput(session, "track_x_In", choices = groupingsChoiceswithoutEmpty())})
-	observe({updateSelectInput(session, "track_y_In", choices = trackChoiceswithoutEmpty(), 
-							   selected = "TRACK_MEAN_SPEED")})
-	# observe({updateSelectInput(session, "track_stat_In", choices = groupingsChoiceswithEmpty())})
-	observe({updateSelectInput(session, "track_replicate_In", choices = groupingsChoiceswithEmpty())})
-	observe({updateSelectInput(session, "track_stat_comparison_control_In", choices = trackStatGroups(), 
-							   selected = safeSelect(trackStatGroups()))})
-	
 	observe({updateSelectInput(session, "traj_xy_In", choices = trajectoryXYLocationswithoutEmpty(), 
 							   selected = "fixed")})
 	#observe({updateSelectInput(session, "traj_x_In", choices = trajectoryXLocationswithoutEmpty(), selected = "POSITION_X_FIX")})
@@ -948,95 +811,10 @@ server = function(input, output, session) {
 	#trackRanges = reactiveValues(y = NULL)
 	
 	#observe({updateSliderInput(session, "track_x_range_In", min = getXMin(), max = getXMax(), step = getXStep(), value = c(getXMin(), getXMax()))})
-	observe({updateSliderInput(session, "track_y_range_In", min = getTrackYMin(), max = getTrackYMax(), 
-							   step = getTrackYStep(), value = c(getTrackYMin(), getTrackYMax()))})
+	
 	
 	observe({updateSliderInput(session, "traj_feat_y_range_In", min = getTrajFeatYMin(), max = getTrajFeatYMax(), 
 							   step = getTrajFeatYStep(), value = c(getTrajFeatYMin(), getTrajFeatYMax()))})
-	
-	observeEvent(input$trackPlotOut_dblclick, {
-		#browser()
-		brush = input$trackPlotOut_brush
-		if (!is.null(brush)) {
-			#ranges$x = c(brush$xmin, brush$xmax)
-			#trackRanges$y = c(brush$ymin, brush$ymax)
-			#updateCheckboxInput(session, "track_x_range_check_In", value = TRUE)
-			updateCheckboxInput(session, "track_y_range_check_In", value = TRUE)
-			#updateSliderInput(session, "track_x_range_In", min = getXMin(), max = getXMax(), step = getXStep(), value = c(brush$xmin, brush$xmax))
-			updateSliderInput(session, "track_y_range_In", min = getTrackYMin(), max = getTrackYMax(), 
-							  step = getTrackYStep(), value = c(brush$ymin, brush$ymax))
-		} else {
-			#ranges$x = NULL
-			#trackRanges$y = NULL
-			#updateCheckboxInput(session, "track_x_range_check_In", value = FALSE)
-			updateCheckboxInput(session, "track_y_range_check_In", value = FALSE)
-			#updateSliderInput(session, "track_x_range_In", min = getXMin(), max = getXMax(), step = getXStep(), value = c(getXMin(), getXMax()))
-			updateSliderInput(session, "track_y_range_In", min = getTrackYMin(), max = getTrackYMax(), 
-							  step = getTrackYStep(), value = c(getTrackYMin(), getTrackYMax()))
-		}
-	})
-	
-	getTrackYPretty = reactive({
-		if(!is.null(tracks()) && !(input$track_y_In == "")){
-			#browser()
-			transformFun = match.fun(trackTransform()$method)
-			values = tracks()[[input$track_y_In]]
-			unit = attr(values, "unit")
-			
-			if(is.null(unit)){
-				unit = ""
-			}
-			
-			unitToConvert = track_axis_labs$y_unit()
-			if(unitToConvert == ""){
-				unitToConvert = unit
-			}
-			
-			if(!udunits2::ud.are.convertible(unit, unitToConvert)){
-				unitToConvert = unit
-			}
-			#browser()
-			if(!is.factor(values)){
-				values = transformFun(udunits2::ud.convert(values, unit, unitToConvert), trackTransform()$parameter)
-				
-				#if()
-				pretty(values, 20)
-			}else{
-				values
-			}
-		}
-	})
-	#getXMin = reactive({getXPretty()[1]})
-	#getXMax = reactive({x = getXPretty(); x[length(x)]})
-	getTrackYMin = reactive({
-		#browser()
-		prettyMin = getTrackYPretty()[1]
-		if(!is.null(prettyMin) && !is.factor(prettyMin)){
-			if(prettyMin > 0){
-				return(0)
-			}else{
-				return(prettyMin * 2)
-			}
-		}
-	})
-	getTrackYMax = reactive({
-		prettyMax = last(getTrackYPretty())
-		if(!is.null(prettyMax) && !is.factor(prettyMax)){
-			if(prettyMax < 0){
-				return(0)
-			}else{
-				return(prettyMax * 2)
-			}
-		}
-		
-	})
-	getTrackYStep = reactive({
-		y = getTrackYPretty()
-		if(!is.null(y)){
-			y[2] - y[1]
-		}
-	})
-	
 	
 	getTrajFeatYPretty = reactive({
 		if(!is.null(tracks()) && !(input$traj_feat_y_In == "")){
@@ -1049,7 +827,7 @@ server = function(input, output, session) {
 				unit = ""
 			}
 			
-			unitToConvert = track_axis_labs$y_unit()
+			unitToConvert = traj_feat_axis_labs$y_unit()
 			if(unitToConvert == ""){
 				unitToConvert = unit
 			}
@@ -1097,11 +875,6 @@ server = function(input, output, session) {
 		}
 	})
 	
-	trackChoiceswithEmpty = reactive({
-		#featuresToNamedList("Track", data()$features, empty = TRUE)
-		choicesInNamedList("Track", features(), empty = TRUE)
-	})
-	
 	trajectoryXYLocationswithoutEmpty = reactive({
 		#trajectoryPositionNamedList(c("Spot", "Edge"), data()$features, "x", empty = FALSE)
 		#browser()
@@ -1138,12 +911,6 @@ server = function(input, output, session) {
 		return(choices)
 	})
 	
-	trackChoiceswithoutEmpty = reactive({
-		#featuresToNamedList("Track", data()$features, empty = FALSE)
-		#browser()
-		choicesInNamedList("Track", features(), empty = FALSE)
-	})
-	
 	trajChoiceswithoutEmpty = reactive({
 		#featuresToNamedList("Track", data()$features, empty = FALSE)
 		#browser()
@@ -1160,22 +927,6 @@ server = function(input, output, session) {
 		req(groupings())
 		#browser()
 		groupingsToNamedList(groupings()$groupings, empty = TRUE)
-	})
-	
-	trackStatGroups = reactive({
-		#browser()
-		statGroup = input$track_x_In
-		#trackData = tracks()
-		if(!is.null(statGroup) && statGroup != ""){
-			groupingsDF = groupings()$groupings
-			groups = as.character(getGroups(groupingsDF, statGroup))
-			labels = as.character(getGLabs(groupingsDF, statGroup))
-			choices = as.list(groups)
-			names(choices) = labels
-			return(choices)
-		}else{
-			return(list())
-		}
 	})
 	
 	groupingsChoiceswithEmptywithDoNotDisplay = reactive({
@@ -1287,38 +1038,6 @@ server = function(input, output, session) {
 			})
 			print(names(labelRVs))
 			cat("========================================================\n")
-		}
-	})
-	
-	observe({
-		groupingsList = groupings()
-		dataList = data()
-		statGroup = input$track_x_In
-		#trackData = tracks()
-		if(!is.null(statGroup) && statGroup != ""){
-			if(length(groupingsList) > 1){
-				groupingsDF = groupingsList$groupings
-				
-				removeUI(selector = "#placeholderPairwiseGroupSelect div", multiple = TRUE)
-				#for(rankListOb in rankListObs){rankListOb$destroy()}
-				#rankListObs <<- list()
-				if(length(dataList) > 1){
-					#browser()
-					choices = as.character(getGroups(groupingsDF, statGroup))
-					labels = as.character(getGLabs(groupingsDF, statGroup))
-					#choices = as.list(choices)
-					#names(choices) = labels
-					
-					insertUI(selector = "#placeholderPairwiseGroupSelect", 
-							 ui = generateBucketList(choices, context = "track"),
-							 # ui = bucket_list(header = "Select pairs", orientation = "horizontal",
-							 # 				 add_rank_list(text = "Compare these", input_id = "track_stat_comparison_select1_In", labels = NULL),
-							 # 				 add_rank_list(text = "<- from these ->", input_id = "track_stat_comparison_select_In", labels = choices),
-							 # 				 add_rank_list(text = "with these", input_id = "track_stat_comparison_select2_In", labels = NULL)
-							 # 				 ), 
-							 where = "beforeEnd")
-				}
-			}
 		}
 	})
 	
@@ -1498,119 +1217,10 @@ server = function(input, output, session) {
 	trackQQPlot = reactive({
 		
 	})
-
-	trackTransform = reactive({
-		# Data Transform with parameter
-		return(list(method = input$track_data_transform_In, parameter = input[[paste(c("track", "data", input$track_data_transform_In, "In"), collapse = "_")]]))
-	})
 	
 	trajFeatTransform = reactive({
 		# Data Transform with parameter
-		return(list(method = input$traj_feat_data_transform_In, parameter = input[[paste(c("track", "data", input$traj_feat_data_transform_In, "In"), collapse = "_")]]))
-	})
-	
-	trackPlot = reactive({
-		if(debugging_track$browse){
-			browser()
-		}
-		print("output$trackFeatureOut = renderPlot({")
-		if(input$track_x_In == "" || input$track_y_In == ""){
-			"Please select both x and y axis variables."
-		}else{
-			titles = lapply(track_titles, function(x){x()})
-			yUnit = track_axis_labs$y_unit(); if(yUnit == ""){yUnit = NULL}
-			xlab = track_axis_labs$x_lab()
-			ylab = track_axis_labs$y_lab()
-			
-			color_group = groupings_colors_track$color_group()
-			fill_group = groupings_colors_track$fill_group()
-			#statGroup = input$track_pairwise_stat_In; if(statGroup == "NULL") {statGroup = NULL}
-			replicateGroup = input$track_replicate_In; if(replicateGroup == "NULL") {replicateGroup = NULL}
-			
-			facetRowGroup = track_facet$row_group()
-			facetColGroup = track_facet$col_group()
-
-			#if(input$track_x_range_check_In){xRange = input$track_x_range_In}else{xRange = NULL}
-			if(input$track_y_range_check_In){yRange = input$track_y_range_In}else{yRange = NULL}
-			
-			a = input$track_stat_comparison_select1_In
-			b = input$track_stat_comparison_select2_In
-			#browser()
-			
-			statPairwiseSelectedPairs = list()
-			if(length(a) == length(b) && length(a) > 0){
-				for(i in 1:min(c(length(a), length(b)))){
-					statPairwiseSelectedPairs[[i]] = c(a[i], b[i])
-				}
-			}
-			
-			statSignSymbols = paste0(input$track_stat_label_symbols0_In, input$track_stat_label_symbols_In, input$track_stat_label_symbols1_In)
-			statSignSymbols = strsplit(statSignSymbols, " < ")[[1]]
-			
-			symnum.args = list(cutpoints = c(0, 0.0001, 0.001, 0.01, 0.05, 1), symbols = c("****", "***", "**", "*", "ns"))
-			# Must be uneven length as there needs to be 1 extra item in interval values
-			if(length(statSignSymbols) %% 2 == 1){
-				cutpoints = as.numeric(statSignSymbols[seq(1, length(statSignSymbols), 2)])
-				# non-numeric cutpoint can't be accepted
-				if(!any(is.na(cutpoints))){
-					# only values x accepted if 0 < x < 1
-					if(!any(!(0 <= cutpoints & cutpoints <= 1))){
-						# cutpoints must be in ascending order
-						if(sum(lead(cutpoints) < cutpoints, na.rm = TRUE) == 0){
-							symbols = statSignSymbols[seq(2, length(statSignSymbols), 2)]	
-							symnum.args = list(cutpoints = cutpoints, symbols = symbols)
-						}
-					}
-				}
-			}
-			
-			plot = plotData(dataTracks = tracks(), x = input$track_x_In, y = input$track_y_In, 
-							type = input$track_type_In, 
-							y.range = yRange, y.unit = yUnit, 
-							colorGroupName = color_group, fillGroupName = fill_group, groupings = groupings()$groupings,
-							#xReverseOrder = input$track_reverse_order_In,
-							facet.row = facetRowGroup, facet.col = facetColGroup, 
-							title = titles$title, subtitle = titles$subtitle, replicateGroupName = replicateGroup, 
-							stat.label = input$track_stat_label_In, hide.ns = input$track_stat_hidens_In, 
-							#statGroupName = statGroup, 
-							multiple.stat.method = input$track_multiple_stat_method_In, 
-							pairwise.stat.method = input$track_pairwise_stat_method_In, 
-							data.transform = trackTransform(),
-							statPairwiseType = input$track_stat_comparison_type_In, 
-							statPairwiseControl = input$track_stat_comparison_control_In, 
-							statPairwiseSelected = statPairwiseSelectedPairs, 
-							statSignSymbols = symnum.args,
-							fillAlpha = groupings_colors_track$fill_alpha(), 
-							colorAlpha = groupings_colors_track$color_alpha(), 
-							x.lab = xlab, y.lab = ylab, is.dark = groupings_colors_track$dark(),
-							facet.text.face = track_facet$label_face(), 
-							facet.label.fill.color = track_facet$label_fill_color(),
-							facet.wrap = track_facet$wrap(),
-							plot.subtitle.hjust = titles$subtitle_hjust, 
-							plot.subtitle.size = titles$subtitle_size, 
-							plot.subtitle.face = titles$subtitle_text_style,
-							violin.scale = input$track_violin_scale_In,
-							box.notch = input$track_box_notch_In,
-							box.varwidth = input$track_box_varwidth_In,
-							dot.binwidth = input$track_dot_binwidth_In,
-							dot.stackgroups = input$track_dot_stackgroups_In,
-							dot.method = input$track_dot_method_In,
-							dot.stackdir = input$track_dot_stackdir_In,
-							browse = debugging_track$browse, 
-							benchmark = debugging_track$benchmark, 
-							verbose = debugging_track$verbose)
-			plot
-		}
-		
-	})
-	
-	output$trackPlotOut = renderPlot({
-		trackPlotOut = trackPlot()
-		if(is.list(trackPlotOut)){
-			trackPlotOut$plot
-		}else{
-			NULL
-		}
+		return(list(method = input$traj_feat_data_transform_In, parameter = input[[paste(c("traj_feat", "data", input$traj_feat_data_transform_In, "In"), collapse = "_")]]))
 	})
 	
 	traj_export_size = reactive({
@@ -1968,22 +1578,27 @@ server = function(input, output, session) {
 		}
 	)
 	
+	
+	trackChoiceswithoutEmpty = reactive({
+		#featuresToNamedList("Track", data()$features, empty = FALSE)
+		#browser()
+		choicesInNamedList("Track", features(), empty = FALSE)
+	})
+	
 	table_output_server("files_table_out", files)
 	table_output_server("features_table_out", features)
 	table_output_server("tracks_table_out", tracks)
 	table_output_server("trajectories_table_out", trajectories)
 	
-	track_facet = facet_control_server("track_facet", groupingsChoiceswithEmpty)
 	traj_facet = facet_control_server("traj_facet", groupingsChoiceswithEmpty)
 	dir_facet = facet_control_server("dir_facet", groupingsChoiceswithEmpty)
 	traj_feat_facet = facet_control_server("traj_feat_facet", groupingsChoiceswithEmpty)
 	
-	plot_export_server("track_export", "Track Feature", trackPlot)
+	
 	plot_export_server("traj_export", "Trajectory", trajectoryPlot)
 	plot_export_server("dir_export", "Directionality", directionalityPlot)
 	plot_export_server("traj_feat_export", "Trajectory Feature", trajFeaturePlot)
 	
-	stat_details_server("track_stats", trackPlot)
 	stat_details_server("traj_feat_stats", trajFeaturePlot)
 	
 	circ_stat_details_server("dir_stats", directionalityPlot)
@@ -1997,26 +1612,20 @@ server = function(input, output, session) {
 	feature_calculator_server("track_from_traj_new_feat", allTrajectoryMeasures, data, features, groupings, 
 							  "trajectories", "tracks", "ID", "track_global_id")
 	
-	debugging_track = debugging_server("track_debug")
 	debugging_traj = debugging_server("traj_debug")
 	debugging_dir = debugging_server("dir_debug")
 	debugging_traj_feat = debugging_server("traj_feat_debug")
 	
-	groupings_colors_track = groupings_colors_server("groupings_colors_track", groupingsChoiceswithEmpty)
 	groupings_colors_dir = groupings_colors_server("groupings_colors_dir", groupingsChoiceswithoutEmpty)
 	
 	dark_plot_traj = dark_plot_server("dark_traj")
 	dark_plot_traj_feat = dark_plot_server("dark_traj_feat")
 	
-	track_titles = titles_server("track_title")
 	traj_titles = titles_server("traj_title")
 	dir_titles = titles_server("dir_title")
 	traj_feat_titles = titles_server("traj_feat_title")
 	
-	track_axis_labs = axis_labels_server("track_axis_labs", features, tracks, 
-										 groups = list(x = reactive({input$track_x_In}), 
-										 			  y = reactive({input$track_y_In})),
-										 default_labels = list(x = NULL, y = reactive({input$track_y_In})))
+	
 	traj_axis_labs = axis_labels_server("traj_axis_labs", features, trajectories, 
 										groups = list(x = reactive({traj_xy_names()$xVarName}), 
 													  y = reactive({traj_xy_names()$yVarName})),
@@ -2032,5 +1641,8 @@ server = function(input, output, session) {
 											 					  y = reactive({input$traj_feat_y_In})))
 	
 	point_source = point_source_server("point_source", data)
+	
+	track_features_server("tracks", data, features, tracks, groupings, 
+						  groupingsChoiceswithEmpty, groupingsChoiceswithoutEmpty)
 }
 shinyApp(ui = ui, server = server, enableBookmarking = "server")
