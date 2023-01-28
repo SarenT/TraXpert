@@ -5,7 +5,7 @@ facet_control_UI = function(id, textFaceChoices){
 		tipify(selectInput(ns("row"), "Facet Row", choices = list()), toolTips$facet_row_In, placement = "top"),
 		tipify(selectInput(ns("col"), "Facet Column", choices = list()), toolTips$facet_col_In, placement = "top"),
 		selectInput(ns("label_face"), "Facet Label Style", choices = textFaceChoices),
-		conditionalPanel(paste0("(input.", ns("row"), " == \"NULL\") != (input.", ns("col"), " == \"NULL\")"), 
+		conditionalPanel("(input.row == \"NULL\") != (input.col == \"NULL\")", ns = ns, 
 						 checkboxInput(ns("wrap"), "Wrap Facets", value = TRUE)),
 		colourInput(ns("label_fill_color"), "Facet Label Background", value = "#FFFFFFFF", allowTransparent = TRUE),
 		

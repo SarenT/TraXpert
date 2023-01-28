@@ -32,25 +32,25 @@ tests = function(ns){
 		selectInput(ns("data_transform_In"), "Transform data with", 
 					choices = dataTransformChoices, 
 					selected = "noneTransform"),
-		conditionalPanel("input.data_transform_In  == 'logTransform'",
+		conditionalPanel("input.data_transform_In  == 'logTransform'", ns = ns,
 						 shinyWidgets::sliderTextInput(
 						 	ns("data_logTransform_In"), 
 						 	"\\(\\log_a(x) \\) ... a", 
 						 	choices = c(2, exp(1), 10), 
 						 	selected = exp(1))
 		),
-		conditionalPanel("input.data_transform_In  == 'powerTransform'",
+		conditionalPanel("input.data_transform_In  == 'powerTransform'", ns = ns,
 						 sliderInput(ns("data_powerTransform_In"), 
 						 			"\\(x^a\\) ... a", 
 						 			min = 2, max = 5, step = 1, value = 3)
 		),
-		conditionalPanel("input.data_transform_In  == 'rootTransform'",
+		conditionalPanel("input.data_transform_In  == 'rootTransform'", ns = ns,
 						 sliderInput(ns("data_rootTransform_In"), 
 						 			"\\(\\sqrt[a]{x}\\) ... a", 
 						 			min = 2, max = 5, step = 1, value = 3)
 		),
 		
-		conditionalPanel("input.data_transform_In  == ''",
+		conditionalPanel("input.data_transform_In  == ''", ns = ns,
 						 sliderInput(ns("data_invTransform_In"), "", 
 						 			min = 1, max = 2, step = 1, value = 1),
 						 sliderInput(ns("data_noneTransform_In"), "", 
@@ -82,16 +82,16 @@ tests = function(ns){
 				  placement = "bottom", trigger = "hover"),
 		#bsTooltip("stat_pairwise_In", toolTips$stat_pairwise_In, placement = "bottom", trigger = "hover"),
 		
-		conditionalPanel("input.multiple_stat_method_In  == 'kruskal.test'",
+		conditionalPanel("input.multiple_stat_method_In  == 'kruskal.test'", ns = ns,
 						 
 		),
-		conditionalPanel("input.multiple_stat_method_In  == 'anova'",
+		conditionalPanel("input.multiple_stat_method_In  == 'anova'", ns = ns,
 						 
 		),
-		conditionalPanel("input.pairwise_stat_method_In  == 'wilcox.test'",
+		conditionalPanel("input.pairwise_stat_method_In  == 'wilcox.test'", ns = ns,
 						 
 		),
-		conditionalPanel("input.pairwise_stat_method_In  == 't.test'",
+		conditionalPanel("input.pairwise_stat_method_In  == 't.test'", ns = ns,
 						 
 		)
 	)
@@ -126,14 +126,14 @@ ranges_units_labels = function(ns){
 specific_options = function(ns){
 	bsCollapsePanel(
 		"Specific Options", 
-		conditionalPanel("input.type_In.indexOf('violin') > -1",
+		conditionalPanel(condition = "input.type_In.indexOf('violin') > -1", ns = ns,
 						 tipify(selectInput(ns("violin_scale_In"), "Scale", 
 						 				   choices = list(Area = "area", Count = "count", Width = "width"), 
 						 				   selected = "area"), 
 						 	   "Area: all violins will have the same area (before trimming the tails)\\n Width: same maximum width\\n Count: violins are proportionally large to the number of observations.", 
 						 	   placement = "top", trigger = "hover")
 		),
-		conditionalPanel("input.type_In.indexOf('box') > -1", 
+		conditionalPanel(condition = "input.type_In.indexOf('box') > -1",  ns = ns,
 						 checkboxInput(ns("box_notch_In"), "Notch", value = TRUE), 
 						 checkboxInput(ns("box_varwidth_In"), "Variable Width", value = FALSE),
 						 bsTooltip(ns("box_notch_In"), "Whether or not a notch should be displayed at median.", 
@@ -142,7 +142,7 @@ specific_options = function(ns){
 						 		  "If checked, boxes are drawn with widths proportional to the square-roots of the number of observations in the groups.", 
 						 		  placement = "bottom", trigger = "hover")
 		),
-		conditionalPanel("input.type_In.indexOf('dot') > -1",
+		conditionalPanel("input.type_In.indexOf('dot') > -1", ns = ns,
 						 sliderInput(ns("dot_binwidth_In"), "Bin Width", 
 						 			min = -0.1, max = 5, value = 0, step = 0.1),
 						 checkboxInput(ns("dot_stackgroups_In"), "Stack Groups", value = FALSE),
@@ -164,7 +164,7 @@ specific_options = function(ns){
 						 		  placement = "bottom", trigger = "hover"),
 						 tags$div(h4("Dot Plot - Options"), p("Bin Width: Dot density (maximum bin width).\n"))
 		),
-		conditionalPanel("input.stat_label_In  == 'p.signif'",
+		conditionalPanel("input.stat_label_In  == 'p.signif'", ns = ns,
 						 fluidPage(fluidRow(
 						 	column(2, shinyjs::disabled(textInput(ns("stat_label_symbols0_In"), 
 						 										  label = "-", value = "0 < "))),
@@ -178,11 +178,11 @@ specific_options = function(ns){
 						 	column(2, shinyjs::disabled(textInput(ns("stat_label_symbols1_In"), 
 						 										  label = "-", value = " < 1")))
 						 ))),
-		conditionalPanel("input.stat_comparison_type_In  == 'to_control'",
+		conditionalPanel("input.stat_comparison_type_In  == 'to_control'", ns = ns,
 						 tipify(selectInput(ns("stat_comparison_control_In"), "Control Group", choices = list()), 
 						 	   "Select the control group to compare with other groups.", 
 						 	   placement = "top", trigger = "hover")),
-		conditionalPanel("input.stat_comparison_type_In  == 'selected'",
+		conditionalPanel("input.stat_comparison_type_In  == 'selected'", ns = ns,
 						 tags$div(id = 'placeholderPairwiseGroupSelect')
 		)
 	)
@@ -213,7 +213,7 @@ track_features_UI = function(id, title, tabColor){
 			 			   tags$style(type="text/css", "#stat_text_Out {white-space: pre-wrap;}"), hr(),
 			 			   plot_export_UI(ns("export")), # plotExportSection("track"),
 			 			   # h3("Export Preview (1:4)"),
-			 			   # imageOutput(outputId = "trackPlotPreviewOut")
+			 			   # imageOutput(outputId = "plotPreviewOut")
 			 		)
 			 	)
 			 )
@@ -223,7 +223,7 @@ track_features_UI = function(id, title, tabColor){
 track_features_server = function(id, data, features, tracks, groupings, 
 								 groupingsChoiceswithEmpty, groupingsChoiceswithoutEmpty){
 	moduleServer(id, function(input, output, session){
-		trackPlot = reactive({
+		plot = reactive({
 			if(debugging$browse){
 				browser()
 			}
@@ -323,10 +323,10 @@ track_features_server = function(id, data, features, tracks, groupings,
 		})
 		
 		
-		output$trackPlotOut = renderPlot({
-			trackPlotOut = trackPlot()
-			if(is.list(trackPlotOut)){
-				trackPlotOut$plot
+		output$plotOut = renderPlot({
+			plotOut = plot()
+			if(is.list(plotOut)){
+				plotOut$plot
 			}else{
 				NULL
 			}
@@ -491,11 +491,11 @@ track_features_server = function(id, data, features, tracks, groupings,
 			}
 		})
 		
-		plot_export_server("export", "Track Feature", trackPlot)
+		plot_export_server("export", "Track Feature", plot)
 		
 		facet = facet_control_server("facet", groupingsChoiceswithEmpty)
 		
-		stat_details_server("stats", trackPlot)
+		stat_details_server("stats", plot)
 		
 		debugging = debugging_server("debug")
 		
