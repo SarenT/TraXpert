@@ -137,9 +137,9 @@ traj_features_server = function(id, data, features, tracks, trajectories, groupi
 								groupingsAndFeatureChoiceswithoutEmpty){
 	moduleServer(id, function(input, output, session){
 		plot = eventReactive(input$plotTrajIn, {#renderPlot({
-			browser()
-			#trajectoryPlot = reactive({
-			#trajectoryPlot = renderPlot({
+			# browser()
+			#plot = reactive({
+			#plot = renderPlot({
 			#observeEvent(input$plotTrajIn, {
 			if(debugging$browse){
 				browser()
@@ -225,22 +225,22 @@ traj_features_server = function(id, data, features, tracks, trajectories, groupi
 		output$plotOut = renderPlot({plot()$plot})
 		
 		output$stat_DF_Out = renderTable(spacing = "xs", striped = TRUE, {
-			if("tbl" %in% class(trajectoryPlot()$stat)){
-				trajectoryPlot()$stat
+			if("tbl" %in% class(plot()$stat)){
+				plot()$stat
 			}
 		})
 		output$stat_text_Out = renderText({
-			if("character" %in% class(trajectoryPlot()$stat)){
+			if("character" %in% class(plot()$stat)){
 				#browser()
-				statOutText = paste(trajectoryPlot()$stat, collapse = "\n") #hTestToString(trajectoryPlot()$stat)
+				statOutText = paste(plot()$stat, collapse = "\n") #hTestToString(plot()$stat)
 				statOutText
 			}
 		})
 		output$data_replicates_Out = renderTable(spacing = "xs", striped = TRUE, {
-			trajectoryPlot()$replicates
+			plot()$replicates
 		})
 		output$data_tracks_Out = renderTable(spacing = "xs", striped = TRUE, {
-			trajectoryPlot()$tracks
+			plot()$tracks
 		})
 		
 		xy_names = reactive({
@@ -261,7 +261,7 @@ traj_features_server = function(id, data, features, tracks, trajectories, groupi
 		
 		
 		facet = facet_control_server("facet", groupingsChoiceswithEmpty)
-		plot_export_server("export", "Trajectory", trajectoryPlot)
+		plot_export_server("export", "Trajectory", plot)
 		debugging = debugging_server("debug")
 		dark_plot = dark_plot_server("dark")
 		titles = titles_server("title")
