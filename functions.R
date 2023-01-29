@@ -2561,6 +2561,44 @@ YgVal = function(cdats) {
 	}
 }
 
+icon_list = function(x){
+	lapply(
+		x,
+		function(x) {
+			tags$div(
+				icon("arrows-alt-h"),
+				tags$strong(x)
+			)
+		}
+	)
+}
+
+#' Utility function to upgrade session data model
+#'
+#' @param dataSession 
+#' @param version 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+dataSessionVersionUpgrade = function(dataSession, version){
+	if(version == 0){
+		dataSession$version = 1
+		version = 1
+	}
+	#Add new versions as separate if statements for stepwise adaptation for the newest version
+	
+	if(version == dataModelVersion){
+		return(dataSession)
+	}else{
+		#TODO error reporting
+		return(NULL)
+	}
+	
+}
+
+
 #' Generates a bucket list for the groupings to select from for pairwise comparisons
 #'
 #' @param ns namespace from Shiny session

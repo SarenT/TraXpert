@@ -121,115 +121,86 @@ titleTrajectories = "Trajectories"; titlePlotTrackFeatures = "Plot Track Feature
 titlePlotTrajectories = "Plot Trajectories"; titlePlotDirectionality = "Plot Directionality"
 titlePlotTrajFeatures = "Plot Trajectory Features"; titleAbout = "About"
 
-icon_list = function(x){
-	lapply(
-		x,
-		function(x) {
-			tags$div(
-				icon("arrows-alt-h"),
-				tags$strong(x)
-			)
-		}
-	)
-}
-
-dataSessionVersionUpgrade = function(dataSession, version){
-	if(version == 0){
-		dataSession$version = 1
-		version = 1
-	}
-	#Add new versions as separate if statements for stepwise adaptation for the newest version
-	
-	if(version == dataModelVersion){
-		return(dataSession)
-	}else{
-		#TODO error reporting
-		return(NULL)
-	}
-	
-}
-
-tabPanelImport = function(title = titleImportGroupings, tabColor){
-	tabPanel(title,
-			 tags$style(HTML(tabBGColorCSS(title, tabColor))),
-			 sidebarLayout(
-			 	sidebarPanel(#h3("TraXpert"),
-			 				 #hr(),
-			 				 p("TraXpert is a tool to automate analysis of tracking files to create plots and simple statistics. TraXpert is smart enough to understand basic file naming convention and the source of files, where each tracking file has ", 
-			 				   strong("\"_\""), 
-			 				   "separated groupings."),
-			 				 br(),
-			 				 p("For instance, files ",
-			 				   br(), #em("2019.05.08_WT_", strong("Untreated")),
-			 				   HTML("<em>2019.05.08_WT_<strong>Untreated</strong>.xml</em> and <br><em>2019.05.08_WT_<strong>Treated</strong>.xml</em> will be recognized as <br><em>2019.05.08_WT_<strong>group1</strong>.xml</em> and <br><em>2019.05.08_WT_<strong>group2</strong>.xml</em>. Also multiple groupings are supported (treatments, genotypes, etc...")
-			 				   ),
-			 				 tags$ul(
-			 				 	tags$li("Select files with", strong("Choose...")),
-			 				 	tags$li("Set group labels and colors"),
-			 				 	tags$li("Click ", strong("Process Files"),  "Button for loading/parsing"),
-			 				 	tags$li(strong("Browse"), "the data or", strong("generate plots"), 
-			 				 			"via the tabs on the top right panel.")
-			 				 ),
-			 				 fileInput(inputId = "tmFilesIn", label = "Choose files:", multiple = TRUE, 
-			 				 		  accept = c("text/xml", ".xml", ".xlsx", ".xls", ".csv", ".txt"), 
-			 				 		  placeholder = "Uploading...", buttonLabel = "Choose..."),
-			 				 fluidPage(fluidRow(
-			 				 	column(7, actionButton(inputId = "processFilesIn", label = "Process Files")), 
-			 				 	column(3, checkboxInput("process_recalculate_In", label = "Recalculate", value = FALSE)),
-			 					column(2, checkboxInput("process_browse_In", label = "Debug", value = FALSE))
-			 				 )),
-			 				 p("OR"),
-			 				 fileInput(inputId = "sessionFileIn", label = "Choose session file:", multiple = FALSE, 
-			 				 		  accept = c("text/tmx", ".tmx"), placeholder = "Uploading...", 
-			 				 		  buttonLabel = "Choose..."),
-			 				 hr(),
-			 				 #bookmarkButton(label = "Save Inputs"),
-			 				 #p("OR"),
-			 				 downloadButton(outputId = "sessionOut", label = "Download session file"),
-			 				 hr()),
-			 	mainPanel(
-			 		fluidPage(
-			 			fluidRow(column(12, DTOutput(outputId = "groupingsOut"))),
-			 			fluidRow(
-			 				column(6, tags$div(id = 'placeholder')),
-			 				column(6, p("Rank groups accordingly. Groups will appear in plots according to these ranks."),
-			 					   tags$div(id = 'placeholderRank'))#, uiOutput("groupRankOut"))
-			 			)
-			 		)
-			 	)
-			 )
-	)
-}
-
-tabPanelOperations = function(title, tabColor){
-	tabPanel(title,
-			 tags$style(HTML(tabBGColorCSS(title, tabColor))),
-			 fluidPage(fluidRow( 
-			 	column(3, rotation_UI("rotation")),
-			 	column(9, point_source_UI("point_source"))
-			 	)),
-			 fluidPage(fluidRow( 
-			 	feature_calculator_UI("track_new_feat", "New Track Feature", 
-			 						  "Calculate a new track feature based on an existing feature. With this, you can calculate new measures by entering the formula.",
-			 						  # "track", 
-			 						  featureDimensionChoices, list(`Track` = "Track")),
-			 	feature_calculator_UI("traj_new_feat", "New Trajectory (Spot/Edge) Feature", 
-			 						  "Calculate a new spot or edge feature based on an existing feature. With this, you can calculate new measures by entering the formula.",
-			 						  # "traj", 
-			 						  featureDimensionChoices, list(`Spot` = "Spot", `Edge` = "Edge")),
-			 # )),
-			 # fluidPage(fluidRow(
-			 	feature_calculator_UI("track_from_traj_new_feat", "New Track Feature from Trajectories", 
-			 						  "Calculate a new track feature based on existing trajectory features. This summarises trajectory information (spots and edges of a track) into a single value per track. e.g. mean track speed is the average of all speeds between spots of a track.",
-			 						  # "track_from_traj", 
-			 						  featureDimensionChoices, list(`Track` = "Track"))
-			 ))
-			 		   
-	)
-}
-
 # Define UI
 ui = function(request){
+	tabPanelImport = function(title = titleImportGroupings, tabColor){
+		tabPanel(title,
+				 tags$style(HTML(tabBGColorCSS(title, tabColor))),
+				 sidebarLayout(
+				 	sidebarPanel(#h3("TraXpert"),
+				 		#hr(),
+				 		p("TraXpert is a tool to automate analysis of tracking files to create plots and simple statistics. TraXpert is smart enough to understand basic file naming convention and the source of files, where each tracking file has ", 
+				 		  strong("\"_\""), 
+				 		  "separated groupings."),
+				 		br(),
+				 		p("For instance, files ",
+				 		  br(), #em("2019.05.08_WT_", strong("Untreated")),
+				 		  HTML("<em>2019.05.08_WT_<strong>Untreated</strong>.xml</em> and <br><em>2019.05.08_WT_<strong>Treated</strong>.xml</em> will be recognized as <br><em>2019.05.08_WT_<strong>group1</strong>.xml</em> and <br><em>2019.05.08_WT_<strong>group2</strong>.xml</em>. Also multiple groupings are supported (treatments, genotypes, etc...")
+				 		),
+				 		tags$ul(
+				 			tags$li("Select files with", strong("Choose...")),
+				 			tags$li("Set group labels and colors"),
+				 			tags$li("Click ", strong("Process Files"),  "Button for loading/parsing"),
+				 			tags$li(strong("Browse"), "the data or", strong("generate plots"), 
+				 					"via the tabs on the top right panel.")
+				 		),
+				 		fileInput(inputId = "tmFilesIn", label = "Choose files:", multiple = TRUE, 
+				 				  accept = c("text/xml", ".xml", ".xlsx", ".xls", ".csv", ".txt"), 
+				 				  placeholder = "Uploading...", buttonLabel = "Choose..."),
+				 		fluidPage(fluidRow(
+				 			column(7, actionButton(inputId = "processFilesIn", label = "Process Files")), 
+				 			column(3, checkboxInput("process_recalculate_In", label = "Recalculate", value = FALSE)),
+				 			column(2, checkboxInput("process_browse_In", label = "Debug", value = FALSE))
+				 		)),
+				 		p("OR"),
+				 		fileInput(inputId = "sessionFileIn", label = "Choose session file:", multiple = FALSE, 
+				 				  accept = c("text/tmx", ".tmx"), placeholder = "Uploading...", 
+				 				  buttonLabel = "Choose..."),
+				 		hr(),
+				 		downloadButton(outputId = "sessionOut", label = "Download session file"),
+				 		hr()),
+				 	mainPanel(
+				 		fluidPage(
+				 			fluidRow(column(12, DTOutput(outputId = "groupingsOut"))),
+				 			fluidRow(
+				 				column(6, tags$div(id = 'placeholder')),
+				 				column(
+				 					6, 
+				 					p("Rank groups accordingly. Groups will appear in plots according to these ranks."),
+				 					tags$div(id = 'placeholderRank'))
+				 			)
+				 		)
+				 	)
+				 )
+		)
+	}
+	
+	tabPanelOperations = function(title, tabColor){
+		tabPanel(title,
+				 tags$style(HTML(tabBGColorCSS(title, tabColor))),
+				 fluidPage(fluidRow( 
+				 	column(3, rotation_UI("rotation")),
+				 	column(9, point_source_UI("point_source"))
+				 )),
+				 fluidPage(fluidRow( 
+				 	feature_calculator_UI("track_new_feat", "New Track Feature", 
+				 						  "Calculate a new track feature based on an existing feature. With this, you can calculate new measures by entering the formula.",
+				 						  # "track", 
+				 						  featureDimensionChoices, list(`Track` = "Track")),
+				 	feature_calculator_UI("traj_new_feat", "New Trajectory (Spot/Edge) Feature", 
+				 						  "Calculate a new spot or edge feature based on an existing feature. With this, you can calculate new measures by entering the formula.",
+				 						  # "traj", 
+				 						  featureDimensionChoices, list(`Spot` = "Spot", `Edge` = "Edge")),
+				 	# )),
+				 	# fluidPage(fluidRow(
+				 	feature_calculator_UI("track_from_traj_new_feat", "New Track Feature from Trajectories", 
+				 						  "Calculate a new track feature based on existing trajectory features. This summarises trajectory information (spots and edges of a track) into a single value per track. e.g. mean track speed is the average of all speeds between spots of a track.",
+				 						  # "track_from_traj", 
+				 						  featureDimensionChoices, list(`Track` = "Track"))
+				 ))
+				 
+		)
+	}
 	
 	fluidPage(shinyjs::useShinyjs(), shinyjs::extendShinyjs(functions = "shinyjs.init", 
 		text = paste0("shinyjs.init = function(){
