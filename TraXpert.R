@@ -374,11 +374,14 @@ ui = function(request){
 					)
 			#)
 		),
-		fluidRow(column(12, fluidPage(fluidRow( style="background-color:#eee; border: 1px solid #aaa; padding: 10px;border-radius:4px",
-												column(4, align = "left", "by Saren Tasciyan"),
-												column(4, align = "center", "All rights reserved"),
-												column(4, align = "right", "v1.0")))
-		)
+		fluidRow(
+			column(12, 
+				   fluidPage(
+				   	fluidRow( style="background-color:#eee; border: 1px solid #aaa; padding: 10px;border-radius:4px",
+				   			  column(4, align = "left", "by Saren Tasciyan"),
+				   			  column(4, align = "center", "All rights reserved"),
+				   			  column(4, align = "right", "v1.0")))
+			)
 		)
 	)
 }
@@ -506,7 +509,8 @@ server = function(input, output, session) {
 								 value = 60, min = 0.0000000001),
 					span('Manual tracking files don\'t include pixel size and frame intervall information. Please provide it here'),
 					if (failed)
-						div(tags$b("Invalid input. Please use \".\" as decimal and all fields are mandatory. Use 1 for voxel thickness for 2D images.", style = "color: red;")),
+						div(tags$b("Invalid input. Please use \".\" as decimal and all fields are mandatory. Use 1 for voxel thickness for 2D images.", 
+								   style = "color: red;")),
 					
 					footer = tagList(
 						modalButton("Cancel"),
