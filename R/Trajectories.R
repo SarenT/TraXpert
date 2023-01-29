@@ -1,4 +1,4 @@
-traj_features_UI = function(id, title, tabColor){
+trajectories_UI = function(id, title, tabColor){
 	ns = NS(id)
 	
 	plot_type = function(ns){
@@ -131,7 +131,7 @@ traj_features_UI = function(id, title, tabColor){
 	)
 }
 
-traj_features_server = function(id, data, features, tracks, trajectories, groupings, 
+trajectories_server = function(id, data, features, tracks, trajectories, groupings, 
 								groupingsChoiceswithEmpty, groupingsChoiceswithoutEmpty, 
 								groupingsChoiceswithEmptywithDoNotDisplay,
 								groupingsAndFeatureChoiceswithoutEmpty){
