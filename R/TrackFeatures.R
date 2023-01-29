@@ -226,7 +226,8 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 								 groupingsChoiceswithEmpty, groupingsChoiceswithoutEmpty,
 								 groupingsChoiceswithEmptywithDoNotDisplay,
 								 groupingsAndFeatureChoiceswithoutEmpty, trackChoiceswithoutEmpty, 
-								 trackDirectionChoiceswithoutEmpty, trackDirectionCatChoiceswithoutEmpty){
+								 trackDirectionChoiceswithoutEmpty, trackDirectionCatChoiceswithoutEmpty,
+								 trajChoiceswithoutEmpty, trajChoiceswithEmpty, dispersionChoices){
 	moduleServer(id, function(input, output, session){
 		plot = reactive({
 			if(debugging$browse){
