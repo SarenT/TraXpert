@@ -44,12 +44,9 @@ lapply(libs.func, require, character.only = TRUE)
 #install.packages(only.install[!is.element(only.install, installed.packages())], )
 #install.packages(libs[!is.element(libs, installed.packages())])
 
-
 lapply(libs, require, character.only = TRUE)
 
-
 options(shiny.port = 7777, shiny.maxRequestSize=1024*1024^2, scipen = 10, browser = "firefox")
-
 
 # defaultWD = "~/"
 # if(dir.exists(defaultWD)){
@@ -183,20 +180,23 @@ ui = function(request){
 				 	column(9, point_source_UI("point_source"))
 				 )),
 				 fluidPage(fluidRow( 
-				 	feature_calculator_UI("track_new_feat", "New Track Feature", 
-				 						  "Calculate a new track feature based on an existing feature. With this, you can calculate new measures by entering the formula.",
-				 						  # "track", 
-				 						  featureDimensionChoices, list(`Track` = "Track")),
-				 	feature_calculator_UI("traj_new_feat", "New Trajectory (Spot/Edge) Feature", 
-				 						  "Calculate a new spot or edge feature based on an existing feature. With this, you can calculate new measures by entering the formula.",
-				 						  # "traj", 
-				 						  featureDimensionChoices, list(`Spot` = "Spot", `Edge` = "Edge")),
+				 	feature_calculator_UI(
+				 		"track_new_feat", "New Track Feature", 
+				 		"Calculate a new track feature based on an existing feature. With this, you can calculate new measures by entering the formula.",
+				 		# "track", 
+				 		featureDimensionChoices, list(`Track` = "Track")),
+				 	feature_calculator_UI(
+				 		"traj_new_feat", "New Trajectory (Spot/Edge) Feature", 
+				 		"Calculate a new spot or edge feature based on an existing feature. With this, you can calculate new measures by entering the formula.",
+				 		# "traj", 
+				 		featureDimensionChoices, list(`Spot` = "Spot", `Edge` = "Edge")),
 				 	# )),
 				 	# fluidPage(fluidRow(
-				 	feature_calculator_UI("track_from_traj_new_feat", "New Track Feature from Trajectories", 
-				 						  "Calculate a new track feature based on existing trajectory features. This summarises trajectory information (spots and edges of a track) into a single value per track. e.g. mean track speed is the average of all speeds between spots of a track.",
-				 						  # "track_from_traj", 
-				 						  featureDimensionChoices, list(`Track` = "Track"))
+				 	feature_calculator_UI(
+				 		"track_from_traj_new_feat", "New Track Feature from Trajectories", 
+				 		"Calculate a new track feature based on existing trajectory features. This summarises trajectory information (spots and edges of a track) into a single value per track. e.g. mean track speed is the average of all speeds between spots of a track.",
+				 		# "track_from_traj", 
+				 		featureDimensionChoices, list(`Track` = "Track"))
 				 ))
 				 
 		)
@@ -204,10 +204,16 @@ ui = function(request){
 	
 	fluidPage(shinyjs::useShinyjs(), shinyjs::extendShinyjs(functions = "shinyjs.init", 
 		text = paste0("shinyjs.init = function(){
-		  $('#tabs li a[data-value=", titleFiles ,"]').parents('li').hide(); $('#tabs li a[data-value=", titleFeatures,"]').parents('li').hide();
-		  $('#tabs li a[data-value=", titleTracks ,"]').parents('li').hide(); $('#tabs li a[data-value=", titleTrajectories,"]').parents('li').hide();
-		  $('#tabs li a[data-value=\"", titlePlotTrackFeatures ,"\"]').parents('li').hide(); $('#tabs li a[data-value=\"", titlePlotTrajectories,"\"]').parents('li').hide();
-		  $('#tabs li a[data-value=\"", titlePlotDirectionality ,"\"]').parents('li').hide(); $('#tabs li a[data-value=\"", titlePlotTrajFeatures,"\"]').parents('li').hide();
+		  $('#tabs li a[data-value=", titleFiles ,"]').parents('li').hide(); $('#tabs li a[data-value=", 
+		  titleFeatures,"]').parents('li').hide();
+		  $('#tabs li a[data-value=", titleTracks ,"]').parents('li').hide(); $('#tabs li a[data-value=", 
+		  titleTrajectories,"]').parents('li').hide();
+		  $('#tabs li a[data-value=\"", 
+		  titlePlotTrackFeatures ,"\"]').parents('li').hide(); $('#tabs li a[data-value=\"", 
+		  titlePlotTrajectories,"\"]').parents('li').hide();
+		  $('#tabs li a[data-value=\"", 
+		  titlePlotDirectionality ,"\"]').parents('li').hide(); $('#tabs li a[data-value=\"", 
+		  titlePlotTrajFeatures,"\"]').parents('li').hide();
 		}")),
 			  title = titlePanel("TraXpert"),
 		tags$head(tags$style(HTML("hr {border-top: 1px solid #000000;} .action-button {background-color: #77FF77}
@@ -394,7 +400,8 @@ server = function(input, output, session) {
 			if(any(endsWith(uploadedFiles$datapath, suffix = ".csv") | endsWith(uploadedFiles$datapath, suffix = ".txt"))){
 				parseParameters(list(files = uploadedFiles$datapath, groupings = groupingsDF, groups = groupsDF, 
 									 fileNames = uploadedFiles$name, 
-					 updateProgress = updateProgress, closeProgress = closeProgress, initializeProgress = initializeProgress, 
+					 updateProgress = updateProgress, closeProgress = closeProgress, 
+					 initializeProgress = initializeProgress, 
 					 browse = browse))
 				observeEvent(input$userUnitInputOKIn, {
 					# Check that data object exists and is data frame.
@@ -408,8 +415,8 @@ server = function(input, output, session) {
 											closeProgress, initializeProgress, browse = browse, 
 											calibrationUnits = userUnits)
 						if(!is.null(dataDF)){
-							data(processData(dataDF, groupsDF, groupingsDF, updateProgress, initializeProgress, closeProgress, 
-											 recalculate = recalculate, browse = browse))
+							data(processData(dataDF, groupsDF, groupingsDF, updateProgress, initializeProgress, 
+											 closeProgress, recalculate = recalculate, browse = browse))
 							
 						}else{
 							data(NULL)
@@ -560,26 +567,29 @@ server = function(input, output, session) {
 				insertUI(selector = '#placeholder',
 						 ui = textAreaInput(paste0('label_', sprintf("%03d", i)), 
 						 				   label = paste0("Group label for ", groups[i], ":"), value = groupLabels[i]))
-				labelRVs[[paste0('label_', sprintf("%03d", i))]] <<- observeEvent(input[[paste0('label_', sprintf("%03d", i))]], {
-					groupingsDF = groupings()$groupings; groupsDF = groupings()$groups
-					listVals = as.character(groupingsDF[[info$row, 4]])
-					listVals[i] = input[[paste0('label_', sprintf("%03d", i))]]
-					groupingsDF[[info$row, 4]] = as.factor(listVals)
-					#cat(paste("---", id, info$row, "\n"))
-					#cat(paste("---", "\t", input[[paste0('label_', sprintf("%03d", i))]], paste(groupingsDF[info$row, 4], collapse = "-"), "\n"))
-					groupings(list(groupings = groupingsDF, groups = groupsDF))
+				labelRVs[[paste0('label_', sprintf("%03d", i))]] <<- 
+					observeEvent(input[[paste0('label_', sprintf("%03d", i))]], {
+						groupingsDF = groupings()$groupings; groupsDF = groupings()$groups
+						listVals = as.character(groupingsDF[[info$row, 4]])
+						listVals[i] = input[[paste0('label_', sprintf("%03d", i))]]
+						groupingsDF[[info$row, 4]] = as.factor(listVals)
+						#cat(paste("---", id, info$row, "\n"))
+						#cat(paste("---", "\t", input[[paste0('label_', sprintf("%03d", i))]], paste(groupingsDF[info$row, 4], collapse = "-"), "\n"))
+						groupings(list(groupings = groupingsDF, groups = groupsDF))
 				})
 				insertUI(selector = "#placeholder", 
-						 ui = colourInput(paste0('color_', sprintf("%03d", i)), label = paste0("Group color for ", groups[i], ":"), 
+						 ui = colourInput(paste0('color_', sprintf("%03d", i)), 
+						 				 label = paste0("Group color for ", groups[i], ":"), 
 						 				 value = groupColors[i]))
-				labelRVs[[paste0('color_', sprintf("%03d", i))]] <<- observeEvent(input[[paste0('color_', sprintf("%03d", i))]], {
-					groupingsDF = groupings()$groupings; groupsDF = groupings()$groups
-					#groupingsDF[, 2] <<- as.vector(groupingsDF[, 2])
-					groupingsDF[[info$row, 5]][i] = input[[paste0('color_', sprintf("%03d", i))]]
-					#groupingsDF[, 2] <<- as.factor(groupingsDF[, 2])
-					#cat(paste("+++", id, info$row, "\n"))
-					#cat(paste("+++", "\t", input[[paste0('color_', sprintf("%03d", i))]], paste(groupingsDF[info$row, 5], collapse = "-"), "\n"))
-					groupings(list(groupings = groupingsDF, groups = groupsDF))
+				labelRVs[[paste0('color_', sprintf("%03d", i))]] <<- 
+					observeEvent(input[[paste0('color_', sprintf("%03d", i))]], {
+						groupingsDF = groupings()$groupings; groupsDF = groupings()$groups
+						#groupingsDF[, 2] <<- as.vector(groupingsDF[, 2])
+						groupingsDF[[info$row, 5]][i] = input[[paste0('color_', sprintf("%03d", i))]]
+						#groupingsDF[, 2] <<- as.factor(groupingsDF[, 2])
+						#cat(paste("+++", id, info$row, "\n"))
+						#cat(paste("+++", "\t", input[[paste0('color_', sprintf("%03d", i))]], paste(groupingsDF[info$row, 5], collapse = "-"), "\n"))
+						groupings(list(groupings = groupingsDF, groups = groupsDF))
 				})
 			})
 			print(names(labelRVs))
@@ -773,7 +783,6 @@ server = function(input, output, session) {
 	table_output_server("features_table_out", features)
 	table_output_server("tracks_table_out", tracks)
 	table_output_server("trajectories_table_out", trajectories)
-	
 	
 	rotation_server("rotation", data)
 	
