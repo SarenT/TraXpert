@@ -213,7 +213,8 @@ generateBucketList = function(choices, context){
 			column(6,
 				   tags$div(class = "panel panel-default",	
 				   		 tags$div(class = "panel-heading", icon("arrow-right"),	"Select groups"),
-				   		 tags$div( class = "panel-body", id = paste(context, "stat_comparison_select_In", sep = "_"), icon_list(choices))
+				   		 tags$div( class = "panel-body", id = paste(context, "stat_comparison_select_In", sep = "_"), 
+				   		 		  icon_list(choices))
 				   ),
 				   tags$div(class = "panel panel-default", 
 				   		 tags$div(class = "panel-heading", icon("exchange"), "1."),
@@ -492,7 +493,7 @@ ui = function(request){
 								 tags$style(HTML(tabBGColorCSS(titleTrajectories, tabColorTables))),
 								 table_output_UI("trajectories_table_out")),
 						track_features_UI("tracks", titlePlotTrackFeatures, tabColorPlots),
-						tabPanelPlotTrajectories(titlePlotTrajectories, tabColorPlots),
+						traj_features_UI("trajectories", titlePlotTrajectories, tabColorPlots),
 						tabPanelDirectionality(titlePlotDirectionality, tabColorPlots),
 						tabPanelPlotTrajectoryFeatures(titlePlotTrajFeatures, tabColorPlots),
 						about_UI("about", titleAbout)
@@ -701,17 +702,6 @@ server = function(input, output, session) {
 		}
 	})
 	
-	observe({updateSelectInput(session, "traj_xy_In", choices = trajectoryXYLocationswithoutEmpty(), 
-							   selected = "fixed")})
-	#observe({updateSelectInput(session, "traj_x_In", choices = trajectoryXLocationswithoutEmpty(), selected = "POSITION_X_FIX")})
-	#observe({updateSelectInput(session, "traj_y_In", choices = trajectoryYLocationswithoutEmpty(), selected = "POSITION_Y_FIX")})
-	#observe({updateSelectInput(session, "traj_fill_In", choices = groupingsChoiceswithEmpty())})
-	observe({updateSelectInput(session, "traj_color_In", choices = groupingsAndFeatureChoiceswithoutEmpty())})
-	observe({updateSelectInput(session, "traj_start_point_In", choices = groupingsChoiceswithEmptywithDoNotDisplay())})
-	observe({updateSelectInput(session, "traj_end_point_In", choices = groupingsChoiceswithEmptywithDoNotDisplay())})
-	#observe({updateSelectInput(session, "traj_alpha_In", choices = groupingsChoiceswithEmpty())})
-	observe({updateSelectInput(session, "traj_replicate_In", choices = groupingsChoiceswithEmpty())})
-	
 	#observe({updateSelectInput(session, "dir_track_direction_In", choices = trackDirectionChoiceswithoutEmpty())})
 	observe({updateSelectInput(session, "dir_track_direction_cat_In", choices = trackDirectionCatChoiceswithoutEmpty(), 
 							   selected = "DIRECTION_CARDINAL")})
@@ -796,16 +786,6 @@ server = function(input, output, session) {
 		if(!is.null(y)){
 			y[2] - y[1]
 		}
-	})
-	
-	trajectoryXYLocationswithoutEmpty = reactive({
-		#trajectoryPositionNamedList(c("Spot", "Edge"), data()$features, "x", empty = FALSE)
-		#browser()
-		#namedList = choicesInNamedList(c("Spot", "Edge"), features(), "POSITION_X", empty = FALSE)
-		#positionTypes[1:length(namedList)] 
-		# Error with new column POSITION_X_DISPLACEMENT, which also matches POSITION_X
-		# Actually now that we have POSITION_X_FIX_ROT by default same as POSITION_X_FIX, we dont need length check
-		positionTypes
 	})
 	
 	# trajectoryXLocationswithoutEmpty = reactive({
@@ -1146,13 +1126,6 @@ server = function(input, output, session) {
 		return(list(method = input$traj_feat_data_transform_In, parameter = input[[paste(c("traj_feat", "data", input$traj_feat_data_transform_In, "In"), collapse = "_")]]))
 	})
 	
-	traj_export_size = reactive({
-		width = input$traj_width_In; height = input$traj_height_In
-		if(input$traj_auto_width_In){width = NA}
-		if(input$traj_auto_height_In){height = NA}
-		return(list(width = width, height = height))
-	})
-	
 	dir_export_size = reactive({
 		width = input$dir_width_In; height = input$dir_height_In
 		if(input$dir_auto_width_In){width = NA}
@@ -1166,30 +1139,6 @@ server = function(input, output, session) {
 		if(input$traj_feat_auto_height_In){height = NA}
 		return(list(width = width, height = height))
 	})
-	
-	output$trajectoryPlotPreviewOut = renderImage({
-		#browser()
-		trajectoryPlotOut = trajectoryPlot()
-		if(is.list(trajectoryPlotOut)){
-			temp_png_file = tempfile(fileext = ".png")
-			
-			size = traj_export_size()
-			
-			ggsave(temp_png_file, trajectoryPlotOut$plot, width = size$width, height = size$height, 
-				   dpi = 300, units = "cm")
-			dim = ggplot2:::plot_dim(dim = unlist(size, use.names = F), dpi = 300, units = "cm") * 300
-			#browser()
-			list(
-				src = temp_png_file,
-				contentType = "image/png",
-				width = dim[1]/4,
-				height = dim[2]/4,
-				alt = "Track feature plot"
-			)
-		}else{
-			NULL
-		}
-	}, deleteFile = FALSE)
 	
 	output$directionalityPlotPreviewOut = renderImage({
 		#browser()
@@ -1238,110 +1187,6 @@ server = function(input, output, session) {
 			NULL
 		}
 	}, deleteFile = FALSE)
-	
-	traj_xy_names = reactive({
-		posTypeInd = which(input$traj_xy_In == unlist(positionTypes))
-		if(length(posTypeInd) > 0){
-			return(list(xVarName = allPositionTypes[[posTypeInd]][1], yVarName = allPositionTypes[[posTypeInd]][2]))
-		}else{
-			return(list(xVarName = NULL, yVarName = NULL))
-		}
-	})
-	
-	trajectoryPlot = eventReactive(input$plotTrajIn, {#renderPlot({
-	#trajectoryPlot = reactive({
-	#trajectoryPlot = renderPlot({
-	#observeEvent(input$plotTrajIn, {
-		if(debugging_traj$browse){
-			browser()
-		}
-		titles = titles = lapply(traj_titles, function(x){x()})
-		xlab = traj_axis_labs$x_lab()
-		ylab = traj_axis_labs$y_lab()
-		
-		colorGroup = input$traj_color_In; if(colorGroup == "NULL") {colorGroup = NULL}
-		startPointGroup = input$traj_start_point_In; if(startPointGroup == "NA") {startPointGroup = NA} else if(startPointGroup == "NULL") {startPointGroup = NULL}
-		endPointGroup = input$traj_end_point_In; if(endPointGroup == "NA") {endPointGroup = NA} else if(endPointGroup == "NULL") {endPointGroup = NULL}
-		
-		replicateGroup = input$traj_replicate_In; if(replicateGroup == "NULL") {replicateGroup = NULL}
-		facetRowGroup = traj_facet$row_group()
-		facetColGroup = traj_facet$col_group()
-		
-		initializeProgress = function(max, message){
-			progress <<- shiny::Progress$new(max = max)
-			if(!is.null(message)){
-				progress$set(message = message, value = 0)
-			}else{
-				progress$set(value = 0)
-			}
-		}
-		
-		
-		# Close the progress when this reactive exits (even if there's an error)
-		#on.exit({progress$close()})
-		
-		updateProgress = function(value, detail = NULL) {
-			if(is.null(detail)){progress$set(value = value)}else{progress$set(value = value, detail = detail)}
-		}
-		
-		closeProgress = function(){progress$close()}
-		
-		plot = plotTrajectories(data = trajectories(), x = traj_xy_names()$xVarName, y = traj_xy_names()$yVarName, 
-						 trackGlobalIDName = "track_global_id", 
-						 groupings = groupings()$groupings, 
-						 x.unit = traj_axis_labs$x_unit(), y.unit = traj_axis_labs$y_unit(),
-						 colorGroupName = colorGroup,
-						 startPointGroupName = startPointGroup, endPointGroupName = endPointGroup, 
-						 colorTrajectories = input$traj_color_tracks_In, 
-						 coord_equal = input$traj_coord_equal_In, 
-						 #fill.legend = fillLegend, color.legend = colorLegend, alpha.legend = alphaLegend, 
-						 inverse = input$traj_inverse_In, equalRange = input$traj_equal_range_In,
-						 facet.row = facetRowGroup, facet.col = facetColGroup, facet.wrap = traj_facet$wrap(),
-						 title = titles$title, subtitle = titles$subtitle, 
-						 replicateGroupName = replicateGroup, 
-						 hide.ns = input$traj_stat_hidens_In,
-						 colorAlpha = input$traj_color_alpha_In, 
-						 is.dark = dark_plot_traj(),
-						 limitNTracks = input$traj_limit_to_smallest_In,
-						 #randomizeTrackSampling = input$traj_limit_to_smallest_In,
-						 trackReduced = input$traj_track_reduced_In,
-						 spotReduced = input$traj_spot_reduced_In,
-						 plot.subtitle.hjust = titles$subtitle_hjust, 
-						 plot.subtitle.size = titles$subtitle_size, 
-						 plot.subtitle.face = titles$subtitle_text_style,
-						 h.line = input$traj_h_line_In, v.line = input$traj_v_line_In, 
-						 panel.border = input$traj_panel_border_In, 
-						 panel.grid.major = input$traj_panel_grid_major_In, 
-						 facet.label.fill.color = traj_facet$label_fill_color(), 
-						 facet.text.face = traj_facet$label_face(), 
-						 linesize = input$traj_line_size_In, x.lab = xlab, y.lab = ylab,
-						 browse = debugging_traj$browse, benchmark = debugging_traj$benchmark, 
-						 verbose = debugging_traj$verbose,
-						 initializeProg = initializeProgress, updateProg = updateProgress)
-		#browser()
-		closeProgress()
-		plot
-	})
-	output$trajectoryPlotOut = renderPlot({trajectoryPlot()$plot})
-	
-	output$traj_stat_DF_Out = renderTable(spacing = "xs", striped = TRUE, {
-		if("tbl" %in% class(trajectoryPlot()$stat)){
-			trajectoryPlot()$stat
-		}
-	})
-	output$traj_stat_text_Out = renderText({
-		if("character" %in% class(trajectoryPlot()$stat)){
-			#browser()
-			statOutText = paste(trajectoryPlot()$stat, collapse = "\n") #hTestToString(trajectoryPlot()$stat)
-			statOutText
-		}
-	})
-	output$traj_data_replicates_Out = renderTable(spacing = "xs", striped = TRUE, {
-		trajectoryPlot()$replicates
-	})
-	output$traj_data_tracks_Out = renderTable(spacing = "xs", striped = TRUE, {
-		trajectoryPlot()$tracks
-	})
 	
 	directionalityPlot = reactive({
 		#browser
@@ -1513,12 +1358,9 @@ server = function(input, output, session) {
 	table_output_server("tracks_table_out", tracks)
 	table_output_server("trajectories_table_out", trajectories)
 	
-	traj_facet = facet_control_server("traj_facet", groupingsChoiceswithEmpty)
 	dir_facet = facet_control_server("dir_facet", groupingsChoiceswithEmpty)
 	traj_feat_facet = facet_control_server("traj_feat_facet", groupingsChoiceswithEmpty)
 	
-	
-	plot_export_server("traj_export", "Trajectory", trajectoryPlot)
 	plot_export_server("dir_export", "Directionality", directionalityPlot)
 	plot_export_server("traj_feat_export", "Trajectory Feature", trajFeaturePlot)
 	
@@ -1535,25 +1377,17 @@ server = function(input, output, session) {
 	feature_calculator_server("track_from_traj_new_feat", allTrajectoryMeasures, data, features, groupings, 
 							  "trajectories", "tracks", "ID", "track_global_id")
 	
-	debugging_traj = debugging_server("traj_debug")
 	debugging_dir = debugging_server("dir_debug")
 	debugging_traj_feat = debugging_server("traj_feat_debug")
 	
 	groupings_colors_dir = groupings_colors_server("groupings_colors_dir", groupingsChoiceswithoutEmpty)
 	
-	dark_plot_traj = dark_plot_server("dark_traj")
 	dark_plot_traj_feat = dark_plot_server("dark_traj_feat")
 	
-	traj_titles = titles_server("traj_title")
 	dir_titles = titles_server("dir_title")
 	traj_feat_titles = titles_server("traj_feat_title")
 	
 	
-	traj_axis_labs = axis_labels_server("traj_axis_labs", features, trajectories, 
-										groups = list(x = reactive({traj_xy_names()$xVarName}), 
-													  y = reactive({traj_xy_names()$yVarName})),
-										default_labels = list(x = reactive({traj_xy_names()$xVarName}), 
-															  y = reactive({traj_xy_names()$yVarName})))
 	dir_axis_labs = axis_labels_server("dir_axis_labs", features, tracks, 
 									   groups = list(x = NULL, y = NULL),
 									   default_labels = list(x = NULL, y = NULL))
@@ -1565,7 +1399,13 @@ server = function(input, output, session) {
 	
 	point_source = point_source_server("point_source", data)
 	
-	track_features_server("tracks", data, features, tracks, groupings, 
-						  groupingsChoiceswithEmpty, groupingsChoiceswithoutEmpty)
+	track_features_server("tracks", data, features, tracks, trajectories, groupings, 
+						  groupingsChoiceswithEmpty, groupingsChoiceswithoutEmpty, 
+						  groupingsChoiceswithEmptywithDoNotDisplay,
+						  groupingsAndFeatureChoiceswithoutEmpty)
+	traj_features_server("trajectories", data, features, tracks, trajectories, groupings, 
+						 groupingsChoiceswithEmpty, groupingsChoiceswithoutEmpty, 
+						 groupingsChoiceswithEmptywithDoNotDisplay,
+						 groupingsAndFeatureChoiceswithoutEmpty)
 }
 shinyApp(ui = ui, server = server, enableBookmarking = "server")

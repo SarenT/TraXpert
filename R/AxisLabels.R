@@ -45,6 +45,7 @@ axis_labels_server = function(id, features, data, groups = list(x = NULL, y = NU
 		
 		# Setting default unit upon x axis selection
 		observe({
+			# browser()
 			req(groups$x)
 			updateTextInput(session = session, inputId = "x_unit", value = attr(data()[[groups$x()]], "unit"))
 		})
