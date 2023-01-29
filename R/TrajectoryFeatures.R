@@ -149,8 +149,18 @@ traj_features_server = function(id, data, features, tracks, trajectories, groupi
 			ylab = axis_labs$y_lab()
 			
 			colorGroup = input$color_In; if(colorGroup == "NULL") {colorGroup = NULL}
-			startPointGroup = input$start_point_In; if(startPointGroup == "NA") {startPointGroup = NA} else if(startPointGroup == "NULL") {startPointGroup = NULL}
-			endPointGroup = input$end_point_In; if(endPointGroup == "NA") {endPointGroup = NA} else if(endPointGroup == "NULL") {endPointGroup = NULL}
+			startPointGroup = input$start_point_In
+			if(startPointGroup == "NA") {
+				startPointGroup = NA
+			} else if(startPointGroup == "NULL") {
+				startPointGroup = NULL
+			}
+			endPointGroup = input$end_point_In
+			if(endPointGroup == "NA") {
+				endPointGroup = NA
+			} else if(endPointGroup == "NULL") {
+				endPointGroup = NULL
+			}
 			
 			replicateGroup = input$replicate_In; if(replicateGroup == "NULL") {replicateGroup = NULL}
 			facetRowGroup = facet$row_group()
