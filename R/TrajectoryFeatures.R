@@ -177,6 +177,392 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 								 groupingsAndFeatureChoiceswithoutEmpty, trackChoiceswithoutEmpty, 
 								 trackDirectionChoiceswithoutEmpty, trackDirectionCatChoiceswithoutEmpty,
 								 trajChoiceswithoutEmpty, trajChoiceswithEmpty, dispersionChoices){
+	
+	#' Plots trajectory features
+	#'
+	#' @param dataTraj trajectory features plot
+	#' @param x 
+	#' @param y 
+	#' @param type 
+	#' @param trackGlobalIDName 
+	#' @param groupings 
+	#' @param x.unit 
+	#' @param y.unit 
+	#' @param y.Range y axis range in a vector c(min, max)
+	#' @param fillGroupName 
+	#' @param colorGroupName 
+	#' @param groupTracks 
+	#' @param shapeGroupName 
+	#' @param lineTypeGroupName 
+	#' @param sizeVarName 
+	#' @param coord_equal 
+	#' @param color.legend 
+	#' @param alpha.legend 
+	#' @param inverse 
+	#' @param facet.row 
+	#' @param facet.col 
+	#' @param facet.wrap 
+	#' @param title 
+	#' @param subtitle 
+	#' @param smooth.window 
+	#' @param replicateGroupName 
+	#' @param aggregate.fun 
+	#' @param dispersion.fun 
+	#' @param dispersion.type 
+	#' @param linesize 
+	#' @param pointsize 
+	#' @param limitNTracks 
+	#' @param randomizeTrackSampling 
+	#' @param trackReduced 
+	#' @param spotReduced 
+	#' @param colorAlpha 
+	#' @param fillAlpha 
+	#' @param dispAlpha 
+	#' @param is.dark 
+	#' @param plot.subtitle.hjust 
+	#' @param plot.subtitle.size 
+	#' @param plot.subtitle.face 
+	#' @param h.line 
+	#' @param v.line 
+	#' @param panel.border 
+	#' @param panel.grid.major 
+	#' @param facet.label.fill.color 
+	#' @param facet.text.face 
+	#' @param x.lab 
+	#' @param y.lab 
+	#' @param browse 
+	#' @param verbose 
+	#' @param benchmark 
+	#' @param initializeProg 
+	#' @param updateProg 
+	#' @param closeProg 
+	#'
+	#' @return
+	#' @export
+	#'
+	#' @examples
+	plotTrajFeatures = function(dataTraj, x, y, type, trackGlobalIDName, groupings, x.unit = NULL, y.unit = NULL, 
+								y.Range = NULL,
+								fillGroupName = NULL, colorGroupName = NULL, #colorReverseOrder = FALSE, 
+								groupTracks = FALSE,
+								shapeGroupName = NULL, lineTypeGroupName = NULL, sizeVarName = NULL, 
+								#alphaGroupName = NULL, 
+								coord_equal = TRUE, 
+								color.legend = NULL, alpha.legend = NULL, #fill.legend = NULL, 
+								inverse = FALSE, facet.row = NULL, facet.col = NULL, facet.wrap = FALSE,
+								title = NA, subtitle = NULL,
+								#statGroupName = NULL, stat.label = "..p.signif..", stat.method = "wilcox.test", 
+								#hide.ns = FALSE, 
+								smooth.window = 1,
+								replicateGroupName = NULL, aggregate.fun = NULL, 
+								dispersion.fun = NULL, dispersion.type = NULL,
+								linesize = 1, pointsize = 1,
+								limitNTracks = FALSE, randomizeTrackSampling = FALSE,
+								trackReduced = 1, spotReduced = 1,
+								colorAlpha = 1.0, fillAlpha = 1.0, dispAlpha = 1.0, is.dark = FALSE, 
+								plot.subtitle.hjust = 0.5, plot.subtitle.size = 10, plot.subtitle.face = "italic",
+								h.line = TRUE, v.line = TRUE, panel.border = FALSE, panel.grid.major = FALSE,
+								facet.label.fill.color = "#FFFFFF00", facet.text.face = "bold", 
+								x.lab = NULL, y.lab = NULL, browse = FALSE, verbose = FALSE, benchmark = FALSE,
+								initializeProg = NULL, updateProg = NULL, closeProg = NULL){
+		if(is.function(initializeProg) && is.function(updateProg)){
+			initializeProg(message = "Generating trajectory plot...", 
+						   max = 4)
+		}
+		# Hack, turns out that this input isn't even required. Aggregate function automatically means to group tracks.
+		if(!is.null(aggregate.fun)){
+			groupTracks = TRUE
+		}
+		
+		if(browse) browser()
+		if(benchmark) startTime = benchMark()
+		if(verbose) cat("Preparing names and expressions...\n")
+		
+		default.x.Unit = attr(dataTraj[[x]], "unit"); default.y.Unit = attr(dataTraj[[y]], "unit")
+		
+		allGroupswoRep = unique(c(trackGlobalIDName, colorGroupName, facet.row, facet.col, shapeGroupName,
+								  lineTypeGroupName, fillGroupName, sizeVarName))
+		allGroupswRep = unique(c(allGroupswoRep, replicateGroupName))
+		
+		# Aggregation is required for subtitle but also limiting number of tracks for groups.
+		if(is.null(subtitle) || limitNTracks){
+			# Aggregate trajectory data to get length for all fields (number of spots in track). Aggregation results in 
+			# rows with track global id (unique values) non-repetitive and groupings. Only the columns of all groups 
+			# returned. 1 track = 1 row. So "length" info is actually lost. But we can use this to count tracks.
+			
+			aggrTracks = dataTraj %>% group_by_at(allGroupswRep) %>% summarise(n())
+			if(is.null(aggrTracks)){
+				aggrTracks = dataTraj
+			}
+			aggrTracks = aggrTracks[, allGroupswRep]
+			
+			if(!is.null(replicateGroupName)){
+				nReplicates = length(unique(dataTraj[[replicateGroupName]]))
+			}else{
+				nReplicates = 1
+			}
+			aggrNTracks = aggrTracks
+			# If grouping is applied, then there are groups after trackGlobalIDName, in this case aggregate more...
+			if(length(allGroupswRep[!allGroupswRep %in% trackGlobalIDName])){
+				if(is.function(updateProg)){
+					updateProg(value = 2, detail = "Aggregating data (2/3) (this may take some time)...")
+				}
+				# Aggregating groupings to count number of trackGlobalIDName in each group.
+				aggrNTracks = aggregate(reformulateT(allGroupswRep[!allGroupswRep %in% trackGlobalIDName], "."), 
+										data = aggrTracks, length)
+				
+			}
+			
+			minNTracks = min(aggrNTracks[[trackGlobalIDName]]); maxNTracks = max(aggrNTracks[[trackGlobalIDName]])
+			
+			if(limitNTracks){
+				aggrTracksGrouped = group_by_at(aggrTracks, allGroupswRep[allGroupswRep != trackGlobalIDName])
+				sampledTracks = sample_n(aggrTracksGrouped, minNTracks)[[trackGlobalIDName]]
+				data = filter(dataTraj, (!!as.name(trackGlobalIDName)) %in% sampledTracks)
+				
+				aggrTracks = aggregate(reformulateT(allGroupswRep, "."), data = dataTraj, length)[, allGroupswRep]
+				#nReplicates = nrow(aggregate(reformulateT(replicateGroupName, "."), data = dataTraj, length))
+				
+				# If grouping is applied, then there are groups after trackGlobalIDName, in this case aggregate more...
+				if(length(allGroupswRep[!allGroupswRep %in% trackGlobalIDName])){
+					if(is.function(updateProg)){
+						updateProg(value = 2, detail = "Aggregating data (2/3) (this may take some time)...")
+					}
+					# Aggregating groupings to count number of trackGlobalIDName in each group.
+					aggrNTracks = aggregate(reformulateT(allGroupswRep[!allGroupswRep %in% trackGlobalIDName], "."), 
+											data = aggrTracks, length)
+				}
+				minNTracks = min(aggrNTracks[[trackGlobalIDName]]); maxNTracks = max(aggrNTracks[[trackGlobalIDName]])
+			}
+			
+			firstPart = ""
+			if(!is.null(replicateGroupName)){
+				if(is.function(updateProg)){updateProg(value = 3, detail = "Aggregating data (3/3) (this may take some time)...")}
+				firstPart = paste0("n=", nReplicates, ", ")
+			}
+			subtitle = paste0(firstPart, "# of tracks each group/replicate=")
+			if(minNTracks == maxNTracks){
+				subtitle = paste0(subtitle, minNTracks)
+			}else{
+				subtitle = paste0(subtitle, minNTracks, '-', maxNTracks)
+			}
+			
+		}
+		
+		if(trackReduced > 1){
+			trackGlobalIDs = unique(dataTraj$track_global_id)
+			trackGlobalIDs = trackGlobalIDs[seq(1, length(trackGlobalIDs), trackReduced)]
+			dataTraj = dataTraj %>% filter(track_global_id %in% trackGlobalIDs)
+			if(!is.null(subtitle)){
+				if(is.character(subtitle)){
+					subtitle = paste0(subtitle, ", displaying 1 in ", trackReduced, " tracks")
+				}
+			}
+		}
+		
+		if(spotReduced > 1){
+			dataTraj = dataTraj %>% group_by(track_global_id) %>% slice(seq(1, n(), by = spotReduced))
+			if(!is.null(subtitle)){
+				if(trackReduced > 1){
+					midText = " and 1 in "
+				}else{
+					midText = ", displaying 1 in "
+				}
+				if(is.character(subtitle)){
+					subtitle = paste0(subtitle, midText, spotReduced, " spots")
+				}
+			}
+		}
+		 
+		colorGroup = nameToExpr(colorGroupName)
+		shapeGroup = nameToExpr(shapeGroupName); fillGroup = nameToExpr(fillGroupName)
+		lineTypeGroup = nameToExpr(lineTypeGroupName); sizeVar = nameToExpr(sizeVarName)
+		trackGroup = nameToExpr(trackGlobalIDName)
+		
+		trackGlobalID = nameToExpr(trackGlobalIDName)
+		
+		if(benchmark) startTime = benchMark("Units, groups, expressions", startTime)
+		
+		if(verbose) cat("Units...\n")
+		if(is.null(x.unit)) x.unit = default.x.Unit
+		if(is.null(y.unit)) y.unit = default.y.Unit
+		if(verbose) cat("x/y labels...\n")
+		
+		x.lab = paste0(x.lab, " [", x.unit, "]")
+		y.lab = paste0(y.lab, " [", y.unit, "]")
+		
+		if(verbose) cat("Generating the plot...\n")
+		
+		xVar = unitConversion(defaultUnit = default.x.Unit, unit = x.unit, x)
+		
+		if(smooth.window == 1){
+			yVar = unitConversion(defaultUnit = default.y.Unit, unit = y.unit, y)
+		}else{
+			dataTraj = dataTraj %>% mutate_at(y, ~smoothLineWithNA(., smooth.window))
+			yVar = unitConversion(defaultUnit = default.y.Unit, unit = y.unit, y)
+		}
+		
+		if(groupTracks){
+			plot = ggplot(dataTraj, 
+						  aes(x = !!xVar, y = !!yVar, color = !!colorGroup, fill = !!fillGroup, size = !!sizeVar, 
+						  	linetype = !!lineTypeGroup, shape = !!shapeGroup))
+		}else{
+			plot = ggplot(dataTraj, 
+						  aes(x = !!xVar, y = !!yVar, color = !!colorGroup, fill = !!fillGroup, size = !!sizeVar, 
+						  	linetype = !!lineTypeGroup, shape = !!shapeGroup, track = !!trackGlobalID))
+		}
+		
+		if(is.function(aggregate.fun)){
+			aggrGroups = c(allGroupswoRep, x)
+			if(groupTracks){
+				aggrGroups = aggrGroups[aggrGroups != aggrGroups[1]]
+			}
+			
+			dataTrajAggr = aggregate(reformulateT(aggrGroups, y), data = dataTraj, aggregate.fun)
+			
+			
+			if(is.function(dispersion.fun)){
+				dataTrajDisp = aggregate(reformulateT(aggrGroups, y), data = dataTraj, dispersion.fun)
+				ranges = dataTrajDisp[, ncol(dataTrajDisp)]
+				colnames(dataTrajDisp)[ncol(dataTrajDisp)] = "tx_lower"
+				colnames(dataTrajDisp)[ncol(dataTrajDisp) - 1] = "tx_mid"
+				colnames(dataTrajDisp)[ncol(dataTrajDisp) - 2] = "tx_upper"
+				dataTrajAggr$tx_lower = ranges[, 3]
+				dataTrajAggr$tx_mid = ranges[, 2]
+				dataTrajAggr$tx_upper = ranges[, 1]
+			}
+			
+			if(groupTracks){
+				plot = ggplot(
+					dataTrajAggr, aes(x = !!xVar, y = !!yVar, color = !!colorGroup, fill = !!fillGroup, 
+									  size = !!sizeVar, linetype = !!lineTypeGroup, shape = !!shapeGroup))
+			}else{
+				plot = ggplot(
+					dataTrajAggr, aes(x = !!xVar, y = !!yVar, color = !!colorGroup, fill = !!fillGroup, 
+									  size = !!sizeVar, linetype = !!lineTypeGroup, shape = !!shapeGroup, 
+									  tracks = !!trackGroup))
+			}
+			
+			
+			if(is.function(dispersion.fun)){
+				if(is.function(dispersion.type)){
+					color = "black"
+						if(is.dark){color = "white"}
+					plot = plot + 
+						dispersion.type(aes(ymin = tx_lower, ymax = tx_upper, fill = !!colorGroup), alpha = dispAlpha)
+				}
+			}
+		}
+		
+		plot = plot + labs(color = getGLab(groupings, colorGroupName), fill = getGLab(groupings, fillGroupName), 
+						   #alpha = getGLab(groupings, alphaGroupName), 
+						   shape = getGLab(groupings, shapeGroupName), 
+						   linetype = getGLab(groupings, lineTypeGroupName), size = getGLab(groupings, sizeVarName), 
+						   x = x.lab, y = y.lab)
+		
+		color = "black"
+			if(is.dark) color = "white"
+			
+		if("point" %in% type){
+			if(is.dark && is.null(colorGroup)){
+				plot = plot + geom_point(color = "white", size = pointsize)
+			}else{
+				plot = plot + geom_point(size = pointsize)
+			}
+		}
+		if("jitter" %in% type){
+			if(is.dark && is.null(colorGroup)){
+				plot = plot + geom_jitter(color = "white", size = pointsize)
+			}else{
+				plot = plot + geom_jitter(size = pointsize)
+			}
+		}
+		if("quantile" %in% type){
+			if(is.dark && is.null(colorGroup)){
+				plot = plot + geom_quantile(color = "white", size = linesize)
+			}else{
+				plot = plot + geom_quantile(size = linesize)
+			}
+		}
+		if("smooth" %in% type){
+			if(is.dark && is.null(colorGroup)){
+				plot = plot + geom_smooth(model = lm, color = "white", size = linesize)
+			}else{
+				plot = plot + geom_smooth(model = lm, size = linesize)
+			}
+		}
+		if("line" %in% type){
+			if(is.dark && is.null(colorGroup)){
+				plot = plot + geom_line(color = "white", size = linesize)
+			}else{
+				plot = plot + geom_line(size = linesize)
+			}
+		}
+		if("area" %in% type){
+			if(is.dark && is.null(colorGroup)){
+				plot = plot + geom_area(color = "white", size = linesize)
+			}else{
+				plot = plot + geom_area(size = linesize)
+			}
+		}
+		if("step" %in% type){
+			if(is.dark && is.null(colorGroup)){
+				plot = plot + geom_step(direction = "hv", color = "white", size = linesize)
+			}else{
+				plot = plot + geom_step(direction = "hv", size = linesize)
+			}
+		}
+		
+		plot = plot + theme_classic()
+		if(benchmark) startTime = benchMark("Generating labels and plot", startTime)
+		if(inverse){
+			if(verbose) cat("Inverting...\n")
+			plot = plot + scale_y_reverse()
+			if(benchmark) startTime = benchMark("Inverting", startTime)
+		}
+		# If both facet variables are NULL, then don't do any faceting, otherwise check if any of them is null
+		
+		plot = facetPlot(plot, row = facet.row, col = facet.col, groupings = groupings, facet.wrap)
+		
+		plot = titlePlot(p = plot, title = title)
+		
+		if(is.function(updateProg)){
+			updateProg(value = 1, detail = "Aggregating data (1/3) (this may take some time)...")
+		}
+		
+		if(benchmark) startTime = benchMark("Facet, title", startTime)
+		if(is.null(subtitle)){
+			if(verbose) cat("Generating subtitle...\n")
+			
+			
+		}
+		if(benchmark) startTime = benchMark("subtitle", startTime)
+		plot = subtitlePlot(p = plot, subtitle = subtitle)
+		
+		if(verbose) cat("Color scales...\n")
+		plot = colorPlot(plot, dataTraj, groupings, colorGroupName, colorAlpha, is.dark)
+		
+		plot = fillPlot(plot, dataTraj, groupings, fillGroupName, fillAlpha, is.dark)
+		
+		plot = plot + guides(color = color.legend, alpha = alpha.legend)
+		
+		plot = plot + coord_cartesian(ylim = y.Range)
+		
+		if(verbose) cat("Theme...\n")
+		plot = setThemeBase(plot, is.dark, plot.subtitle.hjust, plot.subtitle.size, plot.subtitle.face, 
+							facet.label.fill.color, facet.text.face)
+		
+		if(panel.border) plot = plot + theme(panel.border = element_rect(color = "black", fill=NA, size = 1))
+		if(panel.grid.major) plot = plot + theme(panel.grid.major = element_line(color = "black", size = 0.2))
+		if(is.dark) plot = plot + theme_black()
+		
+		if(benchmark) startTime = benchMark("Labels, color scales, theme", startTime)
+		
+		if(verbose) cat("Plot ready...\n")
+		if(is.function(closeProg)){closeProg()}
+		return(list(plot = plot, stat = NULL, replicates = NULL, tracks = NULL))
+	}
+	
 	moduleServer(id, function(input, output, session){
 		plot = eventReactive(input$plotIn, {#plot = reactive({
 			
@@ -213,7 +599,7 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 			}
 			
 			if(input$smooth_In){smoothWindow = input$smooth_windowIn}else{smoothWindow = 1}
-			plot = plotTrajFeatures(dataTraj = trajectories(), x = input$x_In, y = input$y_In, 
+			plot = plot_data(dataTraj = trajectories(), x = input$x_In, y = input$y_In, 
 									type = input$type_In, trackGlobalIDName = "track_global_id",
 									x.unit = axis_labs$x_unit(), y.unit = axis_labs$y_unit(), 
 									y.Range = yRange,

@@ -228,6 +228,332 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 								 groupingsAndFeatureChoiceswithoutEmpty, trackChoiceswithoutEmpty, 
 								 trackDirectionChoiceswithoutEmpty, trackDirectionCatChoiceswithoutEmpty,
 								 trajChoiceswithoutEmpty, trajChoiceswithEmpty, dispersionChoices){
+	
+	
+	#' Plots track data
+	#'
+	#' @param dataTracks Tracks data frame
+	#' @param x x grouping name
+	#' @param y y grouping name
+	#' @param type Plot type: "violin", "box", "bar" and "dot"
+	#' @param groupings groupings data frame e.g. groupings()$groupings
+	#' @param y.unit y axis unit to convert original unit
+	#' @param colorGroupName Stroke aesthetic group name
+	#' @param fillGroupName Fill aesthetic group name
+	#' @param y.range y axis range in a vector c(min, max)
+	#' @param quantiles quantiles to be drawn for violin plot
+	#' @param facet.row Facet aesthetic group name
+	#' @param facet.col Facet aesthetic group name
+	#' @param facet.wrap Wrap facets instead of displaying on a grid (good for odd number of facet groups)
+	#' @param title Plot title
+	#' @param subtitle Secondary title
+	#' @param stat.label Types of significance labels: Stars = "p.signif" or p value = "p.format"
+	#' @param multiple.stat.method one of: list(`Do not perform` = "NONE", `ANOVA` = "anova", `Kruskal–Wallis Test` = "kruskal.test")
+	#' @param pairwise.stat.method one of list(`Do not perform` = "NONE", `Student's t Test` = "t.test", `Wilcoxon/Mann-Whitney Test` = "wilcox.test")
+	#' @param hide.ns Hide non significance
+	#' @param data.transform How to transform the data with a formula list(method = character, parameter = character)
+	#' @param stat.text.color Statistics text color
+	#' @param replicateGroupName Replicates group name
+	#' @param statPairwiseType How to match pairs for statistics "all_combinations", "to_control" and "selected"
+	#' @param statPairwiseControl Name of the control group
+	#' @param statPairwiseSelected Numbered list with pairs of groups list(c(group1, group2), ...)
+	#' @param statSignSymbols Significance symbols and ranges
+	#' @param fillAlpha Fill color opacity 0.0-1.0
+	#' @param colorAlpha Stroke color opacity 0.0-1.0
+	#' @param is.dark Dark plot option
+	#' @param plot.subtitle.hjust Secondary title horizontal alignment
+	#' @param plot.subtitle.size Secondary title text size
+	#' @param plot.subtitle.face Secondary title text face
+	#' @param facet.label.fill.color Facet label background color
+	#' @param facet.text.face Facet label text style
+	#' @param x.lab x axis label
+	#' @param y.lab y axis label
+	#' @param violin.scale Scale options for violin plot (e.g. area)
+	#' @param box.notch Box plot notch at median
+	#' @param box.varwidth \link[ggplot2]{geom_boxplot} varwidth
+	#' @param dot.binwidth \link[ggplot2]{geom_dotplot} dotsize
+	#' @param dot.stackgroups \link[ggplot2]{geom_dotplot} stackgroups
+	#' @param dot.method \link[ggplot2]{geom_dotplot} method
+	#' @param dot.stackdir \link[ggplot2]{geom_dotplot} stackdir
+	#' @param browse 
+	#' @param verbose 
+	#' @param benchmark 
+	#' @param initializeProg 
+	#' @param updateProg 
+	#' @param closeProg 
+	#'
+	#' @return
+	#' @export
+	#'
+	#' @examples
+	plot_data = function(dataTracks, x, y, type, groupings, y.unit = NULL, colorGroupName = NULL, fillGroupName = NULL, 
+						#alphaGroupName = NULL, 
+						y.range = NULL,
+						quantiles = c(0.25, 0.5, 0.75),
+						facet.row = NULL, facet.col = NULL, facet.wrap = FALSE,
+						title = NA, subtitle = NULL,
+						#statGroupName = NULL, 
+						stat.label = "..p.signif..", multiple.stat.method = NULL, pairwise.stat.method = NULL, 
+						hide.ns = FALSE, data.transform = list(method = "noneTransform", paramter = 1),
+						stat.text.color = "black", replicateGroupName = NULL,
+						statPairwiseType = "all_combinations", statPairwiseControl = NULL, statPairwiseSelected = NULL, 
+						statSignSymbols = list(cutpoints = c(0, 0.0001, 0.001, 0.01, 0.05, 1), 
+											   symbols = c("****", "***", "**", "*", "ns")),
+						fillAlpha = 1.0, colorAlpha = 1.0, is.dark = FALSE,
+						plot.subtitle.hjust = 0.5, plot.subtitle.size = 10, plot.subtitle.face = "italic",
+						facet.label.fill.color = "#FFFFFF00", facet.text.face = "bold", 
+						x.lab = NULL, y.lab = NULL,
+						violin.scale = "area",
+						box.notch = TRUE, box.varwidth = FALSE, 
+						dot.binwidth = 1, dot.stackgroups = FALSE, dot.method = "dotdensity", dot.stackdir = "up",
+						browse = FALSE, verbose = FALSE, benchmark = FALSE,
+						#xReverseOrder = FALSE, 
+						initializeProg = NULL, updateProg = NULL, closeProg = NULL){
+		if(browse) browser()
+		if(benchmark) startTime = benchMark()
+		if(verbose) cat("Preparing names and expressions...\n")
+		default.y.Unit = attr(dataTracks[[y]], "unit")
+		if(is.null(default.y.Unit)){
+			default.y.Unit = ""
+		}
+		#Check before
+		if(is.null(y.unit)){y.unit = default.y.Unit}
+		
+		allGroupswoRep = unique(c(x, colorGroupName, fillGroupName, facet.row, facet.col))
+		allGroupswRep = unique(c(allGroupswoRep, replicateGroupName))
+		
+		#Transforming data
+		transformFun = match.fun(data.transform$method)
+		transformFormulaFun = match.fun(paste0(data.transform$method, "Formula"))
+		if(!udunits2::ud.are.convertible(default.y.Unit, y.unit)){
+			y.unit = default.y.Unit
+			#TODO warn about this?
+		}
+		if(!is.factor(dataTracks[[y]])){
+			converted = udunits2::ud.convert(dataTracks[[y]], default.y.Unit, y.unit)
+		}else{
+			converted = dataTracks[[y]]
+		}
+		dataTracks[[y]] = transformFun(converted, data.transform$parameter)
+		attr(dataTracks[[y]], "unit") = y.unit
+		#browser()
+		if(!is.factor(dataTracks[[y]])){
+			dataRange = c(min(dataTracks[[y]]), max(dataTracks[[y]]))
+		}else{
+			dataRange = c(1, length(dataTracks[[y]]))
+		}
+		
+		if(is.null(y.lab)){
+			y.labDisp = ""
+		}else{
+			y.labDisp = TeX(paste0(transformFormulaFun(y.lab, data.transform$parameter), 
+								   " \\[", transformFormulaFun(y.unit, data.transform$parameter), "\\]"))
+		}
+		
+		#if(!is.null(unit)){  ud.convert(tracks$TRACK_MEAN_SPEED, "μm/sec", "μm/h")
+		fillGroup = nameToExpr(fillGroupName); colorGroup = nameToExpr(colorGroupName)
+		
+		yVar = nameToExpr(y)
+		plot = ggplot(dataTracks, aes(x = !!sym(x), y = !!yVar, color = !!colorGroup, fill = !!fillGroup))
+		
+		if(benchmark) startTime = benchMark("Units, groups, expressions", startTime)
+		if(verbose) cat("Units, groups, expressions...\n")
+		
+		
+		if("violin" %in% type){
+			if(is.dark && is.null(colorGroup)){
+				plot = plot + geom_violin(scale = violin.scale, draw_quantiles = quantiles, color = "white")
+			}else{
+				plot = plot + geom_violin(scale = violin.scale, draw_quantiles = quantiles)
+			}
+		}
+		if("box" %in% type){
+			if(is.dark && is.null(colorGroup)){
+				plot = plot + geom_boxplot(notch = box.notch, varwidth = box.varwidth, color = "white")
+			}else{
+				plot = plot + geom_boxplot(notch = box.notch, varwidth = box.varwidth)
+			}
+		}
+		if("bar" %in% type){
+			if(is.dark && is.null(colorGroup)){
+				plot = plot + geom_boxplot(notch = box.notch, varwidth = box.varwidth, color = "white")
+			}else{
+				plot = plot + geom_bar(stat = "identity")
+			}
+		}
+		if("dot" %in% type){
+			if(is.dark && is.null(colorGroup)){
+				plot = plot + geom_dotplot(binaxis = "y", dotsize = dot.binwidth, stackgroups = dot.stackgroups, 
+										   method = dot.method, stackdir = dot.stackdir, color = "white")
+			}else{
+				plot = plot + geom_dotplot(binaxis = "y", dotsize = dot.binwidth, stackgroups = dot.stackgroups, 
+										   method = dot.method, stackdir = dot.stackdir)
+			}
+		}
+		if(benchmark) startTime = benchMark("geom_x", startTime)
+		if(verbose) cat("geom_x...\n")
+		
+		plot = facetPlot(p = plot, row = facet.row, col = facet.col, groupings = groupings, facet.wrap)
+		
+		plot = titlePlot(p = plot, title = title)
+		
+		aggrRep = data.frame(); aggrRepMerged = data.frame(); aggrRepMergedNice = data.frame()
+		aggr = data.frame(); aggrNice = data.frame() 
+		if(!is.null(replicateGroupName)){
+			# All tracks separated by all groupings including replicates
+			aggrRep = dataTracks %>% group_by_at(allGroupswRep) %>% summarise_at(y, length)
+			# All tracks separated by all groupings WITHOUT replicates, hence replicates are summarised
+			aggrRepMerged = aggrRep %>% group_by_at(allGroupswoRep) %>% summarise_at(y, length)
+			# aggrRepMerged with nicer titles for output table
+			aggrRepMergedNice = aggrRepMerged
+			newLabels = 
+				as.character(as.character(groupings$labels)[match(colnames(aggrRepMergedNice), groupings$names)])
+			newLabels[length(newLabels)] = "Number of replicates"
+			colnames(aggrRepMergedNice) = newLabels
+		}
+		
+		aggr = dataTracks %>% group_by_at(allGroupswRep) %>% summarise_at(y, length)
+		aggrNice = aggr
+		colnames(aggrNice) = 
+			c(as.character(groupings$labels)[match(colnames(aggrNice)[1:(ncol(aggrNice) - 1)], groupings$names)], 
+			  "Number of tracks")
+		
+		if(is.null(subtitle)){
+			firstPart = ""
+			if(!is.null(replicateGroupName)){
+				repCountRange = c(min(aggrRepMerged[[y]]), max(aggrRepMerged[[y]]))
+				firstPart = paste0("n=", paste(unique(repCountRange), collapse = "-"), " , ")
+			}
+			
+			subtitle = paste0(firstPart, "# of tracks each group/replicate=", min(aggr[[y]]), '-', max(aggr[[y]]))
+		}
+		
+		if(!is.na(subtitle)) plot = subtitlePlot(p = plot, subtitle = subtitle)
+		
+		if(benchmark) startTime = benchMark("Titles", startTime)
+		if(verbose) cat("Titles...\n")
+		
+		if(is.null(x.lab)){x.labDisp = getGLab(groupings, x)}else{x.labDisp = x.lab}
+		
+		
+		if(is.na(x.labDisp)) x.labDisp = ""
+		#if(is.na(y.labDisp)) y.labDisp = ""
+		plot = plot + labs(color = getGLab(groupings, colorGroupName), fill = getGLab(groupings, fillGroupName), 
+						   #alpha = getGLab(groupings, alphaGroupName), 
+						   x = x.labDisp, y = y.labDisp)
+		
+		if(benchmark) startTime = benchMark("Labels", startTime)
+		if(verbose) cat("Labels...\n")
+		
+		# Stat color for dark plots
+		stat.text.color = "black"
+			if(is.dark) stat.text.color = "white"
+			
+		plot = colorPlot(plot, dataTracks, groupings, colorGroupName, colorAlpha, is.dark)
+		
+		plot = fillPlot(plot, dataTracks, groupings, fillGroupName, fillAlpha, is.dark)
+		
+		plot = plot + scale_x_discrete(labels = getGLabs(groupings = groupings, name = x, 
+														 order = levels(dataTracks[[x]])))
+		
+		if(y.unit == "radian"){
+			plot = plot + scale_y_continuous(breaks  = c(seq(0, 2*pi, pi/2)), 
+											 labels = c("0", "\u03c0/2", "\u03c0", "3\u03c0/2", "2*\u03c0"))
+		}
+		
+		if(benchmark) startTime = benchMark("Colors", startTime)
+		if(verbose) cat("Colors...\n")
+		
+		statOut = list()
+		if(!is.null(multiple.stat.method)){
+			if(multiple.stat.method != "NONE"){
+				if(is.null(y.range)){
+					label.y = (dataRange[2] - dataRange[1]) * 0.9 + dataRange[1]
+				}else{
+					label.y = (y.range[2] - y.range[1]) * 0.9 + y.range[1]
+				}
+				plot = plot + 
+					stat_compare_means(method = multiple.stat.method, label.x = 0.7, label.y = label.y, show.legend = F)
+			}
+		}
+		
+		if(!is.null(pairwise.stat.method) && !is.factor(dataTracks[[y]])){
+			if(pairwise.stat.method != "NONE"){
+				comparisons = list()
+				comparisonGroups = as.character(getGroups(groupings = groupings, name = x))
+				if(statPairwiseType == "all_combinations"){
+					comparisons = combn(comparisonGroups, 2, simplify = F)
+				}else if(statPairwiseType == "to_control"){
+					i = 1
+					for(comparisonGroup in comparisonGroups){
+						if(statPairwiseControl != comparisonGroup){
+							comparisons[[i]] = c(statPairwiseControl, comparisonGroup)
+							i = i + 1
+						}
+					}
+				}else if(statPairwiseType == "selected"){
+					comparisons = statPairwiseSelected
+				}
+				if(stat.label == "p.format"){
+					statSignSymbols = NULL
+				}
+				plot = plot + 
+					stat_compare_means(aes(group = !!sym(x)), label = stat.label, method = pairwise.stat.method, 
+									   label.x = 1.5, comparisons = comparisons, hide.ns = hide.ns, 
+									   show.legend = FALSE, color = stat.text.color, symnum.args = statSignSymbols)
+				stat.fun = match.fun(pairwise.stat.method)
+				nonStatGroupings = allGroupswoRep[allGroupswoRep != x]
+				dataTracksSplits = dataTracks %>% group_by_at(vars(nonStatGroupings)) %>% group_split()
+				for(dataTracksSplit in dataTracksSplits){
+					withinGroupLabel = apply(dataTracksSplit[ , nonStatGroupings ], 1, paste, collapse = " AND " )[1]
+					if(!is.null(comparisons)){
+						stat.fun = match.fun(paste0("pairwise.", pairwise.stat.method))
+						#browser()
+						statOut[[withinGroupLabel]] = capture.output(stat.fun(x = dataTracksSplit[[y]], 
+																			  g = dataTracksSplit[[x]]))
+					}else{
+						statOut[[withinGroupLabel]] = capture.output(stat.fun(reformulateT(x, y), 
+																			  data = dataTracksSplit))
+					}
+				}
+				statOut = replaceStatLabels(statOut, getGLab(groupings, x), y.lab)
+			}
+		}
+		
+		plot = setThemeBase(plot, is.dark, plot.subtitle.hjust, plot.subtitle.size, plot.subtitle.face, 
+							facet.label.fill.color, facet.text.face)
+		
+		plot = plot + coord_cartesian(ylim = y.range)
+		
+		if(benchmark) startTime = benchMark("Stats and theme", startTime)
+		if(verbose) cat("Stats and theme...\n")
+		
+		# Histogram of each group to check data distribution
+		histogram = groupHistograms(dataTracks, x, y, default.y.Unit, y.unit, y.labDisp, groupings, 
+									colorGroup, fillGroup, colorGroupName, fillGroupName, 
+									facet.row, facet.col, facet.wrap, 
+									colorAlpha, fillAlpha, 
+									is.dark)
+		if(!is.factor(dataTracks[[y]])){
+			# QQ plots of each group to check data normality
+			qq = groupQQ(dataTracks, x, y, default.y.Unit, y.unit, groupings, colorGroup, fillGroup, 
+						 colorGroupName, fillGroupName, facet.row, facet.col, facet.wrap, colorAlpha, fillAlpha, 
+						 is.dark)
+			# Shapiro test
+			normality = groupedNormality(dataTracks, groupings, c(x, allGroupswoRep), y, default.y.Unit, y.unit)
+			
+			# Levene test
+			levene = groupedLevene(dataTracks, c(x, allGroupswoRep), y, default.y.Unit, y.unit)
+		}else{
+			qq = NULL
+			normality = NULL
+			levene = NULL
+		}
+		return(list(plot = plot, stat = statOut, replicates = aggrRepMergedNice, tracks = aggrNice, 
+					histogram = histogram, qq = qq, normality = normality, levene = levene))
+	}
+	
+	
 	moduleServer(id, function(input, output, session){
 		plot = reactive({
 			if(debugging$browse){
@@ -287,42 +613,40 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 					}
 				}
 				
-				plot = plotData(dataTracks = tracks(), x = input$x_In, y = input$y_In, 
-								type = input$type_In, 
-								y.range = yRange, y.unit = yUnit, 
-								colorGroupName = color_group, fillGroupName = fill_group, 
-								groupings = groupings()$groupings,
-								#xReverseOrder = input$reverse_order_In,
-								facet.row = facetRowGroup, facet.col = facetColGroup, 
-								title = titles$title, subtitle = titles$subtitle, replicateGroupName = replicateGroup, 
-								stat.label = input$stat_label_In, hide.ns = input$stat_hidens_In, 
-								#statGroupName = statGroup, 
-								multiple.stat.method = input$multiple_stat_method_In, 
-								pairwise.stat.method = input$pairwise_stat_method_In, 
-								data.transform = transform(),
-								statPairwiseType = input$stat_comparison_type_In, 
-								statPairwiseControl = input$stat_comparison_control_In, 
-								statPairwiseSelected = statPairwiseSelectedPairs, 
-								statSignSymbols = symnum.args,
-								fillAlpha = groupings_colors$fill_alpha(), 
-								colorAlpha = groupings_colors$color_alpha(), 
-								x.lab = xlab, y.lab = ylab, is.dark = groupings_colors$dark(),
-								facet.text.face = facet$label_face(), 
-								facet.label.fill.color = facet$label_fill_color(),
-								facet.wrap = facet$wrap(),
-								plot.subtitle.hjust = titles$subtitle_hjust, 
-								plot.subtitle.size = titles$subtitle_size, 
-								plot.subtitle.face = titles$subtitle_text_style,
-								violin.scale = input$violin_scale_In,
-								box.notch = input$box_notch_In,
-								box.varwidth = input$box_varwidth_In,
-								dot.binwidth = input$dot_binwidth_In,
-								dot.stackgroups = input$dot_stackgroups_In,
-								dot.method = input$dot_method_In,
-								dot.stackdir = input$dot_stackdir_In,
-								browse = debugging$browse, 
-								benchmark = debugging$benchmark, 
-								verbose = debugging$verbose)
+				plot = plot_data(dataTracks = tracks(), x = input$x_In, y = input$y_In, 
+								 type = input$type_In, 
+								 y.range = yRange, y.unit = yUnit, 
+								 colorGroupName = color_group, fillGroupName = fill_group, 
+								 groupings = groupings()$groupings,
+								 facet.row = facetRowGroup, facet.col = facetColGroup, 
+								 title = titles$title, subtitle = titles$subtitle, replicateGroupName = replicateGroup, 
+								 stat.label = input$stat_label_In, hide.ns = input$stat_hidens_In, 
+								 multiple.stat.method = input$multiple_stat_method_In, 
+								 pairwise.stat.method = input$pairwise_stat_method_In, 
+								 data.transform = transform(),
+								 statPairwiseType = input$stat_comparison_type_In, 
+								 statPairwiseControl = input$stat_comparison_control_In, 
+								 statPairwiseSelected = statPairwiseSelectedPairs, 
+								 statSignSymbols = symnum.args,
+								 fillAlpha = groupings_colors$fill_alpha(), 
+								 colorAlpha = groupings_colors$color_alpha(), 
+								 x.lab = xlab, y.lab = ylab, is.dark = groupings_colors$dark(),
+								 facet.text.face = facet$label_face(), 
+								 facet.label.fill.color = facet$label_fill_color(),
+								 facet.wrap = facet$wrap(),
+								 plot.subtitle.hjust = titles$subtitle_hjust, 
+								 plot.subtitle.size = titles$subtitle_size, 
+								 plot.subtitle.face = titles$subtitle_text_style,
+								 violin.scale = input$violin_scale_In,
+								 box.notch = input$box_notch_In,
+								 box.varwidth = input$box_varwidth_In,
+								 dot.binwidth = input$dot_binwidth_In,
+								 dot.stackgroups = input$dot_stackgroups_In,
+								 dot.method = input$dot_method_In,
+								 dot.stackdir = input$dot_stackdir_In,
+								 browse = debugging$browse, 
+								 benchmark = debugging$benchmark, 
+								 verbose = debugging$verbose)
 				plot
 			}
 			
@@ -345,7 +669,6 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 				#trackRanges$y = c(brush$ymin, brush$ymax)
 				#updateCheckboxInput(session, "track_x_range_check_In", value = TRUE)
 				updateCheckboxInput(session, "y_range_check_In", value = TRUE)
-				#updateSliderInput(session, "track_x_range_In", min = getXMin(), max = getXMax(), step = getXStep(), value = c(brush$xmin, brush$xmax))
 				updateSliderInput(session, "y_range_In", min = getYMin(), max = getYMax(), 
 								  step = getYStep(), value = c(brush$ymin, brush$ymax))
 			} else {
@@ -353,7 +676,6 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 				#trackRanges$y = NULL
 				#updateCheckboxInput(session, "x_range_check_In", value = FALSE)
 				updateCheckboxInput(session, "y_range_check_In", value = FALSE)
-				#updateSliderInput(session, "x_range_In", min = getXMin(), max = getXMax(), step = getXStep(), value = c(getXMin(), getXMax()))
 				updateSliderInput(session, "y_range_In", min = getYMin(), max = getYMax(), 
 								  step = getYStep(), value = c(getYMin(), getYMax()))
 			}

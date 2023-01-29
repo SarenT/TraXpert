@@ -300,9 +300,6 @@ server = function(input, output, session) {
 		data = state$values$data
 	})
 	
-	#observe({toggleState("plot_width_In", condition = input$plot_autowidth_In)})
-	#observe({toggleState("plot_height_In", condition = input$plot_autoheight_In)})
-	
 	observeEvent(input$tmFilesIn, {
 		tmFiles = input$tmFilesIn
 		tmFiles[pointSourceColumns] = NA
@@ -480,20 +477,6 @@ server = function(input, output, session) {
 			showModal(modalDialog(title = "File Upload Error", "Something went wrong during file upload."))
 		}
 	})
-	
-	#trackRanges = reactiveValues(y = NULL)
-	
-	#observe({updateSliderInput(session, "track_x_range_In", min = getXMin(), max = getXMax(), step = getXStep(), value = c(getXMin(), getXMax()))})
-	
-	# trajectoryXLocationswithoutEmpty = reactive({
-	# 	#trajectoryPositionNamedList(c("Spot", "Edge"), data()$features, "x", empty = FALSE)
-	# 	choicesInNamedList(c("Spot", "Edge"), features(), "POSITION_X", empty = FALSE)
-	# })
-	# 
-	# trajectoryYLocationswithoutEmpty = reactive({
-	# 	#trajectoryPositionNamedList(c("Spot", "Edge"), data()$features, "POSITION_Y", empty = FALSE)
-	# 	choicesInNamedList(c("Spot", "Edge"), features(), "POSITION_Y", empty = FALSE)
-	# })
 	
 	allTrackMeasures = reactive({
 		choices = list()
