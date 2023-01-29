@@ -298,25 +298,6 @@ isEmpty = function(x){
 	return(TRUE)
 }
 
-# editDataTest = function(data, info, proxy = NULL, rownames = TRUE, resetPaging = FALSE, ...) {
-# 	browser()
-# 	for (r in split(info, info$col)) {
-# 		i = r$row; j = r$col + !rownames; v = r$value
-# 		j = j[1]
-# 		# the 0-th column is the row names in this case
-# 		if (j == 0) {
-# 			rownames(data)[i] = v
-# 		} else {
-# 			data[i, j] = coerceValue(v, data[i, j, drop = TRUE])
-# 		}
-# 	}
-# 	if (is.character(proxy)) proxy = dataTableProxy(proxy)
-# 	if (inherits(proxy, 'dataTableProxy')) {
-# 		replaceData(proxy, data, resetPaging = resetPaging, rownames = rownames, ...)
-# 	}
-# 	data
-# }
-
 #' Adapted from https://stackoverflow.com/questions/2547402/is-there-a-built-in-function-for-finding-the-mode
 #' Returns mode of the vector
 #'
@@ -670,72 +651,6 @@ generateGroupColor = function(i, n){
 	}
 }
 
-# hTestToString = function(hTest, digits = 6, prefix = "\t"){
-# 	out = paste0("\n", strwrap(hTest$method, prefix = prefix), "\n\ndata:  ", hTest$data.name, "\n")
-# 	statPart = c()
-# 	if (!is.null(hTest$statistic)) 
-# 		statPart = c(statPart, paste(names(hTest$statistic), "=", format(hTest$statistic, 
-# 															digits = max(1L, digits - 2L))))
-# 	if (!is.null(hTest$parameter)) 
-# 		statPart = c(statPart, paste(names(hTest$parameter), "=", format(hTest$parameter, 
-# 															digits = max(1L, digits - 2L))))
-# 	if (!is.null(hTest$p.value)) {
-# 		fp = format.pval(hTest$p.value, digits = max(1L, digits - 
-# 												  	3L))
-# 		statPart = c(statPart, paste("p-value", if (substr(fp, 1L, 1L) == 
-# 										   "<") fp else paste("=", fp)))
-# 	}
-# 	out = paste0(out, strwrap(paste(statPart, collapse = ", ")), sep = "\n")
-# 	alternative = ""
-# 	if (!is.null(hTest$alternative)) {
-# 		alternative = paste0(alternative, "alternative hypothesis: ")
-# 		if (!is.null(hTest$null.value)) {
-# 			if (length(hTest$null.value) == 1L) {
-# 				alt.char = switch(hTest$alternative, two.sided = "not equal to", 
-# 								   less = "less than", greater = "greater than")
-# 				alternative = paste0(alternative, "true ", names(hTest$null.value), " is ", alt.char, 
-# 					" ", hTest$null.value, "\n", sep = "")
-# 			} else {
-# 				alternative = paste0(alternative, hTest$alternative, "\nnull values:\n")
-# 				alternative = paste0(alternative, hTest$null.value, digits = digits, ...)
-# 			}
-# 		}else{alternative = paste0(alternative, hTest$alternative, "\n")}
-# 	}
-# 	out = paste0(out, alternative, sep = "\n")
-# 	if (!is.null(hTest$conf.int)){
-# 		out = paste0(out, format(100 * attr(hTest$conf.int, "conf.level")), " percent confidence interval:\n", 
-# 			" ", paste0(format(hTest$conf.int[1:2], digits = digits), 
-# 					   collapse = " "), "\n")
-# 	}
-# 	if (!is.null(hTest$estimate)) {
-# 		out = paste0(out, "sample estimates:\n")
-# 		out = paste0(out, outhTest$estimate, digits = digits, ...)
-# 	}
-# 	out = paste0(out, "\n")
-# 	return(out)
-# }
-
-# plotDownloadHandler = function(plot, autowidth, width, autoheight, height, fileType, fileName){
-# 	customDownloadHandler = downloadHandler(
-# 		filename = function() {
-# 			paste(fileName, fileType, sep = ".")
-# 		},
-# 		content = function(file) {
-# 			if(autowidth){width = NA}
-# 			if(autoheight){height = NA}
-# 			browser()
-# 			##svg(filename = tempfile(), )
-# 			ggsave(filename = file, plot = plot, width = width, height = height, dpi = 300, units = "cm")
-# 			#
-# 			# Write to a file specified by the 'file' argument
-# 			#write()
-# 			#writeBin(object = dataObjSerial, con = file)
-# 		},
-# 		contentType = paste("image", fileType, sep = "/")
-# 	)
-# 	return(customDownloadHandler)
-# }
-
 #' Appends new feature to the existing features data frame
 #'
 #' @param oldFeatures data frame
@@ -1055,14 +970,15 @@ parseFiles = function(filesDF, groupings, groups, recalculate = FALSE, browse = 
 #'
 #' @examples
 processData = function(dataList, groups, groupings, updateProgress = NULL, initializeProgress = NULL, 
-					   closeProgress = NULL, recalculate = FALSE, browse = 0, benchmark = TRUE){#, rotation_fix = 0, rotation_z_fix = 0){
+					   closeProgress = NULL, recalculate = FALSE, browse = 0, benchmark = TRUE){
 	if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 	if(benchmark) startTime = benchMark()
 	# Getting data frames
 	tracks = dataList$tracks; trajectories = dataList$trajectories; files = dataList$files; features = dataList$features
 	tracks$group_id = apply(tracks[, as.character(groupings$names), drop = F], 1, paste, collapse = "_")
 	#tracks$group_part_id = apply(tracks[, c(as.character(groupings$names), "Part")], 1, paste, collapse = "_")
-	tracks$track_global_id = paste0(tracks$group_id, "_", tracks$TRACK_ID)#tracks$track_global_id = paste0(tracks$group_part_id, "_", tracks$TRACK_ID)
+	tracks$track_global_id = paste0(tracks$group_id, "_", tracks$TRACK_ID)
+	#tracks$track_global_id = paste0(tracks$group_part_id, "_", tracks$TRACK_ID)
 	
 	# Setting groups IDs
 	files$group_id = apply(files[, as.character(groupings$names), drop = F], 1, paste, collapse = "_")
@@ -1076,7 +992,8 @@ processData = function(dataList, groups, groupings, updateProgress = NULL, initi
 	if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 	trajectories$group_id = apply(trajectories[, as.character(groupings$names), drop = F], 1, paste, collapse = "_")
 	#trajectories$group_part_id = apply(trajectories[, c(as.character(groupings$names), "Part")], 1, paste, collapse = "_")
-	trajectories$track_global_id = paste0(trajectories$group_id, "_", trajectories$TRACK_ID)#trajectories$track_global_id = paste0(trajectories$group_part_id, "_", trajectories$TRACK_ID)
+	trajectories$track_global_id = paste0(trajectories$group_id, "_", trajectories$TRACK_ID)
+	#trajectories$track_global_id = paste0(trajectories$group_part_id, "_", trajectories$TRACK_ID)
 	
 	if(is.function(initializeProgress) && is.function(updateProgress)){
 		initializeProgress(message = "Processing tracks...", max = length(unique(trajectories$track_global_id)))
@@ -1186,70 +1103,6 @@ processData = function(dataList, groups, groupings, updateProgress = NULL, initi
 		
 		if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 		
-		# tracks2$TRACK_DIRECTION = NA; tracks2$TRACK_DIRECTION_Z = NA
-		# tracks2$PATH_LENGTH = NA; tracks2$TRACK_VELOCITY = NA
-		# 
-		# trajectories2$POSITION_X_FIX_ROT = trajectories2$POSITION_X_FIX; trajectories2$POSITION_Y_FIX_ROT = trajectories2$POSITION_Y_FIX; trajectories2$POSITION_Z_FIX_ROT = trajectories2$POSITION_Z_FIX 
-		# 
-		# cat("Calculating rotationally fixed positions of tracks at (0/0)")
-		# 
-		# trajectories2[, fixedPositionColumns] = NA
-		# for(track in unique(trajectories2$track_global_id)){
-		# 	trackPos = trajectories2[trajectories2$track_global_id == track, positionColumns]
-		# 	trajectories2[trajectories2$track_global_id == track, fixedPositionColumns] =
-		# 		trackPos - trackPos[rep(1, nrow(trackPos)), ]
-		# }
-		# if(benchmark) startTime = benchMark("Process data - for loop fixed pos", startTime)
-		# 
-		# # Path length
-		# #trajectories = a %>% group_by(track_global_id) %>% mutate(EDGE_DIRECTION = )
-		# trackNames = unique(trajectories2$track_global_id)
-		# if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
-		# for(i in 1:length(trackNames)){
-		# 	track = trackNames[i]
-		# 	displacements = trajectories2$DISPLACEMENT[trajectories2$track_global_id == track]
-		# 	progress = paste(i, "of", length(trackNames), paste0(round(i*100/length(trackNames), digits = 0), "%"), track, "\n")
-		# 	cat(progress)
-		# 	if(is.function(initializeProgress) && is.function(updateProgress)){
-		# 		updateProgress(value = i - 1, detail = progress)
-		# 	}
-		# 	trackFixPos = trajectories2[trajectories2$track_global_id == track, fixedPositionColumns]
-		# 	trackSel = tracks2$track_global_id == track
-		# 	r = sqrt(rowSums(trackFixPos[, 1:3] ^ 2))
-		# 	
-		# 	phi = atan2(y = trackFixPos$POSITION_Y_FIX, x = trackFixPos$POSITION_X_FIX)
-		# 	direction = phi[length(phi)] %% (2*pi)
-		# 	#ROT phi = phi + ud.convert(rotation_fix, "degree", "radian"); phi[is.nan(phi)] = 0
-		# 	#ROT direction_rot = phi[length(phi)] %% (2*pi)
-		# 	
-		# 	theta = acos(trackFixPos$POSITION_Z_FIX / r); theta[is.nan(theta)] = 0
-		# 	direction_z = theta[length(theta)] %% (pi)
-		# 	#ROT theta = theta + ud.convert(rotation_z_fix, "degree", "radian"); theta[is.nan(theta)] = 0
-		# 	#ROT direction_z_rot = theta[length(theta)] %% (pi)
-		# 	
-		# 	#ROT trajSel = trajectories$track_global_id == track
-		# 	#ROT trajectories[trajSel, ]$POSITION_X_FIX_ROT = r * cos(phi) * sin(theta)
-		# 	#ROT trajectories[trajSel, ]$POSITION_Y_FIX_ROT = r * sin(phi) * sin(theta)
-		# 	#ROT trajectories[trajSel, ]$POSITION_Z_FIX_ROT = r * cos(theta)
-		# 	
-		# 	
-		# 	if(nrow(tracks2[trackSel, ]) == 1){
-		# 		tracks2[trackSel, ]$TRACK_DIRECTION = direction
-		# 		#ROT tracks2[trackSel, ]$TRACK_DIRECTION_ROT = direction_rot
-		# 		tracks2[trackSel, ]$TRACK_DIRECTION_Z = direction_z
-		# 		#ROT tracks2[trackSel, ]$TRACK_DIRECTION_Z_ROT = direction_z_rot
-		# 		
-		# 		tracks2[trackSel, ]$PATH_LENGTH = sum(displacements[-length(displacements)])
-		# 		tracks2[trackSel, ]$TRACK_VELOCITY = tracks2[trackSel, ]$TRACK_DISPLACEMENT / tracks2[trackSel, ]$TRACK_DURATION
-		# 	}
-		# 	if(is.function(updateProgress)){updateProgress(value = i, detail = progress)}
-		# 	
-		# }
-		# if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
-		# tracks2$PERSISTENCE = tracks2$TRACK_DISPLACEMENT / tracks2$PATH_LENGTH
-		# if(benchmark) startTime = benchMark("Process data - for loop", startTime)
-		#browser()
-		
 		# Calculating track directions
 		tracks = tracks %>% 
 			left_join(trajectories %>% 
@@ -1267,29 +1120,10 @@ processData = function(dataList, groups, groupings, updateProgress = NULL, initi
 		#browser()
 		tracks = tracks %>% mutate(toCardinal(get("TRACK_DIRECTION"), directionCat, 
 											  unlist(names(cardinalCols)[cardinalCols == "TRACK_DIRECTION"])))
-	
-		# tracks = tracks %>% 
-		# 	mutate(DIRECTION_CARDINAL = cut(TRACK_DIRECTION, directionCat)) %>% #mutate(across(starts_with("DIRECTION_POINT_SOURCE"), ~ cut(., directionCat), .names = "{.col}_CARDINAL")) %>% 
-		# 	mutate(DIRECTION_CARDINAL = replace(DIRECTION_CARDINAL, 
-		# 										DIRECTION_CARDINAL == last(levels(DIRECTION_CARDINAL)), 
-		# 										first(levels(DIRECTION_CARDINAL))))
-		# 
-		#tracks$DIRECTION_CARDINAL = cut(tracks$TRACK_DIRECTION, directionCat)
-		
-		
-		#ROT tracks$DIRECTION_CARDINAL_ROT = cut(tracks$TRACK_DIRECTION_ROT, directionCat)
-		
-		# Setting last group to first group
-		#tracks = angleCategoryFix(tracks, c("DIRECTION_CARDINAL"))#ROT , "DIRECTION_CARDINAL_ROT"))
-		# tracks = tracks %>% 
-		# 	mutate(DIRECTION_CARDINAL = replace(DIRECTION_CARDINAL, 
-		# 		   			DIRECTION_CARDINAL == last(levels(tracks$DIRECTION_CARDINAL)), 
-		# 		   			first(levels(tracks$DIRECTION_CARDINAL))))
-		# 
-		
 		
 		tracks$TRACK_DIRECTION_ROT = tracks$TRACK_DIRECTION; tracks$TRACK_DIRECTION_Z_ROT = tracks$TRACK_DIRECTION_Z
-		tracks$DIRECTION_CARDINAL_ROT = tracks$DIRECTION_CARDINAL#; tracks$DIRECTION_CARDINAL_Z_ROT = tracks$DIRECTION_CARDINAL_Z
+		tracks$DIRECTION_CARDINAL_ROT = tracks$DIRECTION_CARDINAL
+		#; tracks$DIRECTION_CARDINAL_Z_ROT = tracks$DIRECTION_CARDINAL_Z
 		
 		
 		if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
@@ -1467,17 +1301,6 @@ pointSource = function(dataList, updateProgress = NULL, initializeProgress = NUL
 			mutate(toCardinal(get("EDGE_DIRECTION_POINT_SOURCE_THETA"), directionCat, 
 							  unlist(names(cardinalCols)[cardinalCols == "EDGE_DIRECTION_POINT_SOURCE_THETA"])))
 		
-		# trajectories = 
-		# 		trajectories %>% mutate(across(starts_with("EDGE_DIRECTION_POINT_SOURCE"), ~ cut(., directionCat),
-		# 									   .names = "{.col}_CARDINAL")) %>%
-		# 		mutate(across(matches("POINT_SOURCE_.*_CARDINAL"), ~ replace(., . == last(levels(.)), first(levels(.)))))
-		# tracks = tracks %>% 
-		# 	mutate(across(starts_with("DIRECTION_POINT_SOURCE"), ~ cut(., directionCat), .names = "{.col}_CARDINAL")) %>% 
-		# 	mutate(across(matches("POINT_SOURCE_.*_CARDINAL"), ~ replace(., . == last(levels(.)), first(levels(.)))))
-		# trajectories = 
-		# 	trajectories %>% mutate(across(starts_with("EDGE_DIRECTION_POINT_SOURCE"), ~ cut(., directionCat), 
-		# 								   .names = "{.col}_CARDINAL")) %>% 
-		# 	mutate(across(matches("POINT_SOURCE_.*_CARDINAL"), ~ replace(., . == last(levels(.)), first(levels(.)))))
 		
 		# Setting last group to first group
 		tracks = tracks
@@ -1542,53 +1365,10 @@ rotateTracks = function(dataList, updateProgress = NULL, initializeProgress = NU
 	phi[is.nan(phi)] = 0; phi = phi %% (2*pi)
 	theta = acos(fixedPos$POSITION_Z_FIX / r) + ud.convert(rotation_z_fix, "degree", "radian");
 	theta[is.nan(theta)] = 0; theta %% (pi)
-	#direction = phi[length(phi)] %% (2*pi)
-	#ROT phi = phi + ud.convert(rotation_fix, "degree", "radian"); phi[is.nan(phi)] = 0
-	#ROT direction_rot = phi[length(phi)] %% (2*pi)
+	
 	trajectories$POSITION_X_FIX_ROT = r * cos(phi) * sin(theta)
 	trajectories$POSITION_Y_FIX_ROT = r * sin(phi) * sin(theta)
 	trajectories$POSITION_Z_FIX_ROT = r * cos(theta)
-	#direction_z = theta[length(theta)] %% (pi)
-	# 
-	# if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
-	# for(i in 1:length(trackNames)){
-	# 	track = trackNames[i]
-	# 	
-	# 	#trackFixPos = trajectories[trajectories$track_global_id == track, fixedPositionColumns]
-	# 	trackSel = tracks$track_global_id == track
-	# 	
-	# 	progress = paste(i, "of", length(trackNames), paste0(round(i*100/length(trackNames), digits = 0), "%"), track, "\n")
-	# 	cat(progress)
-	# 	if(is.function(initializeProgress) && is.function(updateProgress)){
-	# 		updateProgress(value = i - 1, detail = progress)
-	# 	}
-	# 	
-	# 	
-	# 	phi = unlist(tracks[trackSel, "TRACK_DIRECTION"] + ud.convert(rotation_fix, "degree", "radian")); phi[is.nan(phi)] = 0
-	# 	direction_rot = phi[length(phi)] %% (2*pi)
-	# 	
-	# 	theta = unlist(tracks[trackSel, "TRACK_DIRECTION_Z"]  + ud.convert(rotation_z_fix, "degree", "radian")); theta[is.nan(theta)] = 0
-	# 	direction_z_rot = theta[length(theta)] %% (pi)
-	# 	
-	# 	trajSel = trajectories$track_global_id == track # selection of 1 track only
-	# 	r = sqrt(rowSums(trajectories[trajSel, fixedPositionColumns][, 1:3] ^ 2)) # r per each time point of the track
-	# 	phi = traj
-	# 	trajectories[trajSel, ]$POSITION_X_FIX_ROT = r * cos(phi) * sin(theta)
-	# 	trajectories[trajSel, ]$POSITION_Y_FIX_ROT = r * sin(phi) * sin(theta)
-	# 	trajectories[trajSel, ]$POSITION_Z_FIX_ROT = r * cos(theta)
-	# 	
-	# 	if(is.function(updateProgress)){updateProgress(value = i, detail = progress)}
-	# }
-	# 
-	# # Generating features of rotated positions if absent
-	# if(nrow(features[grepl("POSITION_.*_ROT", features$feature), ]) > 0){
-	# 	rotatedFeatures = features[grepl("POSITION_.*_FIX", features$feature), ]
-	# 	rotatedFeatures = rotatedFeatures[rotatedFeatures$dimension == "POSITION", ]
-	# 	rotatedFeatures$feature = paste(rotatedFeatures$feature, "ROT", sep = "_")
-	# 	rotatedFeatures$name = paste(rotatedFeatures$name, "and rotated")
-	# 	rotatedFeatures$shortname = paste(rotatedFeatures$shortname, "rotated")
-	# 	features = rbind(features, rotatedFeatures)
-	# }
 	
 	dataList$tracks = tracks; dataList$trajectories = trajectories; dataList$features = features; dataList$files = files
 	if(is.function(closeProgress)){closeProgress()}
@@ -2086,8 +1866,16 @@ setThemeBase = function(plot, is.dark, subtitle.hjust, subtitle.size, subtitle.f
 	return(plot)
 }
 
-groupHistograms = function(data, x, y, default.y.Unit, y.unit, y.labDisp, groupings, colorGroup = NULL, fillGroup = NULL, #alphaGroup = NULL,
-						   colorGroupName = NULL, fillGroupName = NULL, #alphaGroupName = NULL, 
+
+tabBGColorCSS = function(title, tabColor = "#cccccc"){
+	return(paste0(".navbar-default .navbar-nav > li[class=active] > a[data-value='", title, "'] {background-color: ", tabColor, ";}
+	.navbar-default .navbar-nav > li[class=active] > a[data-value='", title, "'] a:hover {background-color: ", tabColor, ";}
+	.navbar-default .navbar-nav > li[class=active] > a[data-value='", title, "'] a:focus {background-color: ", tabColor, ";}
+		   .navbar-default .navbar-nav > li > a[data-value='", title, "'] {background-color: ", tabColor, ";}"))
+}
+
+groupHistograms = function(data, x, y, default.y.Unit, y.unit, y.labDisp, groupings, colorGroup = NULL, 
+						   fillGroup = NULL, colorGroupName = NULL, fillGroupName = NULL, 
 						   facet.row = NULL, facet.col = NULL, facet.wrap = FALSE, colorAlpha = 1.0, fillAlpha = 1.0,
 						   is.dark = FALSE){
 	yVar = unitConversion(default.y.Unit, y.unit, y)
@@ -2109,14 +1897,17 @@ circularHistogram = function(x, bw = c(75, 40, 10), lwd = c(2, 2, 2), lty = c(2,
 	#browser()
 	tryCatch({
 		#browser()
-		plot(x, cex=1.1, bin=bin, stack=stack, sep=sep,shrink=shrink, col="black", main = title, axes = FALSE, browse = browse)
+		plot(x, cex=1.1, bin=bin, stack=stack, sep=sep,shrink=shrink, col="black", main = title, axes = FALSE, 
+			 browse = browse)
 		ticks = seq(0, 11*pi/6, pi/6)
 		labels = paste0(seq(0, 11*pi/6, pi/6) * 180/pi, "°")
 		axis.circular(at=circular(ticks), labels=labels, col="black", zero=zero, rotation='clock', cex=1.1)
 		ticks.circular(circular(ticks), col="black", zero=zero, rotation='clock', tcl=0.075)
 		rose.diag(x, bins = bins, col=col, cex=1.1, prop=prop, border="black", add=TRUE, axes = FALSE)
 		for(i in 1:length(bw)){
-			lines(density.circular(x, bw=bw[i]), lwd=lwd[((i-1) %% length(lwd)) + 1], lty=lty[((i-1) %% length(lwd)) + 1])
+			lines(density.circular(x, bw=bw[i]), 
+				  lwd=lwd[((i-1) %% length(lwd)) + 1], 
+				  lty=lty[((i-1) %% length(lwd)) + 1])
 		}
 	})
 }
@@ -2134,7 +1925,8 @@ vMQQ <- function(circdat, mu = NULL, kappa = NULL, title = "") {
 	#plot.default(tdf, edf(circdat), pch=16, xlim=c(0,1), ylim=c(0,1), xlab = "von Mises distribution function", ylab = "Empirical distribution function")
 	#xlim <- c(0,1) ; ylim <- c(0,1) ; lines(xlim, ylim, lwd=2, lty=2)
 	
-	plot.default(tqf, circdat, pch=16, xlim=c(0,2*pi), ylim=c(0,2*pi), xlab = "von Mises quantile function", ylab = "Empirical quantile function", main = title) 
+	plot.default(tqf, circdat, pch=16, xlim=c(0,2*pi), ylim=c(0,2*pi), xlab = "von Mises quantile function", 
+				 ylab = "Empirical quantile function", main = title) 
 	xlim = c(0,2*pi) ; ylim <- c(0,2*pi) ; lines(xlim, ylim, lwd=2, lty=2)
 }
 
@@ -2152,13 +1944,7 @@ vMQQ <- function(circdat, mu = NULL, kappa = NULL, title = "") {
 #' @export
 #'
 #' @examples
-groupedCircDataModel = function(data, xContinuous, x, y, groupings, allGroupswRep, allGroupswoRep#, 
-							   #summary.fun
-							   #colorGroup = NULL, fillGroup = NULL, #alphaGroup = NULL,
-							   #colorGroupName = NULL, fillGroupName = NULL, #alphaGroupName = NULL, 
-							   #facet.row = NULL, facet.col = NULL, facet.wrap = FALSE, 
-							   #colorAlpha = 1.0, fillAlpha = 1.0, is.dark = FALSE
-							   ){
+groupedCircDataModel = function(data, xContinuous, x, y, groupings, allGroupswRep, allGroupswoRep){
 	#TODO ERROR with paste part here
 	#xContinuous = paste("TRACK", gsub("_CARDINAL", "", x), sep = "_")
 	data = data %>% group_by_at(c(allGroupswRep))
@@ -2204,9 +1990,10 @@ groupedCircDataModel = function(data, xContinuous, x, y, groupings, allGroupswRe
 #' @export
 #'
 #' @examples
-groupQQ = function(data, x, y, default.y.Unit, y.unit, groupings, colorGroup = NULL, fillGroup = NULL, #alphaGroup = NULL,
-				   colorGroupName = NULL, fillGroupName = NULL, #alphaGroupName = NULL, 
-				   facet.row = NULL, facet.col = NULL, facet.wrap = FALSE, colorAlpha = 1.0, fillAlpha = 1.0,
+groupQQ = function(data, x, y, default.y.Unit, y.unit, groupings, colorGroup = NULL, fillGroup = NULL, 
+				   colorGroupName = NULL, fillGroupName = NULL, 
+				   facet.row = NULL, facet.col = NULL, facet.wrap = FALSE, 
+				   colorAlpha = 1.0, fillAlpha = 1.0,
 				   is.dark = FALSE){
 	yVar = unitConversion(default.y.Unit, y.unit, y)
 	plot = ggplot(data, aes(sample = !!yVar, color = !!colorGroup, fill = !!fillGroup))#, group = !!x))
@@ -2266,7 +2053,9 @@ circQQ = function(data, x, y, groupings, colorGroup = NULL, fillGroup = NULL, #a
 groupedNormality = function(data, groupings, groups, y, default.y.Unit, y.unit){
 	yVar = unitConversion(default.y.Unit, y.unit, y)
 	normalityTest = data %>% group_by_at(groups) %>% 
-		summarise(W = shapiro.test(!!yVar)$statistic, p.value = shapiro.test(!!yVar)$p.value, Skewness = skewness(!!yVar, na.rm = TRUE, type = 1), Kurtosis = kurtosis(!!yVar, na.rm = TRUE, type = 1))
+		summarise(W = shapiro.test(!!yVar)$statistic, p.value = shapiro.test(!!yVar)$p.value, 
+				  Skewness = skewness(!!yVar, na.rm = TRUE, type = 1), 
+				  Kurtosis = kurtosis(!!yVar, na.rm = TRUE, type = 1))
 	#browser()
 	labels = as.character(unlist(lapply(groups, FUN = getGLab, groupings = groupings)))
 	colnames(normalityTest)[1:length(labels)] = labels
@@ -2334,8 +2123,6 @@ parseChemotaxisToolFile = function(filePath, groupText, fileGroup, recalculate =
 	args = list(...)
 	calibrationUnits = args$calibrationUnits
 	unts = data.frame(spatialunits = "μm", timeunits = "sec")
-	#filePath = "/home/stasciya/Desktop/Lab Work/for Julian/Analysis_pointVSline/Line_0nM_I_20180724_Col_PLB_fMLF-Titration_Results from P10 in µm per sec.txt" UTF!
-	#filePath = "~/Desktop/Lab Work/for Mirka/20181030_2_5_combined.txt" ISO!
 	
 	trajs = data.frame()
 	trajs = read.csv(file = filePath, sep = "\t", dec = ".")
@@ -2369,18 +2156,29 @@ parseChemotaxisToolFile = function(filePath, groupText, fileGroup, recalculate =
 	colnames(trks) = tracksColNames
 	
 	trks = trajs %>% group_by(TRACK_ID)
-	#trajByTrackID %>% summarise(NUMBER_SPOTS = n(), TRACK_DISPLACEMENT = sqrt((last(POSITION_X) - first(POSITION_X)) ** 2 + (last(POSITION_Y) - first(POSITION_Y))  ** 2))
+	
 	trks = trks %>% summarise(NUMBER_SPOTS = n(),
-						TRACK_DISPLACEMENT = sqrt((last(POSITION_X) - first(POSITION_X)) ** 2 + (last(POSITION_Y) - first(POSITION_Y))  ** 2), 
+						TRACK_DISPLACEMENT = sqrt((last(POSITION_X) - first(POSITION_X)) ** 2 + 
+												  	(last(POSITION_Y) - first(POSITION_Y))  ** 2), 
 						TRACK_DURATION = last(FRAME) - first(FRAME), 
 						TRACK_START = first(FRAME), TRACK_STOP = last(FRAME),
 						TRACK_X_LOCATION = mean(POSITION_X), TRACK_Y_LOCATION = mean(POSITION_Y),
 						TRACK_INDEX = first(TRACK_ID), 
-						TRACK_MEAN_SPEED = mean(sqrt(((lead(POSITION_X) - POSITION_X) ** 2 + (lead(POSITION_Y) - POSITION_Y) ** 2)) / (lead(POSITION_T) - POSITION_T) , na.rm = TRUE),
-						TRACK_MAX_SPEED = max(sqrt(((lead(POSITION_X) - POSITION_X) ** 2 + (lead(POSITION_Y) - POSITION_Y) ** 2)) / (lead(POSITION_T) - POSITION_T), na.rm = TRUE),
-						TRACK_MIN_SPEED = min(sqrt(((lead(POSITION_X) - POSITION_X) ** 2 + (lead(POSITION_Y) - POSITION_Y) ** 2)) / (lead(POSITION_T) - POSITION_T), na.rm = TRUE),
-						TRACK_MEDIAN_SPEED = median(sqrt(((lead(POSITION_X) - POSITION_X) ** 2 + (lead(POSITION_Y) - POSITION_Y) ** 2)) / (lead(POSITION_T) - POSITION_T), na.rm = TRUE),
-						TRACK_STD_SPEED = sd(sqrt(((lead(POSITION_X) - POSITION_X) ** 2 + (lead(POSITION_Y) - POSITION_Y) ** 2)) / (lead(POSITION_T) - POSITION_T), na.rm = TRUE))
+						TRACK_MEAN_SPEED = mean(sqrt(((lead(POSITION_X) - POSITION_X) ** 2 + 
+													  	(lead(POSITION_Y) - POSITION_Y) ** 2)) / 
+													(lead(POSITION_T) - POSITION_T) , na.rm = TRUE),
+						TRACK_MAX_SPEED = max(sqrt(((lead(POSITION_X) - POSITION_X) ** 2 + 
+														(lead(POSITION_Y) - POSITION_Y) ** 2)) / 
+											  	(lead(POSITION_T) - POSITION_T), na.rm = TRUE),
+						TRACK_MIN_SPEED = min(sqrt(((lead(POSITION_X) - POSITION_X) ** 2 + 
+														(lead(POSITION_Y) - POSITION_Y) ** 2)) / 
+											  	(lead(POSITION_T) - POSITION_T), na.rm = TRUE),
+						TRACK_MEDIAN_SPEED = median(sqrt(((lead(POSITION_X) - POSITION_X) ** 2 + 
+														  	(lead(POSITION_Y) - POSITION_Y) ** 2)) / 
+														(lead(POSITION_T) - POSITION_T), na.rm = TRUE),
+						TRACK_STD_SPEED = sd(sqrt(((lead(POSITION_X) - POSITION_X) ** 2 + 
+												   	(lead(POSITION_Y) - POSITION_Y) ** 2)) / 
+											 	(lead(POSITION_T) - POSITION_T), na.rm = TRUE))
 	trks[tracksColNames[! tracksColNames %in% colnames(trks)]] = NA
 	
 	feats = rbind(trajFeats, trackFeats)
@@ -2430,7 +2228,9 @@ parseImarisXLSXFile = function(filePath, groupText, fileGroup, recalculate = FAL
 	
 	cat("\t");cat(paste("Parsing trajectory features - time for", groupText));cat("\n")
 	timesRaw = read_excel(path = filePath, sheet = "Time", skip = 1) %>% rename(Time_ = Time...1, Time = Time...4) %>% 
-		select(c(imarisCoreNames, imarisTimeNames, timeunits = "Unit")) %>% arrange(TRACK_ID, FRAME) %>% filter(!is.na(TRACK_ID))
+		select(c(imarisCoreNames, imarisTimeNames, timeunits = "Unit")) %>% 
+		arrange(TRACK_ID, FRAME) %>% 
+		filter(!is.na(TRACK_ID))
 	
 	trajs = positionsRaw %>% left_join(timesRaw, by = c("SPOT_ID", "TRACK_ID", "FRAME"))
 	trajs = trajs %>% group_by(TRACK_ID) %>% 
@@ -2482,7 +2282,8 @@ parseImarisXLSXFile = function(filePath, groupText, fileGroup, recalculate = FAL
 	#attr(data[[dims$feature[i]]], "unit") = unitstr
 }
 
-#' Checks for XML file errors such as missing features (attributes) in TrackMate files. If there are, these are complemented with missing values
+#' Checks for XML file errors such as missing features (attributes) in TrackMate files. If there are, these are 
+#' complemented with missing values
 #'
 #' @param filePath File path
 #' @param groupText Group identifier text
@@ -2596,9 +2397,8 @@ parseTMFile = function(filePath, groupText, fileGroup, recalculate = FALSE, brow
 	#edges = data.frame(t(data.frame(xml_attrs(xml_find_all(xmlDoc, xpath = '/TrackMate/Model/AllTracks//Edge')))))
 	row.names(edges) = NULL
 	edges = setFeatureTypesinData(edges, feats, "Edge")
-	edges = cbind(data.frame(TRACK_ID = as.numeric(as.character(xml_find_first( edge.nodes, ".//ancestor::Track") %>% xml_attr("TRACK_ID")))), 
-	              edges
-	              )
+	edges = cbind(data.frame(TRACK_ID = as.numeric(as.character(xml_find_first( edge.nodes, ".//ancestor::Track") %>% 
+																	xml_attr("TRACK_ID")))), edges)
 	
 	# Sorting spots chronologically and according to track ID
 	edges = edges %>% dplyr::arrange(EDGE_TIME) %>% dplyr::arrange(TRACK_ID)
@@ -2629,26 +2429,7 @@ parseTMFile = function(filePath, groupText, fileGroup, recalculate = FALSE, brow
 	trajs = trajs %>% mutate(TRACK_ID = if_else(is.na(TRACK_ID), if_else(ID %in% SPOT_TARGET_ID, TRACK_ID[match(ID, SPOT_TARGET_ID)], TRACK_ID), TRACK_ID))
 	trajs = trajs %>% filter(!is.na(TRACK_ID))
 	removeCounter = nSpots - nrow(trajs)
-	# 
-	# trajs$Remove = FALSE # Keep track of spots to be removed. DO NOT remove immediately since we are iterating!
-	# removeCounter = 0
-	# browser()
-	# for(i in which(is.na(trajs$ID == trajs$SPOT_SOURCE_ID))){
-	# 	# getting Track ID of an NA on the trajs side
-	# 	# Track ID can be NA if it is the last spot (due to merging) or the spot has no track
-	# 	# This line may return NAs and ID is actually SPOT_SOURCE_ID, so this will return at least one TRUE (with bunch of NAs and FALSEs), that TRUE will capture TRACK_ID
-	# 	trackID = trajs$TRACK_ID[trajs$SPOT_TARGET_ID == trajs$ID[i]] 
-	# 	trackID = trackID[!is.na(trackID)] # Here NAs are removed to leave numbers only
-	# 	#cat(paste(i, trajs$TRACK_ID[i], trajs$SPOT_ID[i], trackID))
-	# 	if(length(trackID) == 1){
-	# 		trajs$TRACK_ID[i] = trackID # This is also to fix NA value at Track ID last spot!
-	# 	}else{
-	# 		browser()
-	# 		#cat(paste("Removing",i,"..."))
-	# 		trajs$Remove[i] = TRUE # Mark to remove
-	# 		removeCounter = removeCounter + 1
-	# 	}
-	# }
+	
 	cat("\t");cat(paste("Removing trackless spots for", groupText, removeCounter, " were found."));cat("\n")
 	# Finally removing, what needs to be removed
 	# trajs = trajs[!trajs$Remove,]
@@ -2936,96 +2717,3 @@ WallraffTest = function(cdats){
 tool_tip = function(id, message, placement = "bottom", trigger = "hover", options = NULL){
 	bsTooltip(id, message, placement = placement, trigger = trigger, options = options)
 }
-
-# 
-# WallraffTest2 <- function(cdat, ndat, g) {
-# 	N <- length(cdat) ; ndatcsum <- cumsum(ndat) ; tbar <- circular(0) ; distdat <- 0
-# 	for (k in 1:g) {
-# 		dist <- 0 ; sample <- circular(0)  
-# 		if (k==1) {low <- 0} else
-# 			if (k > 1) {low <- ndatcsum[k-1]}
-# 		for (j in 1:ndat[k]) { sample[j] <- cdat[j+low] }
-# 		tm1 <- trigonometric.moment(sample, p=1) ; tbar[k] <- tm1$mu
-# 		for (j in 1:ndat[k]) { dist[j] <- pi-abs(pi-abs(sample[j]-tbar[k])) }
-# 		distdat <- c(distdat, dist)
-# 	}
-# 	distdat <- distdat[-1]
-# 	gID <- c(rep(1,n1), rep(2,n2), rep(3,n3))
-# 	print(distdat)
-# 	TestRes <- kruskal.test(distdat, g=gID)
-# 	return(TestRes)
-# } 
-
-
-# PgVal = function(cdat, ndat, g) {
-# 	N = length(cdat) 
-# 	ndatcsum = cumsum(ndat) ; gmedian = median.circular(cdat) 
-# 	sumterms = 0 ; M = 0 
-# 	for (k in 1:g) {
-# 		if (k==1) {low = 0} else
-# 			if (k > 1) {low = ndatcsum[k-1]}
-# 		sample = circular(0)
-# 		for (j in 1:ndat[k]) { sample[j] = cdat[j+low] }
-# 		shiftdat = MinusPiPi(sample-gmedian) ; m = length(shiftdat[shiftdat<0]) ; M = M+m
-# 		sumterms = sumterms + m*m/ndat[k]
-# 	}
-# 	term1 = ((N*N)/(M*(N-M))); term2 = (N*M)/(N-M) ; Pg = term1*sumterms-term2
-# 	return(Pg)
-# }
-
-# YgVal = function(cdat, ndat, g) {
-# 	N = length(cdat) ; ndatcsum = cumsum(ndat) 
-# 	delhat = 0 ; tbar = 0
-# 	for (k in 1:g) {
-# 		sample = circular(0)
-# 		if (k==1) {low = 0} else
-# 			if (k > 1) {low = ndatcsum[k-1]}
-# 		for (j in 1:ndat[k]) { sample[j] = cdat[j+low] }
-# 		tm1 = trigonometric.moment(sample, p=1)
-# 		tm2 = trigonometric.moment(sample, p=2)
-# 		Rbar1 = tm1$rho; Rbar2 = tm2$rho ; tbar[k] = tm1$mu
-# 		delhat[k] = (1-Rbar2)/(2*Rbar1*Rbar1)
-# 	}
-# 	dhatmax = max(delhat) ; dhatmin = min(delhat)
-# 	#print(paste(dhatmax, dhatmin, dhatmax/dhatmin))
-# 	if (dhatmax/dhatmin <= 4) {
-# 		CP = 0 ; SP = 0 ; dhat0 = 0
-# 		for (k in 1:g) {
-# 			CP = CP + ndat[k]*cos(tbar[k])
-# 			SP = SP + ndat[k]*sin(tbar[k])
-# 			dhat0 = dhat0 + ndat[k]*delhat[k] 
-# 		}
-# 		dhat0 = dhat0/N
-# 		RP = sqrt(CP*CP+SP*SP)
-# 		Yg = 2*(N-RP)/dhat0
-# 		return(Yg) } 
-# 	else if (dhatmax/dhatmin > 4) {
-# 		CM = 0 ; SM = 0 ; Yg = 0
-# 		for (k in 1:g) {
-# 			CM = CM + (ndat[k]*cos(tbar[k])/delhat[k])
-# 			SM = SM + (ndat[k]*sin(tbar[k])/delhat[k])
-# 			Yg = Yg + (ndat[k]/delhat[k]) 
-# 		}
-# 		RM = sqrt(CM*CM+SM*SM)
-# 		Yg = 2*(Yg-RM)
-# 		return(Yg) }
-# }
-# 
-# cdat <- c(cdat1, cdat2, cdat3) 
-# n1 <- length(cdat1) ; n2 <- length(cdat2) ; n3 <- length(cdat3) 
-# ndat <- c(n1, n2, n3) ; g <- 3
-# YgObs <- YgVal(cdat, ndat, g)
-# pchisq(YgObs, g-1, lower.tail=F)
-# 
-# cdats = list(cdat1, cdat2, cdat3)
-# YgObs2 = YgVal(cdats)
-# 
-# cdat <- c(cdat1, cdat2, cdat3) ; n1 <- length(cdat1) ; n2 <- length(cdat2) ; n3 <- length(cdat3) ; ndat <- c(n1, n2, n3) ; g <- 3
-# PgObs <- PgVal(cdat, ndat, g)
-# PgObs
-# pchisq(PgObs, g-1, lower.tail=F)
-# 
-# 
-# PgObs2 = PgVal2(cdats)
-# PgObs2
-# pchisq(PgObs2, length(cdats)-1, lower.tail=F)

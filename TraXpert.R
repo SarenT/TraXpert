@@ -121,13 +121,6 @@ titleTrajectories = "Trajectories"; titlePlotTrackFeatures = "Plot Track Feature
 titlePlotTrajectories = "Plot Trajectories"; titlePlotDirectionality = "Plot Directionality"
 titlePlotTrajFeatures = "Plot Trajectory Features"; titleAbout = "About"
 
-tabBGColorCSS = function(title, tabColor = "#cccccc"){
-	return(paste0(".navbar-default .navbar-nav > li[class=active] > a[data-value='", title, "'] {background-color: ", tabColor, ";}
-	.navbar-default .navbar-nav > li[class=active] > a[data-value='", title, "'] a:hover {background-color: ", tabColor, ";}
-	.navbar-default .navbar-nav > li[class=active] > a[data-value='", title, "'] a:focus {background-color: ", tabColor, ";}
-		   .navbar-default .navbar-nav > li > a[data-value='", title, "'] {background-color: ", tabColor, ";}"))
-}
-
 icon_list = function(x){
 	lapply(
 		x,
