@@ -225,7 +225,8 @@ track_features_UI = function(id, title, tabColor){
 track_features_server = function(id, data, features, tracks, trajectories, groupings, 
 								 groupingsChoiceswithEmpty, groupingsChoiceswithoutEmpty,
 								 groupingsChoiceswithEmptywithDoNotDisplay,
-								 groupingsAndFeatureChoiceswithoutEmpty){
+								 groupingsAndFeatureChoiceswithoutEmpty, trackChoiceswithoutEmpty, 
+								 trackDirectionChoiceswithoutEmpty, trackDirectionCatChoiceswithoutEmpty){
 	moduleServer(id, function(input, output, session){
 		plot = reactive({
 			if(debugging$browse){
@@ -325,7 +326,6 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 			}
 			
 		})
-		
 		
 		output$plotOut = renderPlot({
 			plotOut = plot()
@@ -468,7 +468,7 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 						#names(choices) = labels
 						
 						insertUI(selector = "#placeholderPairwiseGroupSelect", 
-								 ui = generateBucketList(choices, context = "track"),
+								 ui = generateBucketList(session$ns, choices),
 								 # ui = bucket_list(header = "Select pairs", orientation = "horizontal",
 								 # 				 add_rank_list(text = "Compare these", input_id = "track_stat_comparison_select1_In", labels = NULL),
 								 # 				 add_rank_list(text = "<- from these ->", input_id = "track_stat_comparison_select_In", labels = choices),

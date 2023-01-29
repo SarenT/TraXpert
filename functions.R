@@ -4298,6 +4298,54 @@ YgVal = function(cdats) {
 	}
 }
 
+#' Generates a bucket list for the groupings to select from for pairwise comparisons
+#'
+#' @param ns namespace from Shiny session
+#' @param choices Choices to pick from
+#'
+#' @return
+#' @export
+#'
+#' @examples
+generateBucketList = function(ns, choices){
+	ui = tagList(fluidPage(fluidRow(
+		column(6,
+			   tags$div(class = "panel panel-default",	
+			   		 tags$div(class = "panel-heading", icon("arrow-right"),	"Select groups"),
+			   		 tags$div( class = "panel-body", id = ns("stat_comparison_select_In"), 
+			   		 		  icon_list(choices))
+			   ),
+			   tags$div(class = "panel panel-default", 
+			   		 tags$div(class = "panel-heading", icon("exchange"), "1."),
+			   		 tags$div(class = "panel-body", id = ns("stat_comparison_select1_In"))
+			   )),
+		column(6,
+			   tags$div(class = "panel panel-default",
+			   		 tags$div(class = "panel-heading", icon("trash"), "Remove item"),
+			   		 tags$div(class = "panel-body", id = ns("stat_comparison_selectBin_In"))
+			   ),
+			   tags$div(class = "panel panel-default",
+			   		 tags$div(class = "panel-heading", icon("exchange"), "2."),
+			   		 tags$div(class = "panel-body", id = ns("stat_comparison_select2_In"))
+			   )
+		)
+	)),
+	sortable_js(ns("stat_comparison_select_In"), options = sortable_options(group = list(
+		pull = "clone",	name = ns("stat_comparison_select_Group"), put = FALSE), 
+		onSort = sortable_js_capture_input("sort_vars"))),
+	sortable_js(ns("stat_comparison_select1_In"), options = sortable_options(group = list(
+		pull = TRUE, name = ns("stat_comparison_select_Group"), put = TRUE), 
+		onSort = sortable_js_capture_input(ns("stat_comparison_select1_In")))),
+	sortable_js(ns("stat_comparison_selectBin_In"), options = sortable_options(group = list(
+		pull = TRUE, name = ns("stat_comparison_select_Group"), put = TRUE), 
+		onAdd = htmlwidgets::JS("function (evt) { this.el.removeChild(evt.item); }"))),
+	sortable_js(ns("stat_comparison_select2_In"), options = sortable_options(group = list(
+		pull = "clone",	name = ns("stat_comparison_select_Group"), put = TRUE), 
+		onSort = sortable_js_capture_input(ns("stat_comparison_select2_In"))))
+	)
+	return(ui)
+}
+
 watsons.large.sample.nonparametric.test = function(cdats){
 	YgObs = YgVal(cdats)
 	pVal = pchisq(YgObs, length(cdats)-1, lower.tail=F)

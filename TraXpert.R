@@ -208,45 +208,6 @@ tabPanelImport = function(title = titleImportGroupings, tabColor){
 	)
 }
 
-generateBucketList = function(choices, context){
-	ui = tagList(fluidPage(fluidRow(
-			column(6,
-				   tags$div(class = "panel panel-default",	
-				   		 tags$div(class = "panel-heading", icon("arrow-right"),	"Select groups"),
-				   		 tags$div( class = "panel-body", id = paste(context, "stat_comparison_select_In", sep = "_"), 
-				   		 		  icon_list(choices))
-				   ),
-				   tags$div(class = "panel panel-default", 
-				   		 tags$div(class = "panel-heading", icon("exchange"), "1."),
-				   		 tags$div(class = "panel-body", id = paste(context, "stat_comparison_select1_In", sep = "_"))
-				   )),
-			column(6,
-				   tags$div(class = "panel panel-default",
-				   		 tags$div(class = "panel-heading", icon("trash"), "Remove item"),
-				   		 tags$div(class = "panel-body", id = paste(context, "stat_comparison_selectBin_In", sep = "_"))
-				   ),
-				   tags$div(class = "panel panel-default",
-				   		 tags$div(class = "panel-heading", icon("exchange"), "2."),
-				   		 tags$div(class = "panel-body", id = paste(context, "stat_comparison_select2_In", sep = "_"))
-				   )
-			)
-		)),
-		sortable_js(paste(context, "stat_comparison_select_In", sep = "_"), options = sortable_options(group = list(
-			pull = "clone",	name = paste(context, "stat_comparison_select_Group", sep = "_"), put = FALSE), 
-			onSort = sortable_js_capture_input("sort_vars"))),
-		sortable_js(paste(context, "stat_comparison_select1_In", sep = "_"), options = sortable_options(group = list(
-			pull = TRUE, name = paste(context, "stat_comparison_select_Group", sep = "_"), put = TRUE), 
-			onSort = sortable_js_capture_input(paste(context, "stat_comparison_select1_In", sep = "_")))),
-		sortable_js(paste(context, "stat_comparison_selectBin_In", sep = "_"), options = sortable_options(group = list(
-			pull = TRUE, name = paste(context, "stat_comparison_select_Group", sep = "_"), put = TRUE), 
-			onAdd = htmlwidgets::JS("function (evt) { this.el.removeChild(evt.item); }"))),
-		sortable_js(paste(context, "stat_comparison_select2_In", sep = "_"), options = sortable_options(group = list(
-			pull = "clone",	name = paste(context, "stat_comparison_select_Group", sep = "_"), put = TRUE), 
-			onSort = sortable_js_capture_input(paste(context, "stat_comparison_select2_In", sep = "_"))))
-	)
-	return(ui)
-}
-
 tabPanelOperations = function(title, tabColor){
 	tabPanel(title,
 			 tags$style(HTML(tabBGColorCSS(title, tabColor))),
@@ -271,93 +232,6 @@ tabPanelOperations = function(title, tabColor){
 			 						  featureDimensionChoices, list(`Track` = "Track"))
 			 ))
 			 		   
-	)
-}
-
-tabPanelDirectionality = function(title, tabColor){
-	tabPanel(title,
-			 tags$style(HTML(tabBGColorCSS(title, tabColor))),
-			 fluidPage(
-			 	fluidRow(
-			 		column(4,
-			 			   bsCollapse(id = "track_settings",
-			 			   		   titles_UI("dir_title", textFaceChoices),
-			 			   		   bsCollapsePanel("Plot Type and Variables",
-			 			   		   				selectInput("dir_type_In", "Plot Type", choices = list(`Bar/Radar` = "bar", Polygon = "polygon"), selected = "bar"),
-			 			   		   				tipify(selectInput("dir_replicate_In", "Replicates are grouped in", choices = list()), toolTips$replicate_In, "top"),
-			 			   		   				bsTooltip("dir_type_In", "Type of plot. Bar plot is also called rose plot. Polygon is also called radar plot.", "top", "hover"),
-			 			   		   				selectInput("dir_summary_fun_In", "Summary Function", choices = summaryFunctionChoices[2:length(summaryFunctionChoices)], selected = "length"),
-			 			   		   				conditionalPanel("input.dir_summary_fun_In == 'length'", checkboxInput("dir_summary_fun_length_percentage_In", "Percentage", value = TRUE)),
-			 			   		   				selectInput("dir_replicate_summary_fun_In", "Replicates Summary Function", choices = summaryFunctionChoices, selected = "mean"),
-			 			   		   				
-			 			   		   				tipify(selectInput("dir_track_direction_cat_In", "Cardinal Direction Variable", choices = list()), "Which direction measure should be displayed? Cardinal dirction means binned track angles at 30° bins. e.g. angles -15° to 15° are considered as together. If rotation is applied in \"Operations\" tab, then this can be displayed as well.", "top", "hover"),
-			 			   		   				tipify(selectInput("dir_cumulation_In", "Cumulation Variable (upon grouping)", choices = list(`Each Track` = "EACH_TRACK", `Track Displacement` = "TRACK_DISPLACEMENT")), "Which measure needs to be used for cumulation. e.g. track displacement can enhance the effect of directionality with speed and persistence.", "top", "hover"),
-			 			   		   				
-			 			   		   				bsTooltip("dir_summary_fun_In", "Summary function to be applied grouped tracks. Suggested option: length.", "top", "hover"),
-			 			   		   				bsTooltip("dir_summary_fun_length_percentage_In", "Display percentage of number of cells to the total number of cells.", "bottom", "hover"),
-			 			   		   				bsTooltip("dir_replicate_summary_fun_In", "Summarize replicates with the selected function.", "top", "hover")
-			 			   		   ),
-			 			   		   groupings_colors_UI("groupings_colors_dir", width = "150%", can_dark = TRUE),
-			 			   		   bsCollapsePanel("Tests", 
-			 			   		   				tipify(selectInput("dir_multisample_measure_In", "Measure", choices = circMultiSampleTestMeasures), "Which measure to be used to compare groups. Mean/median direction, directionality (concentration) or distribution (are sample drawn from the same distribution?).", "top", "hover"),
-			 			   		   				conditionalPanel("input.dir_multisample_measure_In == 'mean'",
-			 			   		   								 tipify(selectInput("dir_multisample_mean_method_In", "Method", choices = circMultiSampleTestMeanMethods), "Watson large non-parametric test assumes number of sampes over 25 otherwise the p value needs to be considered as an approximation.", "top", "hover")
-			 			   		   				),
-			 			   		   				conditionalPanel("input.dir_multisample_measure_In == 'median'",
-			 			   		   								 tipify(selectInput("dir_multisample_median_method_In", "Method", choices = circMultiSampleTestMedianMethods), "Fisher non-parametric test", "top", "hover")
-			 			   		   				),
-			 			   		   				conditionalPanel("input.dir_multisample_measure_In == 'conc'",
-			 			   		   								 tipify(selectInput("dir_multisample_conc_method_In", "Method", choices = circMultiSampleTestConcMethods), "Fisher non-parametric test", "top", "hover")
-			 			   		   				),
-			 			   		   				conditionalPanel("input.dir_multisample_measure_In == 'dist'",
-			 			   		   								 tipify(selectInput("dir_multisample_dist_method_In", "Method", choices = circMultiSampleTestDistMethods), "Fisher non-parametric test", "top", "hover"),
-			 			   		   								 conditionalPanel("input.dir_multisample_dist_method_In == 'watson.two.test'",
-			 			   		   								 				 tipify(selectInput("dir_stat_watsontwotest_comparison_type_In", "Pairwise comparisons", choices = trackPairwStatComparisonTypeChoices, selected = "all_combinations"), "Select which pairs need to be selected. Either all combinations of pairs, all groups to a control group or selected pairs.", placement = "top", trigger = "hover")
-			 			   		   								 )
-			 			   		   				),
-			 			   		   				conditionalPanel("input.dir_stat_watsontwotest_comparison_type_In == 'to_control'",
-			 			   		   								 tipify(selectInput("dir_stat_watsontwotest_comparison_control_In", "Control Group", choices = list()), "Select the control group to compare with other groups.", placement = "top", trigger = "hover")),
-			 			   		   				conditionalPanel("input.dir_stat_watsontwotest_comparison_type_In  == 'selected'",
-			 			   		   								 tags$div(id = 'placeholderDirPairwiseGroupSelect')
-			 			   		   				)
-			 			   		   ),
-			 			   		   facet_control_UI("dir_facet", textFaceChoices),
-			 			   		   bsCollapsePanel("Ranges, Units & Labels", 
-			 			   		   				checkboxInput("dir_show_y_axis_In", "Show y axis", value = FALSE),
-			 			   		   				bsTooltip("dir_show_y_axis_In", "Displays a y axis, which is a vertical line to indicate y scale.", "bottom", "hover"),
-			 			   		   				axis_labels_UI("dir_axis_labs", 
-			 			   		   							   list(x = list(title = "x axis",
-			 			   		   							   			  unit = FALSE,
-			 			   		   							   			  tooltip = toolTips$xlab_In),
-			 			   		   							   	 y = list(title = "y axis",
-			 			   		   							   	 		 unit = FALSE,
-			 			   		   							   	 		 tooltip = toolTips$ylab_In)
-			 			   		   							   ))
-			 			   		   ),
-			 			   		   bsCollapsePanel("Display Options", 
-			 			   		   				sliderInput("dir_line_size_In", "Line Thickness", min = 0.01, max = 100, value = 0.5, width = "150%"),
-			 			   		   				sliderInput("dir_start_angle_In", "Angle Rotation", min = -180, max = 180, step = 15, value = 0, width = "150%"),
-			 			   		   				
-			 			   		   				#bsTooltip("", "", "bottom", "hover")
-			 			   		   				bsTooltip("dir_line_size_In", "Line thickness relative to original size.", "bottom", "hover"),
-			 			   		   				bsTooltip("dir_start_angle_In", "Starting angle of the directions. This simply rotates the plots, if you want to fix the direction.", "bottom", "hover")
-			 			   		   				
-			 			   		   ),
-			 			   		   debugging_UI("dir_debug", 
-			 			   		   			 list(skip_radar = list(label = "Skip Radar", value = FALSE),
-			 			   		   			 	 skip_degrees = list(label = "Skip Degrees", value = FALSE)))
-			 			   )
-			 			   
-			 			   
-			 		),
-			 		column(8, 
-			 			   plotOutput(outputId = "directionalityPlotOut"),
-			 			   circ_stat_details_UI("dir_stats"),
-			 			   tags$style(type="text/css", "#dir_circstat_text_Out {white-space: pre-wrap;}"), hr(),
-			 			   plot_export_UI("dir_export")
-			 		)
-			 	)
-			 )
 	)
 }
 
@@ -493,8 +367,8 @@ ui = function(request){
 								 tags$style(HTML(tabBGColorCSS(titleTrajectories, tabColorTables))),
 								 table_output_UI("trajectories_table_out")),
 						track_features_UI("tracks", titlePlotTrackFeatures, tabColorPlots),
-						traj_features_UI("trajectories", titlePlotTrajectories, tabColorPlots),
-						tabPanelDirectionality(titlePlotDirectionality, tabColorPlots),
+						trajectories_UI("trajectories", titlePlotTrajectories, tabColorPlots),
+						directionality_UI("directionality", titlePlotDirectionality, tabColorPlots),
 						tabPanelPlotTrajectoryFeatures(titlePlotTrajFeatures, tabColorPlots),
 						about_UI("about", titleAbout)
 					)
@@ -701,13 +575,6 @@ server = function(input, output, session) {
 			showModal(modalDialog(title = "File Upload Error", "Something went wrong during file upload."))
 		}
 	})
-	
-	#observe({updateSelectInput(session, "dir_track_direction_In", choices = trackDirectionChoiceswithoutEmpty())})
-	observe({updateSelectInput(session, "dir_track_direction_cat_In", choices = trackDirectionCatChoiceswithoutEmpty(), 
-							   selected = "DIRECTION_CARDINAL")})
-	observe({updateSelectInput(session, "dir_cumulation_In", choices = trackChoiceswithoutEmpty(), selected = "TRACK_ID")})
-	observe({updateSelectInput(session, "dir_alpha_In", choices = groupingsChoiceswithEmpty())})
-	observe({updateSelectInput(session, "dir_replicate_In", choices = groupingsChoiceswithEmpty())})
 	
 	observe({updateSelectInput(session, "traj_feat_x_In", choices = trajChoiceswithoutEmpty(), selected = "EDGE_TIME")})
 	observe({updateSelectInput(session, "traj_feat_y_In", choices = trajChoiceswithoutEmpty(), selected = "VELOCITY")})
@@ -944,37 +811,6 @@ server = function(input, output, session) {
 		}
 	})
 	
-	observe({
-		groupingsList = groupings()
-		dataList = data()
-		statGroup = input$dir_color_In
-		#trackData = tracks()
-		if(!is.null(statGroup) && statGroup != ""){
-			if(length(groupingsList) > 1){
-				groupingsDF = groupingsList$groupings
-				
-				removeUI(selector = "#placeholderDirPairwiseGroupSelect div", multiple = TRUE)
-				#for(rankListOb in rankListObs){rankListOb$destroy()}
-				#rankListObs <<- list()
-				if(length(dataList) > 1){
-					#browser()
-					choices = as.character(getGroups(groupingsDF, statGroup))
-					labels = as.character(getGLabs(groupingsDF, statGroup))
-					#choices = as.list(choices)
-					#names(choices) = labels
-					
-					insertUI(selector = "#placeholderDirPairwiseGroupSelect", 
-							 ui = generateBucketList(choices, "dir"),
-							 # ui = bucket_list(header = "Select pairs", orientation = "horizontal",
-							 # 				 add_rank_list(text = "Compare these", input_id = "track_stat_comparison_select1_In", labels = NULL),
-							 # 				 add_rank_list(text = "<- from these ->", input_id = "track_stat_comparison_select_In", labels = choices),
-							 # 				 add_rank_list(text = "with these", input_id = "track_stat_comparison_select2_In", labels = NULL)
-							 # 				 ), 
-							 where = "beforeEnd")
-				}
-			}
-		}
-	})
 	#groupRankListOut = list()
 	
 	#output$groupRankOut = renderUI({groupRankListOut()})
@@ -1126,43 +962,12 @@ server = function(input, output, session) {
 		return(list(method = input$traj_feat_data_transform_In, parameter = input[[paste(c("traj_feat", "data", input$traj_feat_data_transform_In, "In"), collapse = "_")]]))
 	})
 	
-	dir_export_size = reactive({
-		width = input$dir_width_In; height = input$dir_height_In
-		if(input$dir_auto_width_In){width = NA}
-		if(input$dir_auto_height_In){height = NA}
-		return(list(width = width, height = height))
-	})
-	
 	traj_feat_export_size = reactive({
 		width = input$traj_feat_width_In; height = input$traj_feat_height_In
 		if(input$traj_feat_auto_width_In){width = NA}
 		if(input$traj_feat_auto_height_In){height = NA}
 		return(list(width = width, height = height))
 	})
-	
-	output$directionalityPlotPreviewOut = renderImage({
-		#browser()
-		directionalityPlotOut = directionalityPlot()
-		if(is.list(directionalityPlotOut)){
-			temp_png_file = tempfile(fileext = ".png")
-			
-			size = dir_export_size()
-			
-			ggsave(temp_png_file, directionalityPlotOut$plot, width = size$width, height = size$height, 
-				   dpi = 300, units = "cm")
-			dim = ggplot2:::plot_dim(dim = unlist(size, use.names = F), dpi = 300, units = "cm") * 300
-			#browser()
-			list(
-				src = temp_png_file,
-				contentType = "image/png",
-				width = dim[1]/4,
-				height = dim[2]/4,
-				alt = "Track feature plot"
-			)
-		}else{
-			NULL
-		}
-	}, deleteFile = FALSE)
 	
 	output$trajFeaturePlotPreviewOut = renderImage({
 		#browser()
@@ -1187,83 +992,6 @@ server = function(input, output, session) {
 			NULL
 		}
 	}, deleteFile = FALSE)
-	
-	directionalityPlot = reactive({
-		#browser
-		if(!is.list(groupings()) || length(groupings()) == 0){
-			return(NULL)
-		}
-		if(debugging_dir$browse){
-			browser()
-		}
-		titles = titles = lapply(dir_titles, function(x){x()})
-		xlab = dir_axis_labs$x_lab()
-		ylab = dir_axis_labs$y_lab()
-		
-		color_group = groupings_colors_dir$color_group()
-		fill_group = groupings_colors_dir$fill_group()
-		
-		replicateGroup = input$dir_replicate_In; if(replicateGroup == "NULL") {replicateGroup = NULL}
-		facetRowGroup = dir_facet$row_group()
-		facetColGroup = dir_facet$col_group()
-		
-		start.angle = ud.convert(input$dir_start_angle_In, "degree", "radian"); start.angle[is.nan(start.angle)] = 0
-		statMeasure = input$dir_multisample_measure_In
-		statMethod = NULL; statExtras = NULL
-		if(statMeasure != "NULL"){
-			statMethod = input[[paste("dir_multisample", statMeasure, "method_In", sep = "_")]]
-			if(statMethod == "watson.two.test"){
-				statExtras = input$dir_stat_watsontwotest_comparison_type_In
-				if(statExtras == "to_control"){
-					statExtras = c(statExtras, input$dir_stat_watsontwotest_comparison_control_In)
-				}else{
-					statExtras = c(statExtras, "")
-				}
-			}
-		}else{
-			statMeasure = NULL
-		}
-		
-		#browser()
-		
-		groupsCardinal = unlist(groupingsToNamedList(groupings()$groupings, empty = FALSE), use.names = F)
-		plot = plotRadar(dataTracks = tracks(), groups = groupsCardinal, #directionGroupName = input$dir_track_direction_In, 
-						 directionCatGroupName = input$dir_track_direction_cat_In, 
-						 #colorReverseOrder = input$dir_reverse_order_In,
-						 cumulativeGroupName = input$dir_cumulation_In, type = input$dir_type_In, 
-						 summary.fun.name = input$dir_summary_fun_In, 
-						 percentage = input$dir_summary_fun_length_percentage_In,
-						 groupings = groupings()$groupings, start.angle = start.angle, 
-						 stat.method = statMethod, stat.measure = statMeasure, stat.extras = statExtras,
-						 colorGroupName = color_group, fillGroupName = fill_group, #alphaGroupName = alphaGroup,
-						 replicateGroupName = replicateGroup,
-						 replicate.summary.fun.name =  input$dir_replicate_summary_fun_In,
-						 facet.row = facetRowGroup, facet.col = facetColGroup, 
-						 title = titles$title, subtitle = titles$subtitle, 
-						 fillAlpha = groupings_colors_dir$fill_alpha(), 
-						 colorAlpha = groupings_colors_dir$color_alpha(), 
-						 is.dark = groupings_colors_dir$dark(), line.size = input$dir_line_size_In,
-						 facet.label.fill.color = dir_facet$label_fill_color(), 
-						 facet.text.face = dir_facet$label_face(), 
-						 facet.wrap = dir_facet$wrap(),
-						 show.y.axis = input$dir_show_y_axis_In, 
-						 plot.subtitle.hjust = titles$subtitle_hjust, 
-						 plot.subtitle.size = titles$subtitle_size, 
-						 plot.subtitle.face = titles$subtitle_text_style,
-						 browse = debugging_dir$browse, benchmark = debugging_dir$benchmark, 
-						 verbose = debugging_dir$verbose, skip.radar = debugging_dir$skip_radar, 
-						 skip.degrees = debugging_dir$skip_degrees
-		)
-		#browser()
-		plot
-	})
-	output$directionalityPlotOut = renderPlot({
-		#browser()
-		#print(directionalityPlot())
-		plot = directionalityPlot()$plot
-		
-		plot
-	})
 	
 	trajFeaturePlot = eventReactive(input$plotTrajFeatIn, {#trajFeaturePlot = reactive({
 		
@@ -1346,7 +1074,6 @@ server = function(input, output, session) {
 		}
 	)
 	
-	
 	trackChoiceswithoutEmpty = reactive({
 		#featuresToNamedList("Track", data()$features, empty = FALSE)
 		#browser()
@@ -1358,15 +1085,12 @@ server = function(input, output, session) {
 	table_output_server("tracks_table_out", tracks)
 	table_output_server("trajectories_table_out", trajectories)
 	
-	dir_facet = facet_control_server("dir_facet", groupingsChoiceswithEmpty)
+	
 	traj_feat_facet = facet_control_server("traj_feat_facet", groupingsChoiceswithEmpty)
 	
-	plot_export_server("dir_export", "Directionality", directionalityPlot)
 	plot_export_server("traj_feat_export", "Trajectory Feature", trajFeaturePlot)
 	
 	stat_details_server("traj_feat_stats", trajFeaturePlot)
-	
-	circ_stat_details_server("dir_stats", directionalityPlot)
 	
 	rotation_server("rotation", data)
 	
@@ -1377,20 +1101,13 @@ server = function(input, output, session) {
 	feature_calculator_server("track_from_traj_new_feat", allTrajectoryMeasures, data, features, groupings, 
 							  "trajectories", "tracks", "ID", "track_global_id")
 	
-	debugging_dir = debugging_server("dir_debug")
-	debugging_traj_feat = debugging_server("traj_feat_debug")
 	
-	groupings_colors_dir = groupings_colors_server("groupings_colors_dir", groupingsChoiceswithoutEmpty)
+	debugging_traj_feat = debugging_server("traj_feat_debug")
 	
 	dark_plot_traj_feat = dark_plot_server("dark_traj_feat")
 	
-	dir_titles = titles_server("dir_title")
 	traj_feat_titles = titles_server("traj_feat_title")
 	
-	
-	dir_axis_labs = axis_labels_server("dir_axis_labs", features, tracks, 
-									   groups = list(x = NULL, y = NULL),
-									   default_labels = list(x = NULL, y = NULL))
 	traj_feat_axis_labs = axis_labels_server("traj_feat_axis_labs", features, trajectories,
 											 groups = list(x = reactive({input$traj_feat_x_In}), 
 											 			  y = reactive({input$traj_feat_y_In})),
@@ -1402,10 +1119,17 @@ server = function(input, output, session) {
 	track_features_server("tracks", data, features, tracks, trajectories, groupings, 
 						  groupingsChoiceswithEmpty, groupingsChoiceswithoutEmpty, 
 						  groupingsChoiceswithEmptywithDoNotDisplay,
-						  groupingsAndFeatureChoiceswithoutEmpty)
-	traj_features_server("trajectories", data, features, tracks, trajectories, groupings, 
-						 groupingsChoiceswithEmpty, groupingsChoiceswithoutEmpty, 
-						 groupingsChoiceswithEmptywithDoNotDisplay,
-						 groupingsAndFeatureChoiceswithoutEmpty)
+						  groupingsAndFeatureChoiceswithoutEmpty,trackChoiceswithoutEmpty, 
+						  trackDirectionChoiceswithoutEmpty, trackDirectionCatChoiceswithoutEmpty)
+	trajectories_server("trajectories", data, features, tracks, trajectories, groupings, 
+						groupingsChoiceswithEmpty, groupingsChoiceswithoutEmpty, 
+						groupingsChoiceswithEmptywithDoNotDisplay,
+						groupingsAndFeatureChoiceswithoutEmpty, trackChoiceswithoutEmpty, 
+						trackDirectionChoiceswithoutEmpty, trackDirectionCatChoiceswithoutEmpty)
+	directionality_server("directionality", data, features, tracks, trajectories, groupings, 
+						  groupingsChoiceswithEmpty, groupingsChoiceswithoutEmpty, 
+						  groupingsChoiceswithEmptywithDoNotDisplay,
+						  groupingsAndFeatureChoiceswithoutEmpty, trackChoiceswithoutEmpty, 
+						  trackDirectionChoiceswithoutEmpty, trackDirectionCatChoiceswithoutEmpty)
 }
 shinyApp(ui = ui, server = server, enableBookmarking = "server")

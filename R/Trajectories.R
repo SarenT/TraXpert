@@ -134,7 +134,8 @@ trajectories_UI = function(id, title, tabColor){
 trajectories_server = function(id, data, features, tracks, trajectories, groupings, 
 								groupingsChoiceswithEmpty, groupingsChoiceswithoutEmpty, 
 								groupingsChoiceswithEmptywithDoNotDisplay,
-								groupingsAndFeatureChoiceswithoutEmpty){
+								groupingsAndFeatureChoiceswithoutEmpty, trackChoiceswithoutEmpty, 
+								trackDirectionChoiceswithoutEmpty, trackDirectionCatChoiceswithoutEmpty){
 	moduleServer(id, function(input, output, session){
 		plot = eventReactive(input$plotTrajIn, {#renderPlot({
 			# browser()
