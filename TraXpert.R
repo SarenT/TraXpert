@@ -95,7 +95,8 @@ ui = function(request){
 				 				  buttonLabel = "Choose..."),
 				 		hr(),
 				 		downloadButton(outputId = "sessionOut", label = "Download session file"),
-				 		hr()),
+				 		hr(),
+				 		selectInput("sampleIn", "Sample Files", c("None", list.files("res/")), selected = "None")),
 				 	mainPanel(
 				 		fluidPage(
 				 			fluidRow(column(12, DTOutput(outputId = "groupingsOut"))),
@@ -230,6 +231,50 @@ server = function(input, output, session) {
 	observeEvent(input$sessionFileIn, {
 		#browser()
 		sessionFilePath = input$sessionFileIn$datapath[1]
+		sessionFile = file(paste0("file://", sessionFilePath))
+		open(sessionFile, "rb")
+		dataSession = unserialize(connection = sessionFile)
+		close(sessionFile)
+		
+		if(!is.null(dataSession$version)){
+			version(dataSession$version)
+		}else{
+			version(0)
+		}
+		
+		dataSession = dataSessionVersionUpgrade(dataSession, version())
+		
+		if(!is.null(dataSession$groupings)){
+			groupings(dataSession$groupings)
+		}
+		
+		if(!is.null(dataSession$data)){
+			data(dataSession$data)
+		}
+		
+		if(!is.null(dataSession$version)){
+			version(dataSession$version)
+		}
+		
+		showTab(inputId = tabsID, target = titleTracks)
+		showTab(inputId = tabsID, target = titleFiles)
+		showTab(inputId = tabsID, target = titleFeatures)
+		showTab(inputId = tabsID, target = titleTrajectories)
+		showTab(inputId = tabsID, target = titlePlotTrajFeatures)
+		showTab(inputId = tabsID, target = titlePlotTrackFeatures)
+		showTab(inputId = tabsID, target = titlePlotTrajectories)
+		showTab(inputId = tabsID, target = titlePlotDirectionality)
+		showTab(inputId = tabsID, target = titlePlotTrajFeatures)
+		#data(list())
+		#browser()
+		#serialize(dataObj, NULL)
+	})
+	
+	observeEvent(input$sampleIn, {
+		if(input$sampleIn == "None"){
+			return()
+		}
+		sessionFilePath = paste("res", input$sampleIn, sep = "/")
 		sessionFile = file(paste0("file://", sessionFilePath))
 		open(sessionFile, "rb")
 		dataSession = unserialize(connection = sessionFile)

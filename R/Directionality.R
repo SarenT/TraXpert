@@ -718,10 +718,10 @@ directionality_server = function(id, data, features, tracks, trajectories, group
 			}
 		})
 		
-		facet = facet_control_server("facet", choices$groupingsChoiceswithEmpty)
+		facet = facet_control_server("facet", choices)
 		plot_export_server("export", "Directionality", plot)
 		circ_stat_details_server("stats", plot)
-		groupings_colors = groupings_colors_server("groupings_colors", choices$groupingsChoiceswithoutEmpty)
+		groupings_colors = groupings_colors_server("groupings_colors", choices)
 		debugging = debugging_server("debug")
 		titles = titles_server("title")
 		axis_labs = axis_labels_server("axis_labs", features, tracks, 

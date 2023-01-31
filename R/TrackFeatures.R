@@ -805,7 +805,7 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 		
 		plot_export_server("export", "Track Feature", plot)
 		
-		facet = facet_control_server("facet", choices$groupingsChoiceswithEmpty)
+		facet = facet_control_server("facet", choices)
 		
 		stat_details_server("stats", plot)
 		
@@ -813,11 +813,10 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 		
 		titles = titles_server("title")
 		
-		groupings_colors = groupings_colors_server("groupings_colors", choices$groupingsChoiceswithEmpty)
+		groupings_colors = groupings_colors_server("groupings_colors", choices)
 		
 		axis_labs = axis_labels_server("axis_labs", features, tracks, 
-									   groups = list(x = reactive({input$x_In}), 
-									   			  y = reactive({input$y_In})),
+									   groups = list(x = reactive({input$x_In}), y = reactive({input$y_In})),
 									   default_labels = list(x = NULL, y = reactive({input$y_In})))
 	})
 }

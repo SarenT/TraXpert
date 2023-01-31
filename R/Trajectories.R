@@ -585,7 +585,7 @@ trajectories_server = function(id, data, features, tracks, trajectories, groupin
 		observe({updateSelectInput(session, "replicate_In", choices = choices$groupingsChoiceswithEmpty())})
 		
 		
-		facet = facet_control_server("facet", choices$groupingsChoiceswithEmpty)
+		facet = facet_control_server("facet", choices)
 		plot_export_server("export", "Trajectory", plot)
 		debugging = debugging_server("debug")
 		dark_plot = dark_plot_server("dark")

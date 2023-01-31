@@ -21,10 +21,10 @@ groupings_colors_UI = function(id, width = "100%", can_dark = FALSE){
 	bsCollapsePanel("Groupings and Colors", items)
 }
 
-groupings_colors_server = function(id, groupingsChoiceswithEmpty){
+groupings_colors_server = function(id, choices){
 	moduleServer(id, function(input, output, session){
-		observe({updateSelectInput(session, "fill", choices = groupingsChoiceswithEmpty())})
-		observe({updateSelectInput(session, "color", choices = groupingsChoiceswithEmpty())})
+		observe({updateSelectInput(session, "fill", choices = choices$groupingsChoiceswithEmpty())})
+		observe({updateSelectInput(session, "color", choices = choices$groupingsChoiceswithEmpty())})
 		
 		color_group = reactive({
 			group = input$color
