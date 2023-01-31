@@ -47,11 +47,20 @@ axis_labels_server = function(id, features, data, groups = list(x = NULL, y = NU
 		observe({
 			# browser()
 			req(groups$x)
+			if(is.null(groups$x()) || groups$x() == ""){
+				return()
+			}
+			# browser()
 			updateTextInput(session = session, inputId = "x_unit", value = attr(data()[[groups$x()]], "unit"))
 		})
 		# Setting default unit upon y axis selection
 		observe({
 			req(groups$y)
+			# browser()
+			if(is.null(groups$y()) || groups$y() == ""){
+				return()
+			}
+			# browser()
 			updateTextInput(session = session, inputId = "y_unit", value = attr(data()[[groups$y()]], "unit"))
 		})
 		

@@ -17,10 +17,10 @@ facet_control_UI = function(id, textFaceChoices){
 	)
 }
 
-facet_control_server = function(id, groupingsChoiceswithEmpty){
+facet_control_server = function(id, choices){
 	moduleServer(id, function(input, output, session){
-		observe({updateSelectInput(session, "row", choices = groupingsChoiceswithEmpty())})
-		observe({updateSelectInput(session, "col", choices = groupingsChoiceswithEmpty())})
+		observe({updateSelectInput(session, "row", choices = choices$groupingsChoiceswithEmpty())})
+		observe({updateSelectInput(session, "col", choices = choices$groupingsChoiceswithEmpty())})
 		
 		row_group = reactive({
 			row_group = input$row; if(row_group == "NULL") {row_group = NULL}

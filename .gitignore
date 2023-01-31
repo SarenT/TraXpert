@@ -14,3 +14,4 @@ Imaris/
 .RDataTmp
 *.xml
 .Rproj.user
+!res/*

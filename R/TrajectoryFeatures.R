@@ -738,7 +738,7 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 			}
 		})
 		
-		facet = facet_control_server("facet", choices$groupingsChoiceswithEmpty)
+		facet = facet_control_server("facet", choices)
 		plot_export_server("export", "Trajectory Feature", plot)
 		stat_details_server("stats", plot)
 		debugging = debugging_server("debug")
