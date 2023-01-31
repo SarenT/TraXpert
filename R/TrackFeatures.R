@@ -738,17 +738,6 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 			}
 		})
 		
-		choiceswithEmpty = reactive({
-			#featuresToNamedList("Track", data()$features, empty = TRUE)
-			choicesInNamedList("Track", features(), empty = TRUE)
-		})
-		
-		choiceswithoutEmpty = reactive({
-			#featuresToNamedList("Track", data()$features, empty = FALSE)
-			#browser()
-			choicesInNamedList("Track", features(), empty = FALSE)
-		})
-		
 		transform = reactive({
 			# Data Transform with parameter
 			ns = session$ns
@@ -757,7 +746,7 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 		})
 		
 		observe({updateSelectInput(session, "x_In", choices = choices$groupingsChoiceswithoutEmpty())})
-		observe({updateSelectInput(session, "y_In", choices = choiceswithoutEmpty(), 
+		observe({updateSelectInput(session, "y_In", choices = choices$trackChoiceswithoutEmpty(), 
 								   selected = "TRACK_MEAN_SPEED")})
 		# observe({updateSelectInput(session, "stat_In", choices = groupingsChoiceswithEmpty())})
 		observe({updateSelectInput(session, "replicate_In", choices = choices$groupingsChoiceswithEmpty())})

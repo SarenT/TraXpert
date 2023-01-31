@@ -688,10 +688,6 @@ server = function(input, output, session) {
 		data(dataDF)
 	})
 	
-	trackQQPlot = reactive({
-		
-	})
-	
 	output$sessionOut = downloadHandler(
 		
 		# This function returns a string which tells the client
