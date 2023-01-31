@@ -213,6 +213,15 @@ server = function(input, output, session) {
 	
 	observeEvent(input$tmFilesIn, {
 		tmFiles = input$tmFilesIn
+		
+		showModal(modalDialog(
+			title = "TraXpert includes non-visible spots and tracks",
+			paste("Please make sure to remove all non-visible spots and tracks before continuing with TraXpert.",
+				  "Use the \"Trim non-visible data\" action in TrackMate.", sep = "\n"),
+			easyClose = TRUE,
+			footer = NULL
+		))
+		
 		tmFiles[pointSourceColumns] = NA
 		
 		for(pointSourceColumn in pointSourceColumns){
