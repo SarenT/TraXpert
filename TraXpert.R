@@ -53,70 +53,10 @@ options(shiny.port = 7777, shiny.maxRequestSize=1024*1024^2, scipen = 10, browse
 # 	setwd(defaultWD)	
 # }
 
-source("functions.R")
+source("lib/constants.R")
+source("lib/functions.R")
 
 try(detach("package:plyr", unload=TRUE), silent = TRUE)
-
-textFaceChoices = list(Plain = "plain", Italic = "italic", Bold = "bold", `Bold & Italic` = "bold.italic")
-aggregateFunctionChoices = list(`Do not aggregate` = "NULL", Sum = "sum", Mean = "mean", Median = "median", Mode = "single.mode", Min = "min", Max = "Max")
-summaryFunctionChoices = aggregateFunctionChoices
-summaryFunctionChoices[["Number of elements"]] = "length"
-dispersionMeasureChoices = list(`Do not display error` = "NULL", `Standard Deviation` = "stddev", `Interquartile Range` = "IQR", `Range (Min/Max)` = "range", `Standard error of the mean` = "se", `CI 95%` = "ci95", `CI 99%` = "ci99")
-dispChoicesforAggrFunction = list(`Do not aggregate` = c(1), Sum = c(1), Mean = c(1, 2, 5, 6, 7), 
-								  Median = c(1, 3, 4, 6, 7), Mode = c(1), Min = c(1, 4), Max = c(1, 4))
-dispersionTypeChoices = list(`Line Range` = "linerange", `Point Range` = "pointrange", `Cross Bar` = "crossbar", `Error Bar` = "errorbar", `Ribbon` = "ribbon")
-statLabelChoices = list(Stars = "p.signif", `p value` = "p.format") #, Stars = "..p.signif..", `p Format` = "..p.format..", p = "p", pp = "..p..")
-#statLabelChoices = list(Stars = "..p.signif..", `p Format` = "..p.format..", p = "..p..")
-trajFeaturesChoices = list(`Point Plot` = "point", `Jitter Plot` = "jitter", `Quantile Plot` = "quantile", `Smooth Plot` = "smooth", `Line Plot` = "line", `Area Plot` = "area", `Step Plot` = "step")
-trackFeaturesChoices = list(`Bar Plot` = "bar", `Box Plot` = "box", `Dot Plot` = "dot", `Violin Plot` = "violin")
-featureDimensionChoices = list(`Position` = "POSITION", `Time` = "TIME", `N/A` = "NONE", `Velocity/Speed` = "VELOCITY", `Length` = "LENGTH", `Angle` = "ANGLE")
-trackMultipleStatChoices = list(`Do not perform` = "NONE", `ANOVA` = "anova", `Kruskal–Wallis Test` = "kruskal.test")
-trackPairwiseStatChoices = list(`Do not perform` = "NONE", `Student's t Test` = "t.test", `Wilcoxon/Mann-Whitney Test` = "wilcox.test")
-trackPairwStatComparisonTypeChoices = list(`All Combinations` = "all_combinations", `All groups to control group` = "to_control", `Selected Pairs` = "selected")
-	
-dataTransformChoices = list(`None` = "noneTransform", `Power (left)` = "powerTransform", `Root (right)` = "rootTransform", 
-							`Log (right)` = "logTransform", `Inverse (right)` = "invTransform")
-
-trackDirectionalityMeasures = list(`Number of Tracks in Cardinal Groups` = "cardinalNumberOfTracks")
-
-positionTypes = list(Absolute = "unfixed", `Fixed at origin` = "fixed", `Fixed and rotated` = "fixed-rotated")
-
-circMultiSampleTestMeasures = list(`Do not test` = "NULL", `Common Mean Direction` = "mean", 
-								   `Common Median Direction` = "median", `Common Concentration` = "conc", 
-								   `Common Distribution` = "dist")
-
-circMultiSampleTestMeanMethods = list(`Watson's Large-sample Nonparametric Test` = "watsons.large.sample.nonparametric.test", 
-									  `Watson-Williams Test` = "watson.williams.test.2")
-circMultiSampleTestMedianMethods = list(`Fisher's Nonparametric Test` = "fisher.nonparametric.test", 
-										`Random. Fisher Nonparametric Test` = "PgRandTest")
-circMultiSampleTestConcMethods = list(`Wallraff's Nonparametric Test` = "WallraffTest")
-circMultiSampleTestDistMethods = list(`Watson Two Sample Test` = "watson.two.test")
-
-circMultiSampleTestMeasureMethods = list(`NULL` = NULL, `meanDir` = circMultiSampleTestMeanMethods, 
-										 `medianDir` = circMultiSampleTestMedianMethods, 
-										 `concentration` = circMultiSampleTestConcMethods, 
-										 `distribution` = circMultiSampleTestDistMethods)
-# circMultiSampleTestMeasureInputs = list(`NULL` = NULL, `meanDir` = "dir_multisample_mean_method_In", 
-# 										`medianDir` = "dir_multisample_median_method_In", 
-# 										`concentration` = "dir_multisample_conc_method_In", 
-# 										`distribution` = "dir_multisample_dist_method_In")
-
-formulaChoicesVector = c(" ", "(", ")", "-", "/", "*", "+", "^", "mean(", "first(", "last(", "median(", "%%", "&&", "||", ">", "<", "<=", ">=", "lag(", "lead(", "sqrt(")
-formulaChoices = as.list(formulaChoicesVector)
-names(formulaChoices) = formulaChoicesVector
-
-circHistQQCellSize = 800
-
-dataModelVersion = 1
-
-tabsID = "tabs"
-tabColorImport = "#ffaaaa"; tabColorOperations = "#aaaaff"; tabColorTables = "#ffffaa"; tabColorPlots = "#aaffaa"
-
-titleImportGroupings = "Import/Groupings"; titleOperations = "Operations"; 
-titleFiles = "Files" ;titleFeatures = "Features" ;titleTracks = "Tracks"
-titleTrajectories = "Trajectories"; titlePlotTrackFeatures = "Plot Track Features"
-titlePlotTrajectories = "Plot Trajectories"; titlePlotDirectionality = "Plot Directionality"
-titlePlotTrajFeatures = "Plot Trajectory Features"; titleAbout = "About"
 
 # Define UI
 ui = function(request){
@@ -397,7 +337,8 @@ server = function(input, output, session) {
 			
 			groupingsDF = groupings()$groupings
 			groupsDF = groupings()$groups
-			if(any(endsWith(uploadedFiles$datapath, suffix = ".csv") | endsWith(uploadedFiles$datapath, suffix = ".txt"))){
+			if(any(endsWith(uploadedFiles$datapath, suffix = ".csv") | 
+				   endsWith(uploadedFiles$datapath, suffix = ".txt"))){
 				parseParameters(list(files = uploadedFiles$datapath, groupings = groupingsDF, groups = groupsDF, 
 									 fileNames = uploadedFiles$name, 
 					 updateProgress = updateProgress, closeProgress = closeProgress, 
