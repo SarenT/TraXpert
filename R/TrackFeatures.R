@@ -222,12 +222,7 @@ track_features_UI = function(id, title, tabColor){
 	)
 }
 
-track_features_server = function(id, data, features, tracks, trajectories, groupings, 
-								 groupingsChoiceswithEmpty, groupingsChoiceswithoutEmpty,
-								 groupingsChoiceswithEmptywithDoNotDisplay,
-								 groupingsAndFeatureChoiceswithoutEmpty, trackChoiceswithoutEmpty, 
-								 trackDirectionChoiceswithoutEmpty, trackDirectionCatChoiceswithoutEmpty,
-								 trajChoiceswithoutEmpty, trajChoiceswithEmpty, dispersionChoices){
+track_features_server = function(id, data, features, tracks, trajectories, groupings, choices){
 	
 	
 	#' Plots track data
@@ -761,11 +756,11 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 						parameter = input[[ns(paste(c("data", input$data_transform_In, "In"), collapse = "_"))]]))
 		})
 		
-		observe({updateSelectInput(session, "x_In", choices = groupingsChoiceswithoutEmpty())})
+		observe({updateSelectInput(session, "x_In", choices = choices$groupingsChoiceswithoutEmpty())})
 		observe({updateSelectInput(session, "y_In", choices = choiceswithoutEmpty(), 
 								   selected = "TRACK_MEAN_SPEED")})
 		# observe({updateSelectInput(session, "stat_In", choices = groupingsChoiceswithEmpty())})
-		observe({updateSelectInput(session, "replicate_In", choices = groupingsChoiceswithEmpty())})
+		observe({updateSelectInput(session, "replicate_In", choices = choices$groupingsChoiceswithEmpty())})
 		observe({updateSelectInput(session, "stat_comparison_control_In", choices = statGroups(), 
 								   selected = safeSelect(statGroups()))})
 		observe({updateSliderInput(session, "y_range_In", min = getYMin(), max = getYMax(), 
@@ -821,7 +816,7 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 		
 		plot_export_server("export", "Track Feature", plot)
 		
-		facet = facet_control_server("facet", groupingsChoiceswithEmpty)
+		facet = facet_control_server("facet", choices$groupingsChoiceswithEmpty)
 		
 		stat_details_server("stats", plot)
 		
@@ -829,7 +824,7 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 		
 		titles = titles_server("title")
 		
-		groupings_colors = groupings_colors_server("groupings_colors", groupingsChoiceswithEmpty)
+		groupings_colors = groupings_colors_server("groupings_colors", choices$groupingsChoiceswithEmpty)
 		
 		axis_labs = axis_labels_server("axis_labs", features, tracks, 
 									   groups = list(x = reactive({input$x_In}), 

@@ -131,12 +131,7 @@ trajectories_UI = function(id, title, tabColor){
 	)
 }
 
-trajectories_server = function(id, data, features, tracks, trajectories, groupings, 
-								groupingsChoiceswithEmpty, groupingsChoiceswithoutEmpty, 
-								groupingsChoiceswithEmptywithDoNotDisplay,
-								groupingsAndFeatureChoiceswithoutEmpty, trackChoiceswithoutEmpty, 
-								trackDirectionChoiceswithoutEmpty, trackDirectionCatChoiceswithoutEmpty,
-								trajChoiceswithoutEmpty, trajChoiceswithEmpty, dispersionChoices){
+trajectories_server = function(id, data, features, tracks, trajectories, groupings, choices){
 	
 	
 	#' Plots trajectories of particles
@@ -582,13 +577,15 @@ trajectories_server = function(id, data, features, tracks, trajectories, groupin
 		
 		observe({updateSelectInput(session, "xy_In", choices = xyLocationswithoutEmpty(), 
 								   selected = "fixed")})
-		observe({updateSelectInput(session, "color_In", choices = groupingsAndFeatureChoiceswithoutEmpty())})
-		observe({updateSelectInput(session, "start_point_In", choices = groupingsChoiceswithEmptywithDoNotDisplay())})
-		observe({updateSelectInput(session, "end_point_In", choices = groupingsChoiceswithEmptywithDoNotDisplay())})
-		observe({updateSelectInput(session, "replicate_In", choices = groupingsChoiceswithEmpty())})
+		observe({updateSelectInput(session, "color_In", choices = choices$groupingsAndFeatureChoiceswithoutEmpty())})
+		observe({updateSelectInput(session, "start_point_In", 
+								   choices = choices$groupingsChoiceswithEmptywithDoNotDisplay())})
+		observe({updateSelectInput(session, "end_point_In", 
+								   choices = choices$groupingsChoiceswithEmptywithDoNotDisplay())})
+		observe({updateSelectInput(session, "replicate_In", choices = choices$groupingsChoiceswithEmpty())})
 		
 		
-		facet = facet_control_server("facet", groupingsChoiceswithEmpty)
+		facet = facet_control_server("facet", choices$groupingsChoiceswithEmpty)
 		plot_export_server("export", "Trajectory", plot)
 		debugging = debugging_server("debug")
 		dark_plot = dark_plot_server("dark")

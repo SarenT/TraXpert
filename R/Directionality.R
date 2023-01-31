@@ -172,12 +172,7 @@ directionality_UI = function(id, title, tabColor){
 }
 
 
-directionality_server = function(id, data, features, tracks, trajectories, groupings, 
-								 groupingsChoiceswithEmpty, groupingsChoiceswithoutEmpty,
-								 groupingsChoiceswithEmptywithDoNotDisplay,
-								 groupingsAndFeatureChoiceswithoutEmpty, trackChoiceswithoutEmpty, 
-								 trackDirectionChoiceswithoutEmpty, trackDirectionCatChoiceswithoutEmpty,
-								 trajChoiceswithoutEmpty, trajChoiceswithEmpty, dispersionChoices){
+directionality_server = function(id, data, features, tracks, trajectories, groupings, choices){
 	
 	
 	#' Plot directionality plot (aka Nightingale plot)
@@ -682,12 +677,13 @@ directionality_server = function(id, data, features, tracks, trajectories, group
 		})
 		
 		#observe({updateSelectInput(session, "track_direction_In", choices = trackDirectionChoiceswithoutEmpty())})
-		observe({updateSelectInput(session, "track_direction_cat_In", choices = trackDirectionCatChoiceswithoutEmpty(), 
+		observe({updateSelectInput(session, "track_direction_cat_In", 
+								   choices = choices$trackDirectionCatChoiceswithoutEmpty(), 
 								   selected = "DIRECTION_CARDINAL")})
-		observe({updateSelectInput(session, "cumulation_In", choices = trackChoiceswithoutEmpty(), 
+		observe({updateSelectInput(session, "cumulation_In", choices = choices$trackChoiceswithoutEmpty(), 
 								   selected = "TRACK_ID")})
-		observe({updateSelectInput(session, "alpha_In", choices = groupingsChoiceswithEmpty())})
-		observe({updateSelectInput(session, "replicate_In", choices = groupingsChoiceswithEmpty())})
+		observe({updateSelectInput(session, "alpha_In", choices = choices$groupingsChoiceswithEmpty())})
+		observe({updateSelectInput(session, "replicate_In", choices = choices$groupingsChoiceswithEmpty())})
 		
 		
 		observe({
@@ -722,10 +718,10 @@ directionality_server = function(id, data, features, tracks, trajectories, group
 			}
 		})
 		
-		facet = facet_control_server("facet", groupingsChoiceswithEmpty)
+		facet = facet_control_server("facet", choices$groupingsChoiceswithEmpty)
 		plot_export_server("export", "Directionality", plot)
 		circ_stat_details_server("stats", plot)
-		groupings_colors = groupings_colors_server("groupings_colors", groupingsChoiceswithoutEmpty)
+		groupings_colors = groupings_colors_server("groupings_colors", choices$groupingsChoiceswithoutEmpty)
 		debugging = debugging_server("debug")
 		titles = titles_server("title")
 		axis_labs = axis_labels_server("axis_labs", features, tracks, 

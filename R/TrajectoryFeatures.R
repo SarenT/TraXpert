@@ -171,12 +171,7 @@ trajectory_features_UI = function(id, title, tabColor){
 	
 }
 
-trajectory_features_server = function(id, data, features, tracks, trajectories, groupings, 
-								 groupingsChoiceswithEmpty, groupingsChoiceswithoutEmpty,
-								 groupingsChoiceswithEmptywithDoNotDisplay,
-								 groupingsAndFeatureChoiceswithoutEmpty, trackChoiceswithoutEmpty, 
-								 trackDirectionChoiceswithoutEmpty, trackDirectionCatChoiceswithoutEmpty,
-								 trajChoiceswithoutEmpty, trajChoiceswithEmpty, dispersionChoices){
+trajectory_features_server = function(id, data, features, tracks, trajectories, groupings, choices){
 	
 	#' Plots trajectory features
 	#'
@@ -241,7 +236,7 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 	#' @export
 	#'
 	#' @examples
-	plotTrajFeatures = function(dataTraj, x, y, type, trackGlobalIDName, groupings, x.unit = NULL, y.unit = NULL, 
+	plot_data = function(dataTraj, x, y, type, trackGlobalIDName, groupings, x.unit = NULL, y.unit = NULL, 
 								y.Range = NULL,
 								fillGroupName = NULL, colorGroupName = NULL, #colorReverseOrder = FALSE, 
 								groupTracks = FALSE,
@@ -667,17 +662,19 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 		output$plotOut = renderPlot({plot()$plot})
 		
 		
-		observe({updateSelectInput(session, "x_In", choices = trajChoiceswithoutEmpty(), selected = "EDGE_TIME")})
-		observe({updateSelectInput(session, "y_In", choices = trajChoiceswithoutEmpty(), selected = "VELOCITY")})
-		observe({updateSelectInput(session, "fill_In", choices = groupingsChoiceswithEmpty())})
-		observe({updateSelectInput(session, "color_In", choices = groupingsChoiceswithoutEmpty())})
-		observe({updateSelectInput(session, "shape_In", choices = groupingsChoiceswithEmpty())})
-		observe({updateSelectInput(session, "linetype_In", choices = groupingsChoiceswithEmpty())})
-		observe({updateSelectInput(session, "size_In", choices = trajChoiceswithEmpty())})
+		observe({updateSelectInput(session, "x_In", choices = choices$trajChoiceswithoutEmpty(), 
+								   selected = "EDGE_TIME")})
+		observe({updateSelectInput(session, "y_In", choices = choices$trajChoiceswithoutEmpty(), 
+								   selected = "VELOCITY")})
+		observe({updateSelectInput(session, "fill_In", choices = choices$groupingsChoiceswithEmpty())})
+		observe({updateSelectInput(session, "color_In", choices = choices$groupingsChoiceswithoutEmpty())})
+		observe({updateSelectInput(session, "shape_In", choices = choices$groupingsChoiceswithEmpty())})
+		observe({updateSelectInput(session, "linetype_In", choices = choices$groupingsChoiceswithEmpty())})
+		observe({updateSelectInput(session, "size_In", choices = choices$trajChoiceswithEmpty())})
 		
-		observe({updateSelectInput(session, "stat_In", choices = groupingsChoiceswithEmpty())})
-		observe({updateSelectInput(session, "replicate_In", choices = groupingsChoiceswithEmpty())})
-		observe({updateSelectInput(session, "disp_fun_In", choices = dispersionChoices())})
+		observe({updateSelectInput(session, "stat_In", choices = choices$groupingsChoiceswithEmpty())})
+		observe({updateSelectInput(session, "replicate_In", choices = choices$groupingsChoiceswithEmpty())})
+		observe({updateSelectInput(session, "disp_fun_In", choices = choices$dispersionChoices())})
 		
 		observe({updateSliderInput(session, "y_range_In", min = getYMin(), max = getYMax(), 
 								   step = getYStep(), value = c(getYMin(), getYMax()))})
@@ -741,7 +738,7 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 			}
 		})
 		
-		facet = facet_control_server("facet", groupingsChoiceswithEmpty)
+		facet = facet_control_server("facet", choices$groupingsChoiceswithEmpty)
 		plot_export_server("export", "Trajectory Feature", plot)
 		stat_details_server("stats", plot)
 		debugging = debugging_server("debug")

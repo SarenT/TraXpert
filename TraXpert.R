@@ -197,7 +197,7 @@ ui = function(request){
 	)
 }
 server = function(input, output, session) {
-	source("functions.R")
+	# source("functions.R")
 	
 	labelRVs = list()
 	# Save extra values in state$values when we bookmark
@@ -720,6 +720,17 @@ server = function(input, output, session) {
 		choicesInNamedList("Track", features(), empty = FALSE)
 	})
 	
+	choices = list(groupingsChoiceswithEmpty = groupingsChoiceswithEmpty, 
+				   groupingsChoiceswithoutEmpty = groupingsChoiceswithoutEmpty, 
+				   groupingsChoiceswithEmptywithDoNotDisplay = 	groupingsChoiceswithEmptywithDoNotDisplay,
+				   groupingsAndFeatureChoiceswithoutEmpty = groupingsAndFeatureChoiceswithoutEmpty,
+				   trackChoiceswithoutEmpty = trackChoiceswithoutEmpty, 
+				   trackDirectionChoiceswithoutEmpty = trackDirectionChoiceswithoutEmpty, 
+				   trackDirectionCatChoiceswithoutEmpty = trackDirectionCatChoiceswithoutEmpty,
+				   trajChoiceswithoutEmpty = trajChoiceswithoutEmpty, 
+				   trajChoiceswithEmpty = trajChoiceswithEmpty, 
+				   dispersionChoices = dispersionChoices)
+	
 	table_output_server("files_table_out", files)
 	table_output_server("features_table_out", features)
 	table_output_server("tracks_table_out", tracks)
@@ -736,29 +747,9 @@ server = function(input, output, session) {
 	
 	point_source = point_source_server("point_source", data)
 	
-	track_features_server("track_features", data, features, tracks, trajectories, groupings, 
-						  groupingsChoiceswithEmpty, groupingsChoiceswithoutEmpty, 
-						  groupingsChoiceswithEmptywithDoNotDisplay,
-						  groupingsAndFeatureChoiceswithoutEmpty,trackChoiceswithoutEmpty, 
-						  trackDirectionChoiceswithoutEmpty, trackDirectionCatChoiceswithoutEmpty,
-						  trajChoiceswithoutEmpty, trajChoiceswithEmpty, dispersionChoices)
-	trajectories_server("trajectories", data, features, tracks, trajectories, groupings, 
-						groupingsChoiceswithEmpty, groupingsChoiceswithoutEmpty, 
-						groupingsChoiceswithEmptywithDoNotDisplay,
-						groupingsAndFeatureChoiceswithoutEmpty, trackChoiceswithoutEmpty, 
-						trackDirectionChoiceswithoutEmpty, trackDirectionCatChoiceswithoutEmpty,
-						trajChoiceswithoutEmpty, trajChoiceswithEmpty, dispersionChoices)
-	directionality_server("directionality", data, features, tracks, trajectories, groupings, 
-						  groupingsChoiceswithEmpty, groupingsChoiceswithoutEmpty, 
-						  groupingsChoiceswithEmptywithDoNotDisplay,
-						  groupingsAndFeatureChoiceswithoutEmpty, trackChoiceswithoutEmpty, 
-						  trackDirectionChoiceswithoutEmpty, trackDirectionCatChoiceswithoutEmpty,
-						  trajChoiceswithoutEmpty, trajChoiceswithEmpty, dispersionChoices)
-	trajectory_features_server("trajectory_features", data, features, tracks, trajectories, groupings, 
-						  groupingsChoiceswithEmpty, groupingsChoiceswithoutEmpty, 
-						  groupingsChoiceswithEmptywithDoNotDisplay,
-						  groupingsAndFeatureChoiceswithoutEmpty,trackChoiceswithoutEmpty, 
-						  trackDirectionChoiceswithoutEmpty, trackDirectionCatChoiceswithoutEmpty,
-						  trajChoiceswithoutEmpty, trajChoiceswithEmpty, dispersionChoices)
+	track_features_server("track_features", data, features, tracks, trajectories, groupings, choices)
+	trajectories_server("trajectories", data, features, tracks, trajectories, groupings, choices)
+	directionality_server("directionality", data, features, tracks, trajectories, groupings, choices)
+	trajectory_features_server("trajectory_features", data, features, tracks, trajectories, groupings, choices)
 }
 shinyApp(ui = ui, server = server, enableBookmarking = "server")
