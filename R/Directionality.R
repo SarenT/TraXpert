@@ -228,7 +228,7 @@ directionality_server = function(id, data, features, tracks, trajectories, group
 						 show.y.axis = FALSE, subtitle = NA,
 						 plot.subtitle.hjust = 0.5, plot.subtitle.size = 10, plot.subtitle.face = "italic",
 						 browse = 0, verbose = FALSE, skip.radar = FALSE, skip.degrees = FALSE, benchmark = FALSE){
-		if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
+		if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 		if(benchmark) startTime = benchMark()
 		if(verbose) cat("Calculating aggrate results...\n")
 		
@@ -282,7 +282,7 @@ directionality_server = function(id, data, features, tracks, trajectories, group
 		}
 		
 		if(benchmark) startTime = benchMark("Aggregates...", startTime)
-		if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
+		if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 		
 		if(!is.null(summary.fun)){
 			if(summary.fun.name == "length"){
@@ -349,7 +349,7 @@ directionality_server = function(id, data, features, tracks, trajectories, group
 		if(verbose) cat("Computing h- and vlines...\n")
 		y_lims = c(0, max(cumulativeDispl[[cumulativeGroupName]]))
 		
-		if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
+		if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 		
 		if(benchmark) startTime = benchMark("Group expressions...", startTime)
 		directionCatNumericGroup = nameToExpr(directionCatNumericGroupName)
@@ -368,9 +368,9 @@ directionality_server = function(id, data, features, tracks, trajectories, group
 			line.size = y_lims[2] / 400
 		}
 		
-		if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
+		if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 		
-		colorGroupIndices = 1:length(levels(cumulativeDispl[[colorGroupName]]))
+		# colorGroupIndices = 1:length(levels(cumulativeDispl[[colorGroupName]]))
 		#if(colorReverseOrder){colorGroupIndices = rev(colorGroupIndices)}
 		
 		if(is.dark){
@@ -410,7 +410,7 @@ directionality_server = function(id, data, features, tracks, trajectories, group
 		#return(list(plot = plot, stat = NULL, replicates = NULL, tracks = NULL))
 		
 		if(benchmark) startTime = benchMark("Facets, titles, colors...", startTime)
-		if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
+		if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 		plot = facetPlot(plot, row = facet.row, col = facet.col, groupings = groupings, facet.wrap)
 		
 		plot = titlePlot(p = plot, title = title)
@@ -431,20 +431,20 @@ directionality_server = function(id, data, features, tracks, trajectories, group
 		
 		if(!is.na(subtitle)) plot = subtitlePlot(p = plot, subtitle = subtitle)
 		
-		if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
+		if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 		if(verbose) cat("Setting color scales...\n")
 		
 		plot = colorPlot(plot, dataTracks, groupings, colorGroupName, colorAlpha, is.dark)
 		
 		plot = fillPlot(plot, dataTracks, groupings, fillGroupName, fillAlpha, is.dark)
 		
-		if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
+		if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 		
 		if(verbose) cat("Setting labels...\n")
 		if(benchmark) startTime = benchMark("Labels...", startTime)
 		plot = plot + xlab("") + ylab("")
 		
-		if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
+		if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 		
 		if(!skip.degrees){
 			#x.labels = seq(0 + 180, 330 + 180, by = 30) %% 360 - 180; x.labels = x.labels * -1 #x.labels[7] = abs(x.labels[7])
@@ -467,7 +467,7 @@ directionality_server = function(id, data, features, tracks, trajectories, group
 			}
 		}
 		
-		if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
+		if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 		if(benchmark) startTime = benchMark("Theme...", startTime)
 		plot = setThemeBase(plot, is.dark, plot.subtitle.hjust, plot.subtitle.size, plot.subtitle.face, 
 							facet.label.fill.color, facet.text.face)
@@ -556,7 +556,7 @@ directionality_server = function(id, data, features, tracks, trajectories, group
 			statOut = NULL
 		}
 		
-		if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
+		if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 		return(list(plot = dirPlot, stat = statOut, replicates = aggrRepMergedNice, tracks = aggrNice, 
 					circDataModel = circDataModel, summaryStats = summaryStats %>% tibble(), 
 					uniformityDF = uniformityTests, uniformityText = uniformityOutput, 
@@ -567,11 +567,11 @@ directionality_server = function(id, data, features, tracks, trajectories, group
 	
 	moduleServer(id, function(input, output, session){
 		plot = reactive({
-			#browser
+			# browser()
 			if(!is.list(groupings()) || length(groupings()) == 0){
 				return(NULL)
 			}
-			if(debugging$browse){
+			if(!release && debugging$browse){
 				browser()
 			}
 			titles = titles = lapply(titles, function(x){x()})
@@ -602,7 +602,7 @@ directionality_server = function(id, data, features, tracks, trajectories, group
 				statMeasure = NULL
 			}
 			
-			#browser()
+			# browser()
 			
 			groupsCardinal = unlist(groupingsToNamedList(groupings()$groupings, empty = FALSE), use.names = F)
 			plot = plot_data(dataTracks = tracks(), groups = groupsCardinal, #directionGroupName = input$track_direction_In, 

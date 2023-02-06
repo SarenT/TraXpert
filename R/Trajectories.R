@@ -210,7 +210,7 @@ trajectories_server = function(id, data, features, tracks, trajectories, groupin
 			initializeProg(message = "Generating trajectory plot...", max = 4)
 		}
 		
-		if(browse) browser()
+		if(!release && browse) browser()
 		if(benchmark) startTime = benchMark()
 		if(verbose) cat("Preparing names and expressions...\n")
 		
@@ -457,9 +457,7 @@ trajectories_server = function(id, data, features, tracks, trajectories, groupin
 	}
 	moduleServer(id, function(input, output, session){
 		plot = eventReactive(input$plotTrajIn, {
-			if(debugging$browse){
-				browser()
-			}
+			if(!release && debugging$browse) browser()
 			titles = lapply(titles, function(x){x()})
 			xlab = axis_labs$x_lab()
 			ylab = axis_labs$y_lab()

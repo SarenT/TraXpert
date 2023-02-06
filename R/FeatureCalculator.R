@@ -1,6 +1,14 @@
 feature_calculator_UI = function(id, title, description, featureDimensionChoices, typeChoices, column_size = 4){
 	ns = NS(id)
 	
+	debug_checkbox = function(){
+		if(!release){
+			checkboxInput(ns("debug"), label = "Debug", value = FALSE)
+		}else{
+			""
+		}
+	}
+	
 	#newFeaturePanel = function(title, description, feature, typeChoices){
 	tagList(
 		column(column_size, fluidPage(class = "shiny-input-panel", fluidRow(
@@ -28,7 +36,7 @@ feature_calculator_UI = function(id, title, description, featureDimensionChoices
 									 "top"))
 				),
 				fluidRow(column(6, actionButton(ns("calculate"), label = "Calculate")),
-						 column(6, checkboxInput(ns("debug"), label = "Debug")))
+						 column(6, debug_checkbox()))
 			))
 		)),
 		bsTooltip(ns("btn"), "Start calculation. All fields must be filled."),
@@ -53,9 +61,7 @@ feature_calculator_server = function(id, measures, data, features, groupings,
 		})
 		
 		observeEvent(input$calculate, {
-			if(input$debug){
-				browser()
-			}
+			if(!release && input$debug) browser()
 			
 			feat = input$feat
 			

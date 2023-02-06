@@ -269,7 +269,7 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 			groupTracks = TRUE
 		}
 		
-		if(browse) browser()
+		if(!release && browse) browser()
 		if(benchmark) startTime = benchMark()
 		if(verbose) cat("Preparing names and expressions...\n")
 		
@@ -562,9 +562,7 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 		plot = eventReactive(input$plotIn, {#plot = reactive({
 			
 			print("output$trajFeatureOut = renderPlot({")
-			if(debugging$browse){
-				browser()
-			}
+			if(!release && debugging$browse) browser()
 			
 			# Converting title reactives to list of values
 			titles = lapply(titles, function(x){x()})

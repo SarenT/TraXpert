@@ -1,6 +1,14 @@
 rotation_UI = function(id, column_size = 4){
 	ns = NS(id)
 	
+	debug_checkbox = function(){
+		if(!release){
+			checkboxInput(ns("rotate_browse_In"), label = "Debug", value = FALSE)
+		}else{
+			""
+		}
+	}
+	
 	fluidPage(
 		class = "shiny-input-panel", 
 		fluidRow(
@@ -17,7 +25,7 @@ rotation_UI = function(id, column_size = 4){
 				   			min = -180, max = 180, step = 15, value = 0))),
 		fluidRow(
 			column(6, actionButton(ns("rotateIn"), label = "Process Files")),
-			column(6, checkboxInput(ns("rotate_browse_In"), label = "Debug", value = FALSE)))
+			column(6, debug_checkbox()))
 	)
 }
 
@@ -46,7 +54,7 @@ rotation_server = function(id, data){
 			
 			data(rotateTracks(dataDF, updateProgress, initializeProgress, closeProgress, 
 							  rotation_fix = input$processRotationFixIn, rotation_z_fix = input$processZRotationFixIn, 
-							  browse = input$rotate_browse_In))
+							  browse = !release && input$rotate_browse_In))
 		})
 	})
 }
