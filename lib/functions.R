@@ -129,7 +129,8 @@ interquantilerange = function(x){
 #'
 #' @examples
 ci95 = function(x){
-	return(Rmisc::CI(x = x, ci = 0.95))
+	t = t.test(x, conf.level = 0.95)
+	return(setNames(c(t$conf.int[2], t$estimate, t$conf.int[1]), c("upper", "mean", "lower")))
 }
 
 #' Calculates the confidence intervall of 99%. This is a wrapper function as the calling function can't input parameters
@@ -141,7 +142,8 @@ ci95 = function(x){
 #'
 #' @examples
 ci99 = function(x){
-	return(Rmisc::CI(x = x, ci = 0.99))
+	t = t.test(x, conf.level = 0.99)
+	return(setNames(c(t$conf.int[2], t$estimate, t$conf.int[1]), c("upper", "mean", "lower")))
 }
 
 #' Calcualtes the mean of the modes (in case there are multiple)
@@ -195,7 +197,7 @@ fixTrajectoryStartPos = function(x){
 #'
 #' @examples
 rotateFixedPosition = function(x, y, z, phiRotate = 0, thetaRotate = 0, browse = FALSE){
-	if(browse) browser()
+	if(!release && browse) browser()
 	r = sqrt(x ^ 2 + y ^ 2 + z ^ 2)
 	phi = atan2(y = y, x = x)
 	phi = phi + phiRotate; phi %% (2*pi)
@@ -209,9 +211,8 @@ rotateFixedPosition = function(x, y, z, phiRotate = 0, thetaRotate = 0, browse =
 	theta = theta + thetaRotate
 	theta = theta %% pi
 	rotatedFix = data.frame(r * cos(phi) * sin(theta), r * sin(phi) * sin(theta), r * cos(theta))
-	colnames(rotatedFix) = c(paste(fixedPositionColumns[1], "ROT", sep = "_"), 
-							 paste(fixedPositionColumns[2], "ROT", sep = "_"),
-							 paste(fixedPositionColumns[3], "ROT", sep = "_"))
+	colnames(rotatedFix) = paste(fixedPositionColumns[1:3], "ROT", sep = "_")
+	
 	return(rotatedFix)
 }
 
@@ -603,7 +604,7 @@ prepareBareGroupings = function(files){
 }
 
 toCardinal = function(angles, directionCat, name, browse = FALSE){
-	if(browse){browser()}
+	if(!release && browse) browser()
 	anglesCardinal = cut(angles, directionCat)
 	anglesCardinal = replace(anglesCardinal, anglesCardinal == last(levels(anglesCardinal)), 
 							 first(levels(anglesCardinal)))
@@ -639,7 +640,7 @@ parseFiles = function(filesDF, groupings, groups, recalculate = FALSE, browse = 
 	#colnames(groups) = groupings$names
 	# Finally generating file names
 	#groups$files = fileNames
-	if(browse == 1){browser()}
+	if(!release && browse) browser()
 	
 	files = filesDF$datapath
 	fileNames = filesDF$name
@@ -737,7 +738,7 @@ parseFiles = function(filesDF, groupings, groups, recalculate = FALSE, browse = 
 #' @examples
 processData = function(dataList, groups, groupings, updateProgress = NULL, initializeProgress = NULL, 
 					   closeProgress = NULL, recalculate = FALSE, browse = 0, benchmark = TRUE){
-	if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
+	if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 	if(benchmark) startTime = benchMark()
 	# Getting data frames
 	tracks = dataList$tracks; trajectories = dataList$trajectories; files = dataList$files; features = dataList$features
@@ -755,7 +756,7 @@ processData = function(dataList, groups, groupings, updateProgress = NULL, initi
 	#dimFeatures = positionColumns #features[features$group_id == features$group_id[1], ][2:5, ]$feature 
 	#fixedPositionColumns = paste(positionColumns, "FIX", sep = "_")
 	#rotFixedPositionsColumns = paste(fixedPositionColumns, "ROT", sep = "_")
-	if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
+	if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 	trajectories$group_id = apply(trajectories[, as.character(groupings$names), drop = F], 1, paste, collapse = "_")
 	#trajectories$group_part_id = apply(trajectories[, c(as.character(groupings$names), "Part")], 1, paste, collapse = "_")
 	trajectories$track_global_id = paste0(trajectories$group_id, "_", trajectories$TRACK_ID)
@@ -764,7 +765,7 @@ processData = function(dataList, groups, groupings, updateProgress = NULL, initi
 	if(is.function(initializeProgress) && is.function(updateProgress)){
 		initializeProgress(message = "Processing tracks...", max = length(unique(trajectories$track_global_id)))
 	}
-	if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
+	if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 	tracks = tracks %>% group_by(.dots = paste0("`", c(as.character(groupings$names),# "Part", 
 													   "group_id"#, "group_part_id"
 													   ), "`"))
@@ -778,7 +779,7 @@ processData = function(dataList, groups, groupings, updateProgress = NULL, initi
 	#tracks2 = tracks
 	
 	if(benchmark) startTime = benchMark("Process data - groupings and global id", startTime)
-	if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
+	if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 	cat("Calculating fixed positions of tracks at (0/0)\n")
 	
 	suppressWarnings({
@@ -868,7 +869,7 @@ processData = function(dataList, groups, groupings, updateProgress = NULL, initi
 				get(fixedPositionColumns[1]), get(fixedPositionColumns[2]), get(fixedPositionColumns[3])))
 		if(benchmark) startTime = benchMark("Process data - traj rotation", startTime)
 		
-		if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
+		if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 		
 		# Calculating track directions
 		tracks = tracks %>% 
@@ -893,12 +894,12 @@ processData = function(dataList, groups, groupings, updateProgress = NULL, initi
 		#; tracks$DIRECTION_CARDINAL_Z_ROT = tracks$DIRECTION_CARDINAL_Z
 		
 		
-		if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
+		if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 		for(grouping in groupings$names){
 			tracks[[grouping]] = as.factor(tracks[[grouping]])
 		}
 	})
-	if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
+	if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 	#browser()
 	tracks = setUnits(tracks, features[features$type == "Track", ], files)
 	trajectories = setUnits(trajectories, features[features$type == "Spot" | features$type == "Edge", ], files)
@@ -996,7 +997,7 @@ angleRemap = function(theta){
 #'
 #' @examples
 pointSource = function(dataList, updateProgress = NULL, initializeProgress = NULL, closeProgress = NULL, browse = 0){
-	if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
+	if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 	tracks = dataList$tracks; trajectories = dataList$trajectories; files = dataList$files; features = dataList$features
 	if(is.function(initializeProgress) && is.function(updateProgress)){
 		initializeProgress(message = "Calculating point source directionalities...", max = 1)
@@ -1112,7 +1113,7 @@ pointSource = function(dataList, updateProgress = NULL, initializeProgress = NUL
 #' @examples
 rotateTracks = function(dataList, updateProgress = NULL, initializeProgress = NULL, closeProgress = NULL, browse = 0, 
 			 rotation_fix = 0, rotation_z_fix = 0){
-	if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
+	if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 	# Getting data frames
 	tracks = dataList$tracks; trajectories = dataList$trajectories; files = dataList$files; features = dataList$features
 	if(is.function(initializeProgress) && is.function(updateProgress)){
@@ -1818,7 +1819,7 @@ groupedLevene = function(data, groups, y, default.y.Unit, y.unit){
 #'
 #' @examples
 parseChemotaxisToolFile = function(filePath, groupText, fileGroup, recalculate = FALSE, browse = 0, ...){
-	if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
+	if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 	#browser()
 	args = list(...)
 	calibrationUnits = args$calibrationUnits
@@ -1910,7 +1911,7 @@ parseChemotaxisToolFile = function(filePath, groupText, fileGroup, recalculate =
 #'
 #' @examples
 parseImarisXLSXFile = function(filePath, groupText, fileGroup, recalculate = FALSE, browse = 0){
-	if(browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
+	if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 #parseImarisFiles = function(files, groupings, groups, browse = 0, 
 #							updateProgress = NULL, fileNames = NULL, closeProgress = NULL, initializeProgress = NULL) {
 	#browser()
@@ -2028,7 +2029,7 @@ analyzeXMLError = function(filePath, groupText, xmlAttrs){
 #'
 #' @examples
 parseTMFile = function(filePath, groupText, fileGroup, recalculate = FALSE, browse = 0){
-	if(browse == 1){browser()}
+	if(!release && browse) browser()
 	
 	xmlDoc = read_xml(filePath)
 	xmlList = as_list(xmlDoc)

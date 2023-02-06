@@ -1,9 +1,18 @@
 point_source_UI = function(id){
 	ns = NS(id)
+	
+	debug_checkbox = function(){
+		if(!release){
+			checkboxInput(ns("browse"), label = "Debug", value = FALSE)
+		}else{
+			""
+		}
+	}
+	
 	fluidPage(class = "shiny-input-panel", fluidRow(
 		column(3, h4("Point Source"), 
 			   p("Calculate point source directionality by a providing point source location (physical units NOT pixels)."),
-			   checkboxInput(ns("browse"), label = "Debug", value = FALSE), 
+			   debug_checkbox(), 
 			   tipify(fileInput(inputId = ns("upload"), label = "Upload"), 
 			   				 "Upload a file to fill up the database", "top", "hover"),
 			   downloadButton(outputId = ns("download"), label = "Download Template"),
@@ -32,9 +41,7 @@ point_source_server = function(id, data){
 		})
 		
 		observeEvent(input$calculate, {
-			if(input$browse){
-				browser()
-			}
+			if(!release && input$browse) browser()
 			initializeProgress = function(max, message){
 				progress <<- shiny::Progress$new(max = max)
 				if(!is.null(message)){
@@ -51,7 +58,7 @@ point_source_server = function(id, data){
 			dataList = data()
 			if(sum(is.na(dataList$files[pointSourceColumns])) == 0){
 				data(pointSource(dataList, updateProgress, initializeProgress, closeProgress, 
-								 browse = input$browse))
+								 browse = !release && input$browse))
 			}
 		})
 		

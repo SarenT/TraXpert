@@ -15,24 +15,24 @@ libs = c("methods", "xml2", "ggplot2", "magrittr", "dplyr", "ggpubr", "RColorBre
 only.install = c("shinyjs", "htmlwidgets", "shinyWidgets")
 
 libs.func = c("dplyr", "tidyr", "purrr", "rlang", "viridisLite", "e1071", "circular")
-only.install.func = c("stringr", "ggiraphExtra", "Rmisc", "tools")
+only.install.func = c("stringr", "ggiraphExtra", "tools")
 
 all.required.libs = c(libs, only.install, libs.func, only.install.func)
 still.needed.libs = all.required.libs[!(all.required.libs %in% row.names(installed.packages()))]
-
-while(length(still.needed.libs)){
-	cat("Following packages are still missing: ", paste(still.needed.libs, collapse = ", "), "\n")
-	answer = readline(prompt="Do you want to automatically install these packages now? [(y)es, (n)o]: ")
-	if(answer == "y"){
-		install.packages(still.needed.libs)
-
-		still.needed.libs = all.required.libs[!(all.required.libs %in% row.names(installed.packages()))]
-	}else if(answer == "n"){
-		stop("Exiting...")
-	}else{
-		cat("Answer (", answer, ") not recognized only \"y\" for yes or \"n\" for no are allowed.\nExiting...\n")
-	}
-}
+# 
+# while(length(still.needed.libs)){
+# 	cat("Following packages are still missing: ", paste(still.needed.libs, collapse = ", "), "\n")
+# 	answer = readline(prompt="Do you want to automatically install these packages now? [(y)es, (n)o]: ")
+# 	if(answer == "y"){
+# 		install.packages(still.needed.libs)
+# 
+# 		still.needed.libs = all.required.libs[!(all.required.libs %in% row.names(installed.packages()))]
+# 	}else if(answer == "n"){
+# 		stop("Exiting...")
+# 	}else{
+# 		cat("Answer (", answer, ") not recognized only \"y\" for yes or \"n\" for no are allowed.\nExiting...\n")
+# 	}
+# }
 
 # Install missing packages if there is any
 #install.packages(only.install.func[!is.element(only.install.func, installed.packages())])
@@ -53,10 +53,24 @@ options(shiny.port = 7777, shiny.maxRequestSize=1024*1024^2, scipen = 10, browse
 # 	setwd(defaultWD)	
 # }
 
+require(shinyjs, exclude = "colourInput");require(htmlwidgets);require(shinyWidgets)
+require(stringr);require(ggiraphExtra);require(tools)
+
+require(methods)
+require(xml2)
+require(ggplot2)
+require(magrittr);require(dplyr);require(ggpubr);require(RColorBrewer);require(udunits2);require(sticky);require(shiny)
+require(sortable);require(DT);require(svglite);require(readxl);require(colorspace)
+require(smoother);require(shinyBS);require(car);require(latex2exp);require(colourpicker)
+
+require(dplyr);require(tidyr);require(purrr);require(rlang);require(viridisLite);require(e1071);require(circular)
+
 source("lib/constants.R")
 source("lib/functions.R")
 
 try(detach("package:plyr", unload=TRUE), silent = TRUE)
+
+cat("Checkpoint\n")
 
 # Define UI
 ui = function(request){
@@ -86,8 +100,8 @@ ui = function(request){
 				 				  placeholder = "Uploading...", buttonLabel = "Choose..."),
 				 		fluidPage(fluidRow(
 				 			column(7, actionButton(inputId = "processFilesIn", label = "Process Files")), 
-				 			column(3, checkboxInput("process_recalculate_In", label = "Recalculate", value = FALSE)),
-				 			column(2, checkboxInput("process_browse_In", label = "Debug", value = FALSE))
+				 			column(3, checkboxInput("process_recalculate_In", label = "Recalculate", value = FALSE))# ,
+				 			# column(2, checkboxInput("process_browse_In", label = "Debug", value = FALSE))
 				 		)),
 				 		p("OR"),
 				 		fileInput(inputId = "sessionFileIn", label = "Choose session file:", multiple = FALSE, 

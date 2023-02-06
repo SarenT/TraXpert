@@ -24,9 +24,10 @@ groupings_colors_UI = function(id, width = "100%", can_dark = FALSE){
 groupings_colors_server = function(id, choices){
 	moduleServer(id, function(input, output, session){
 		observe({updateSelectInput(session, "fill", choices = choices$groupingsChoiceswithEmpty())})
-		observe({updateSelectInput(session, "color", choices = choices$groupingsChoiceswithEmpty())})
+		observe({updateSelectInput(session, "color", choices = choices$groupingsChoiceswithoutEmpty())})
 		
 		color_group = reactive({
+			# browser()
 			group = input$color
 			if(group == "NULL") {group = NULL}
 			group

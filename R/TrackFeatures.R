@@ -197,7 +197,7 @@ track_features_UI = function(id, title, tabColor){
 			 fluidPage(
 			 	fluidRow(
 			 		column(4,
-			 			   bsCollapse(id = ns("settings"),
+			 			   bsCollapse(# id = ns("settings"),
 			 			   		   titles_UI(ns("title"), textFaceChoices),
 			 			   		   plot_type(),
 			 			   		   groupings_colors_UI(ns("groupings_colors"), can_dark = TRUE),
@@ -213,9 +213,7 @@ track_features_UI = function(id, title, tabColor){
 			 			   		   brush = brushOpts(id = ns("plotOut_brush"), resetOnNew = TRUE)),
 			 			   stat_details_UI(ns("stats")),
 			 			   tags$style(type="text/css", "#stat_text_Out {white-space: pre-wrap;}"), hr(),
-			 			   plot_export_UI(ns("export")), # plotExportSection("track"),
-			 			   # h3("Export Preview (1:4)"),
-			 			   # imageOutput(outputId = "plotPreviewOut")
+			 			   plot_export_UI(ns("export"))
 			 		)
 			 	)
 			 )
@@ -304,7 +302,7 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 						browse = FALSE, verbose = FALSE, benchmark = FALSE,
 						#xReverseOrder = FALSE, 
 						initializeProg = NULL, updateProg = NULL, closeProg = NULL){
-		if(browse) browser()
+		if(!release && browse) browser()
 		if(benchmark) startTime = benchMark()
 		if(verbose) cat("Preparing names and expressions...\n")
 		default.y.Unit = attr(dataTracks[[y]], "unit")
@@ -551,9 +549,8 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 	
 	moduleServer(id, function(input, output, session){
 		plot = reactive({
-			if(debugging$browse){
-				browser()
-			}
+			# browser()
+			if(!release && debugging$browse) browser()
 			print("output$trackFeatureOut = renderPlot({")
 			if(input$x_In == "" || input$y_In == ""){
 				"Please select both x and y axis variables."

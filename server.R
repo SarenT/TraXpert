@@ -144,9 +144,7 @@ server = function(input, output, session) {
 		# Create a Progress object
 		recalculate = input$process_recalculate_In
 		browse = input$process_browse_In
-		if(browse){
-			browser()
-		}
+		if(!release && browse) browser()
 		click = input$processFilesIn
 		
 		uploadedFiles = files()
