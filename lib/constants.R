@@ -1,4 +1,4 @@
-release = TRUE
+if(!("release" %in% ls())) release = TRUE
 
 textFaceChoices = list(Plain = "plain", Italic = "italic", Bold = "bold", `Bold & Italic` = "bold.italic")
 aggregateFunctionChoices = list(`Do not aggregate` = "NULL", Sum = "sum", Mean = "mean", Median = "median", 

@@ -533,10 +533,19 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 						 colorGroupName, fillGroupName, facet.row, facet.col, facet.wrap, colorAlpha, fillAlpha, 
 						 is.dark)
 			# Shapiro test
-			normality = groupedNormality(dataTracks, groupings, c(x, allGroupswoRep), y, default.y.Unit, y.unit)
+			normality = tryCatch({
+				groupedNormality(dataTracks, groupings, c(x, allGroupswoRep), y, default.y.Unit, y.unit)
+			}, error = function(e){
+				return(e)
+			})
+			
 			
 			# Levene test
-			levene = groupedLevene(dataTracks, c(x, allGroupswoRep), y, default.y.Unit, y.unit)
+			levene = tryCatch({
+				groupedLevene(dataTracks, c(x, allGroupswoRep), y, default.y.Unit, y.unit)
+			}, error = function(e){
+				return(e)
+			})
 		}else{
 			qq = NULL
 			normality = NULL

@@ -100,8 +100,8 @@ ui = function(request){
 				 				  placeholder = "Uploading...", buttonLabel = "Choose..."),
 				 		fluidPage(fluidRow(
 				 			column(7, actionButton(inputId = "processFilesIn", label = "Process Files")), 
-				 			column(3, checkboxInput("process_recalculate_In", label = "Recalculate", value = FALSE))# ,
-				 			# column(2, checkboxInput("process_browse_In", label = "Debug", value = FALSE))
+				 			column(3, checkboxInput("process_recalculate_In", label = "Recalculate", value = FALSE)),
+				 			column(2, uiOutput("debug_field"))
 				 		)),
 				 		p("OR"),
 				 		fileInput(inputId = "sessionFileIn", label = "Choose session file:", multiple = FALSE, 

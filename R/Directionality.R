@@ -433,7 +433,7 @@ directionality_server = function(id, data, features, tracks, trajectories, group
 		
 		if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 		if(verbose) cat("Setting color scales...\n")
-		
+		browser()
 		plot = colorPlot(plot, dataTracks, groupings, colorGroupName, colorAlpha, is.dark)
 		
 		plot = fillPlot(plot, dataTracks, groupings, fillGroupName, fillAlpha, is.dark)
@@ -482,8 +482,12 @@ directionality_server = function(id, data, features, tracks, trajectories, group
 		# Histogram of each group to check data distribution
 		directionGroupName = cardinalCols[[directionCatGroupName]]
 		#browser()
-		circDataModel = groupedCircDataModel(dataTracks, directionGroupName, directionCatGroupName, cumulativeGroupName,
-											 groupings, allGroupswRep, allGroupswoRep)
+		# circDataModel = tryCatch({
+		groupedCircDataModel(dataTracks, directionGroupName, directionCatGroupName, cumulativeGroupName, groupings, 
+							 allGroupswRep, allGroupswoRep)
+		# }, error = function(e){
+		# 	return(e)
+		# })
 		
 		summaryStats = data.frame()
 		for(title in names(circDataModel)){

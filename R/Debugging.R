@@ -6,7 +6,7 @@ debugging_UI = function(id, extras = list()){
 				checkboxInput(ns("benchmark"), "Benchmark", value = FALSE))
 	
 	if(!release){
-		tagAppendChild(debug_controls, checkboxInput(ns("browse"), "Debug", value = FALSE))
+		debug_controls = tagAppendChild(debug_controls, checkboxInput(ns("browse"), "Debug", value = FALSE))
 	}
 	
 	extra_controls = Map(function(name, item){

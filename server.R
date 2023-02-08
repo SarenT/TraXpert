@@ -80,6 +80,10 @@ server = function(input, output, session) {
 		#serialize(dataObj, NULL)
 	})
 	
+	output$debug_field = renderUI({
+		if(!release) checkboxInput("process_browse_In", label = "Debug", value = FALSE)
+	})
+	
 	observeEvent(input$sampleIn, {
 		if(input$sampleIn == "None"){
 			return()
