@@ -355,10 +355,10 @@ directionality_server = function(id, data, features, tracks, trajectories, group
 		directionCatNumericGroup = nameToExpr(directionCatNumericGroupName)
 		cumulativeGroup = nameToExpr(cumulativeGroupName)
 		colorGroup = nameToExpr(colorGroupName); fillGroup = nameToExpr(fillGroupName)
-		
+		# browser()
 		if(benchmark) startTime = benchMark("Generating plot...", startTime)
 		if(verbose) cat("Generating plot...\n")
-		breaks = seq(y_lims[1], y_lims[2], by = (y_lims[2] - y_lims[1]) / 4)
+		breaks = pretty(y_lims, n = 4) # seq(y_lims[1], y_lims[2], by = (y_lims[2] - y_lims[1]) / 4)
 		breaksAngle = seq(0, 360-1, by = angleCatBy * 180 / pi)
 		plot = ggplot() + 
 			scale_x_continuous(limits = c(-15, 345), expand = c(0, 0), breaks = breaksAngle) +
@@ -433,7 +433,7 @@ directionality_server = function(id, data, features, tracks, trajectories, group
 		
 		if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 		if(verbose) cat("Setting color scales...\n")
-		
+		# browser()
 		plot = colorPlot(plot, dataTracks, groupings, colorGroupName, colorAlpha, is.dark)
 		
 		plot = fillPlot(plot, dataTracks, groupings, fillGroupName, fillAlpha, is.dark)
@@ -482,8 +482,12 @@ directionality_server = function(id, data, features, tracks, trajectories, group
 		# Histogram of each group to check data distribution
 		directionGroupName = cardinalCols[[directionCatGroupName]]
 		#browser()
-		circDataModel = groupedCircDataModel(dataTracks, directionGroupName, directionCatGroupName, cumulativeGroupName,
-											 groupings, allGroupswRep, allGroupswoRep)
+		# circDataModel = tryCatch({
+		circDataModel = groupedCircDataModel(dataTracks, directionGroupName, directionCatGroupName, cumulativeGroupName, groupings, 
+							 allGroupswRep, allGroupswoRep)
+		# }, error = function(e){
+		# 	return(e)
+		# })
 		
 		summaryStats = data.frame()
 		for(title in names(circDataModel)){

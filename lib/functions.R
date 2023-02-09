@@ -572,7 +572,7 @@ letterwrap = function(n, depth = 1) {
 #'
 #' @examples
 prepareBareGroupings = function(files){
-	#browser()
+	# browser()
 	groupings = data.frame(names = c(), labels = c(), groups = c(), groupLabels = c(), colors = c())
 	if(length(files) > 1){
 		filesSpl = strsplit(tools::file_path_sans_ext(files), "\\ - |_")
@@ -592,9 +592,9 @@ prepareBareGroupings = function(files){
 		uniqueGroups$files = files
 		#browser()
 	}else if(length(files) == 1){
-		groupings = rbind(groupings, data.frame(names = c("TMX_GROUP_A"), labels = c("Grouping"), 
-												groups = list(c("Group")), groupLabels = list(c("Group")), 
-												colors = list(c("#000000"))))
+		groupings = dplyr::bind_rows(groupings, tibble(names = c("TMX_GROUP_A"), labels = c("Grouping"), 
+											groups = list(c("Group")), groupLabels = list(c("Group")), 
+											colors = list(c("#000000"))))
 		uniqueGroups = data.frame(TMX_GROUP_A = c("Group"), files = files)
 	}
 	if(is.null(files)){return(groupings)}
@@ -1373,6 +1373,7 @@ getGroups = function(groupings, name){
 #'
 #' @examples
 getGColors = function(groupings, name, order = NULL){
+	# browser()
 	colors = unlist(groupings$colors[groupings$names==name])
 	if(is.null(order)){
 		return(colors)
@@ -2064,13 +2065,20 @@ parseTMFile = function(filePath, groupText, fileGroup, recalculate = FALSE, brow
 	row.names(feats) = NULL
 	
 	cat("\t");cat(paste("Parsing tracks for", groupText));cat("\n")
+	
+	# Loading filters
+	filtered_tracks = unlist(
+		lapply(xml_attrs(xml_find_all(xmlDoc, xpath = '/TrackMate/Model/FilteredTracks//TrackID')), `[[`, "TRACK_ID"))
+	
 	# Loading tracks
-	#browser()
+	# browser()
 	xmlTrackAttrs = xml_attrs(xml_find_all(xmlDoc, xpath = '/TrackMate/Model/AllTracks//Track'))
 	xmlTrackAttrs = analyzeXMLError(filePath = filePath, groupText = groupText, xmlAttrs = xmlTrackAttrs)
 	xmlTrackAttrs = lapply(xmlTrackAttrs, as.list)
 	trks = bind_rows(xmlTrackAttrs)
 	#TODO check for NaN and Infinity values within trackmate files and report back to users!
+	
+	trks = trks %>% filter(TRACK_ID %in% filtered_tracks)
 	
 	row.names(trks) = NULL
 	# Getting track feature types to set tracks data frame variable types

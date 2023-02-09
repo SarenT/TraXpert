@@ -1,6 +1,7 @@
 *.xml
 .RData
 .Rhistory
+rsconnect/
 *.png
 *.jpg
 *.svg
