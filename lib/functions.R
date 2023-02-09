@@ -572,7 +572,7 @@ letterwrap = function(n, depth = 1) {
 #'
 #' @examples
 prepareBareGroupings = function(files){
-	#browser()
+	# browser()
 	groupings = data.frame(names = c(), labels = c(), groups = c(), groupLabels = c(), colors = c())
 	if(length(files) > 1){
 		filesSpl = strsplit(tools::file_path_sans_ext(files), "\\ - |_")
@@ -592,9 +592,9 @@ prepareBareGroupings = function(files){
 		uniqueGroups$files = files
 		#browser()
 	}else if(length(files) == 1){
-		groupings = rbind(groupings, data.frame(names = c("TMX_GROUP_A"), labels = c("Grouping"), 
-												groups = list(c("Group")), groupLabels = list(c("Group")), 
-												colors = list(c("#000000"))))
+		groupings = dplyr::bind_rows(groupings, tibble(names = c("TMX_GROUP_A"), labels = c("Grouping"), 
+											groups = list(c("Group")), groupLabels = list(c("Group")), 
+											colors = list(c("#000000"))))
 		uniqueGroups = data.frame(TMX_GROUP_A = c("Group"), files = files)
 	}
 	if(is.null(files)){return(groupings)}
@@ -1373,7 +1373,7 @@ getGroups = function(groupings, name){
 #'
 #' @examples
 getGColors = function(groupings, name, order = NULL){
-	browser()
+	# browser()
 	colors = unlist(groupings$colors[groupings$names==name])
 	if(is.null(order)){
 		return(colors)
