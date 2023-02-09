@@ -457,61 +457,69 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 		if(benchmark) startTime = benchMark("Colors", startTime)
 		if(verbose) cat("Colors...\n")
 		
-		statOut = list()
-		if(!is.null(multiple.stat.method)){
-			if(multiple.stat.method != "NONE"){
-				if(is.null(y.range)){
-					label.y = (dataRange[2] - dataRange[1]) * 0.9 + dataRange[1]
-				}else{
-					label.y = (y.range[2] - y.range[1]) * 0.9 + y.range[1]
-				}
-				plot = plot + 
-					stat_compare_means(method = multiple.stat.method, label.x = 0.7, label.y = label.y, show.legend = F)
-			}
-		}
 		
-		if(!is.null(pairwise.stat.method) && !is.factor(dataTracks[[y]])){
-			if(pairwise.stat.method != "NONE"){
-				comparisons = list()
-				comparisonGroups = as.character(getGroups(groupings = groupings, name = x))
-				if(statPairwiseType == "all_combinations"){
-					comparisons = combn(comparisonGroups, 2, simplify = F)
-				}else if(statPairwiseType == "to_control"){
-					i = 1
-					for(comparisonGroup in comparisonGroups){
-						if(statPairwiseControl != comparisonGroup){
-							comparisons[[i]] = c(statPairwiseControl, comparisonGroup)
-							i = i + 1
+		statOut = tryCatch({
+			statOutTemp = list()
+			if(!is.null(multiple.stat.method)){
+				if(multiple.stat.method != "NONE"){
+					if(is.null(y.range)){
+						label.y = (dataRange[2] - dataRange[1]) * 0.9 + dataRange[1]
+					}else{
+						label.y = (y.range[2] - y.range[1]) * 0.9 + y.range[1]
+					}
+					plot = plot + 
+						stat_compare_means(method = multiple.stat.method, label.x = 0.7, label.y = label.y, 
+										   show.legend = F)
+				}
+			}
+			
+			if(!is.null(pairwise.stat.method) && !is.factor(dataTracks[[y]])){
+				if(pairwise.stat.method != "NONE"){
+					comparisons = list()
+					comparisonGroups = as.character(getGroups(groupings = groupings, name = x))
+					if(statPairwiseType == "all_combinations"){
+						comparisons = combn(comparisonGroups, 2, simplify = F)
+					}else if(statPairwiseType == "to_control"){
+						i = 1
+						for(comparisonGroup in comparisonGroups){
+							if(statPairwiseControl != comparisonGroup){
+								comparisons[[i]] = c(statPairwiseControl, comparisonGroup)
+								i = i + 1
+							}
+						}
+					}else if(statPairwiseType == "selected"){
+						comparisons = statPairwiseSelected
+					}
+					if(stat.label == "p.format"){
+						statSignSymbols = NULL
+					}
+					plot = plot + 
+						stat_compare_means(aes(group = !!sym(x)), label = stat.label, method = pairwise.stat.method, 
+										   label.x = 1.5, comparisons = comparisons, hide.ns = hide.ns, 
+										   show.legend = FALSE, color = stat.text.color, symnum.args = statSignSymbols)
+					stat.fun = match.fun(pairwise.stat.method)
+					nonStatGroupings = allGroupswoRep[allGroupswoRep != x]
+					dataTracksSplits = dataTracks %>% group_by_at(vars(nonStatGroupings)) %>% group_split()
+					for(dataTracksSplit in dataTracksSplits){
+						withinGroupLabel = apply(dataTracksSplit[ , nonStatGroupings ], 1, paste, collapse = " AND " )[1]
+						if(!is.null(comparisons)){
+							stat.fun = match.fun(paste0("pairwise.", pairwise.stat.method))
+							#browser()
+							statOutTemp[[withinGroupLabel]] = capture.output(stat.fun(x = dataTracksSplit[[y]], 
+																				  g = dataTracksSplit[[x]]))
+						}else{
+							statOutTemp[[withinGroupLabel]] = capture.output(stat.fun(reformulateT(x, y), 
+																				  data = dataTracksSplit))
 						}
 					}
-				}else if(statPairwiseType == "selected"){
-					comparisons = statPairwiseSelected
+					statOutTemp = replaceStatLabels(statOutTemp, getGLab(groupings, x), y.lab)
 				}
-				if(stat.label == "p.format"){
-					statSignSymbols = NULL
-				}
-				plot = plot + 
-					stat_compare_means(aes(group = !!sym(x)), label = stat.label, method = pairwise.stat.method, 
-									   label.x = 1.5, comparisons = comparisons, hide.ns = hide.ns, 
-									   show.legend = FALSE, color = stat.text.color, symnum.args = statSignSymbols)
-				stat.fun = match.fun(pairwise.stat.method)
-				nonStatGroupings = allGroupswoRep[allGroupswoRep != x]
-				dataTracksSplits = dataTracks %>% group_by_at(vars(nonStatGroupings)) %>% group_split()
-				for(dataTracksSplit in dataTracksSplits){
-					withinGroupLabel = apply(dataTracksSplit[ , nonStatGroupings ], 1, paste, collapse = " AND " )[1]
-					if(!is.null(comparisons)){
-						stat.fun = match.fun(paste0("pairwise.", pairwise.stat.method))
-						#browser()
-						statOut[[withinGroupLabel]] = capture.output(stat.fun(x = dataTracksSplit[[y]], 
-																			  g = dataTracksSplit[[x]]))
-					}else{
-						statOut[[withinGroupLabel]] = capture.output(stat.fun(reformulateT(x, y), 
-																			  data = dataTracksSplit))
-					}
-				}
-				statOut = replaceStatLabels(statOut, getGLab(groupings, x), y.lab)
 			}
-		}
+			statOutTemp
+		}, error = function(e){
+			return(e)
+		})
+		
 		
 		plot = setThemeBase(plot, is.dark, plot.subtitle.hjust, plot.subtitle.size, plot.subtitle.face, 
 							facet.label.fill.color, facet.text.face)
