@@ -71,7 +71,11 @@ stat_details_server = function(id, plot_data){
 		output$stat_histogram_Out = renderPlot({
 			plotOut = plot_data()
 			if(is.list(plotOut)){
-				plotOut$histogram
+				if(is(plotOut$histogram, "ggplot")){
+					plotOut$histogram
+				}else{
+					NULL
+				}
 			}else{
 				NULL
 			}
@@ -80,7 +84,11 @@ stat_details_server = function(id, plot_data){
 		output$stat_qq_Out = renderPlot({
 			plotOut = plot_data()
 			if(is.list(plotOut)){
-				plotOut$qq
+				if(is(plotOut$qq, "ggplot")){
+					plotOut$qq
+				}else{
+					NULL
+				}
 			}else{
 				NULL
 			}

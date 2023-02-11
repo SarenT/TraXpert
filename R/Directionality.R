@@ -514,27 +514,30 @@ directionality_server = function(id, data, features, tracks, trajectories, group
 			summaryStats = rbind(summaryStats, summaryStat)
 		}
 		
-		uniformityTests = data.frame()
-		uniformityOutput = ""
-		for(title in names(circDataModel)){
-			
-			circGroupData = circDataModel[[title]]
-			
-			rayleigh = rayleigh.test(circGroupData)
-			watson = watson.test(circGroupData)
-			
-			testOutput = capture.output(rayleigh)
-			uniformityOutput = paste(c(uniformityOutput, "", title, testOutput[testOutput != ""]), collapse = "\n")
-			testOutput = capture.output(watson)
-			uniformityOutput = paste(c(uniformityOutput, "", title, testOutput[testOutput != ""]), collapse = "\n")
-			
-			uniformityTest = data.frame(`Title` = title,
-										`Rayleigh statistic` = rayleigh$statistic,
-										`Rayleigh p` = rayleigh$p
-			)
-			uniformityTests = rbind(uniformityTests, uniformityTest)
-			
-		}
+		uniformity = tryCatch({
+			tests = data.frame()
+			output = ""
+			for(title in names(circDataModel)){
+				circGroupData = circDataModel[[title]]
+				
+				rayleigh = rayleigh.test(circGroupData)
+				watson = watson.test(circGroupData)
+				
+				testOutput = capture.output(rayleigh)
+				output = paste(c(output, "", title, testOutput[testOutput != ""]), collapse = "\n")
+				testOutput = capture.output(watson)
+				output = paste(c(output, "", title, testOutput[testOutput != ""]), collapse = "\n")
+				
+				uniformityTest = data.frame(`Title` = title,
+											`Rayleigh statistic` = rayleigh$statistic,
+											`Rayleigh p` = rayleigh$p
+				)
+				tests = rbind(tests, uniformityTest)
+			}
+			list(tests = tests, output = output)
+		}, error = function(e){
+			return(e)
+		})
 		
 		vonMisesGoodnessOfFit = ""
 		for(title in names(circDataModel)){
@@ -551,7 +554,7 @@ directionality_server = function(id, data, features, tracks, trajectories, group
 		print(stat.method)
 		print(stat.extras)
 		print("=========================")
-		
+		# browser()
 		statOut = NULL
 		if(!is.null(stat.measure)){
 			statMethod = match.fun(stat.method)
@@ -563,7 +566,8 @@ directionality_server = function(id, data, features, tracks, trajectories, group
 		if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 		return(list(plot = dirPlot, stat = statOut, replicates = aggrRepMergedNice, tracks = aggrNice, 
 					circDataModel = circDataModel, summaryStats = summaryStats %>% tibble(), 
-					uniformityDF = uniformityTests, uniformityText = uniformityOutput, 
+					# uniformityDF = uniformityTests, uniformityText = uniformityOutput, 
+					uniformity = uniformity, 
 					vonMisesFit = vonMisesGoodnessOfFit))
 		#return(plot)
 	}

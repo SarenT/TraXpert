@@ -48,52 +48,80 @@ circ_stat_details_server = function(id, plot_data){
 	moduleServer(id, function(input, output, session){
 		
 		output$circstat_DF_Out = renderTable(spacing = "xs", striped = TRUE, {
-			if("tbl" %in% class(plot_data()$stat)){
-				plot_data()$stat
+			plotOut = plot_data()
+			if(is.list(plotOut)){
+				if(is(plotOut$stat, "data.frame")){
+					plotOut$stat
+				}else{
+					NULL
+				}
+			}else{
+				NULL
 			}
 		})
 		output$circstat_text_Out = renderText({
-			#browser()
-			if("list" %in% class(plot_data()$stat)){
-				statOutText = ""
-				for(i in 1:length(plot_data()$stat)){
-					statName = names(plot_data()$stat)[i]
-					statOutText = paste(statOutText, statName, sep = "\n\n")
-					statOutText = paste(statOutText, paste(plot_data()$stat[[i]], collapse = "\n"), sep = "\n") #hTestToString(trackPlot()$stat)
+			# browser()
+			plotOut = plot_data()
+			if(is.list(plotOut)){
+				if(is(plotOut$stat, "list")){
+					statOutText = ""
+					for(i in 1:length(plotOut$stat)){
+						statName = names(plotOut$stat)[i]
+						statOutText = paste(statOutText, statName, sep = "\n\n")
+						statOutText = paste(statOutText, paste(plotOut$stat[[i]], collapse = "\n"), sep = "\n") #hTestToString(trackPlot()$stat)
+					}
+					
+					statOutText
+				}else if(is(plotOut$stat, "character")){
+					#browser()
+					statOutText = paste(plotOut$stat, collapse = "\n\n") #hTestToString(trajectoryPlot()$stat)
+					statOutText
 				}
-				
-				statOutText
-			}else if("character" %in% class(plot_data()$stat)){
-				#browser()
-				statOutText = paste(plot_data()$stat, collapse = "\n\n") #hTestToString(trajectoryPlot()$stat)
-				statOutText
 			}
+			
 			
 		})
 		
 		output$stat_shape_Out = renderTable(spacing = "xs", striped = TRUE, {
-			#browser()
-			if("tbl" %in% class(plot_data()$summaryStats)){
-				plot_data()$summaryStats
+			# browser()
+			plotOut = plot_data()
+			if(is.list(plotOut)){
+				if(is(plotOut$summaryStats, "data.frame")){
+					plotOut$summaryStats
+				}else{
+					return(NULL)
+				}
 			}
 		})
 		
 		output$stat_uniformity_DF_Out = renderTable(spacing = "xs", striped = TRUE, {
-			#browser()
-			if("tbl" %in% class(plot_data()$uniformityDF)){
-				plot_data()$uniformityDF
+			# browser()
+			plotOut = plot_data()
+			if(is.list(plotOut)){
+				if(is(plotOut$uniformityDF, "data.frame")){
+					plotOut$uniformityDF
+				}else{
+					return(NULL)
+				}
 			}
 		})
 		
 		output$stat_uniformity_text_Out = renderText({
-			#browser()
-			if(is.list(plot_data())){
-				plot_data()$uniformityText
+			# browser()
+			plotOut = plot_data()
+			if(is.list(plotOut)){
+				if(is(plotOut$uniformityText, "character")){
+					plotOut$uniformityText
+				}else{
+					return(NULL)
+				}
+			}else{
+				return(NULL)
 			}
 		})
 		
 		output$stat_vonMisesFit_Out = renderText({
-			#browser()
+			# browser()
 			
 			if(is.list(plot_data())){
 				plot_data()$vonMisesFit
@@ -129,6 +157,7 @@ circ_stat_details_server = function(id, plot_data){
 		})
 		
 		histogramData = reactive({
+			# browser()
 			directionalityHistPlotOut = plot_data()
 			
 			if(is.list(directionalityHistPlotOut)){
@@ -139,7 +168,7 @@ circ_stat_details_server = function(id, plot_data){
 		})
 		
 		output$circstat_histogram_qqplot_Contents = renderPlot({
-			#browser()
+			# browser()
 			
 			histogramData = histogramData()
 			if(!is.null(histogramData)){

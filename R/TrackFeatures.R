@@ -530,16 +530,26 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 		if(verbose) cat("Stats and theme...\n")
 		
 		# Histogram of each group to check data distribution
-		histogram = groupHistograms(dataTracks, x, y, default.y.Unit, y.unit, y.labDisp, groupings, 
-									colorGroup, fillGroup, colorGroupName, fillGroupName, 
-									facet.row, facet.col, facet.wrap, 
-									colorAlpha, fillAlpha, 
-									is.dark)
+		histogram = tryCatch({
+			groupHistograms(dataTracks, x, y, default.y.Unit, y.unit, y.labDisp, groupings, 
+							colorGroup, fillGroup, colorGroupName, fillGroupName, 
+							facet.row, facet.col, facet.wrap, 
+							colorAlpha, fillAlpha, 
+							is.dark)
+		}, error = function(e){
+			return(e)
+		})
+		
 		if(!is.factor(dataTracks[[y]])){
 			# QQ plots of each group to check data normality
-			qq = groupQQ(dataTracks, x, y, default.y.Unit, y.unit, groupings, colorGroup, fillGroup, 
-						 colorGroupName, fillGroupName, facet.row, facet.col, facet.wrap, colorAlpha, fillAlpha, 
-						 is.dark)
+			qq = tryCatch({
+				groupQQ(dataTracks, x, y, default.y.Unit, y.unit, groupings, colorGroup, fillGroup, 
+						colorGroupName, fillGroupName, facet.row, facet.col, facet.wrap, colorAlpha, fillAlpha, 
+						is.dark)
+			}, error = function(e){
+				return(e)
+			})
+			
 			# Shapiro test
 			normality = tryCatch({
 				groupedNormality(dataTracks, groupings, c(x, allGroupswoRep), y, default.y.Unit, y.unit)
