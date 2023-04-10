@@ -2349,8 +2349,15 @@ icon_list = function(x){
 #' @examples
 dataSessionVersionUpgrade = function(dataSession, version){
 	if(version == 0){
+		cat("Upgrading from version 0 to 1. Please download session file again. (Dummy upgrade)\n")
 		dataSession$version = 1
-		version = 1
+		version = dataSession$version
+	}
+	
+	if(version == 1){
+		cat("Upgrading from version 1 to 2. Please download session file again. (MSD new calculation)\n")
+		dataSession$version = 2
+		version = dataSession$version
 	}
 	#Add new versions as separate if statements for stepwise adaptation for the newest version
 	

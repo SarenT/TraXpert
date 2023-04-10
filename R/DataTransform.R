@@ -2,20 +2,25 @@ data_transform_UI = function(id, label){
 	ns = NS(id)
 	
 	fluidRow(
-		column(6, selectInput(ns("method"), paste0("Transform data with (", label, ")"), 
-							  choices = dataTransformChoices, selected = "noneTransform")),
+		column(6, tipify(selectInput(ns("method"), paste0("Transform data (", label, ") with"), 
+									 choices = dataTransformChoices, selected = "noneTransform"), 
+						 "Data transfortmed before any calculation is performed (e.g. statistics)", "bottom", "top")),
 		column(6, 
 			   conditionalPanel(
 			   	"input.method == 'logTransform'", ns = ns,
-			   	shinyWidgets::sliderTextInput(ns("logTransform"), "\\(\\log_a(x) \\) ... a", 
-			   								  choices = c(`2` = 2, `e` = exp(1), `10` = 10), selected = exp(1))),
+			   	tipify(shinyWidgets::sliderTextInput(ns("logTransform"), "\\(\\log_a(x) \\) ... a", 
+			   										 choices = c(`2` = 2, `e` = exp(1), `10` = 10), selected = exp(1)),
+			   		   "Base for the logarithm function", "bottom", "top")
+			   ),
 			   conditionalPanel("input.method  == 'powerTransform'", ns = ns,
-			   				 sliderInput(ns("powerTransform"), "\\(x^a\\) ... a", 
-			   				 			min = 2, max = 5, step = 1, value = 3)
+			   				 tipify(sliderInput(ns("powerTransform"), "\\(x^a\\) ... a", 
+			   				 				   min = 2, max = 5, step = 1, value = 2),
+			   				 	   "Exponent/power (a) for the exponentiation", "bottom", "top")
 			   ),
 			   conditionalPanel("input.method  == 'rootTransform'", ns = ns,
-			   				 sliderInput(ns("rootTransform"), "\\(\\sqrt[a]{x}\\) ... a", 
-			   				 			min = 2, max = 5, step = 1, value = 3)
+			   				 tipify(sliderInput(ns("rootTransform"), "\\(\\sqrt[a]{x}\\) ... a", 
+			   				 				   min = 2, max = 5, step = 1, value = 2),
+			   				 	   "Base for the root function (e.g. 2 for square root)", "bottom", "top")
 			   ),
 			   conditionalPanel("input.method  == ''", ns = ns,
 			   				 sliderInput(ns("invTransform"), "", min = 1, max = 2, step = 1, value = 1),

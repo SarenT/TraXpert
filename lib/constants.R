@@ -1,5 +1,9 @@
 if(!("release" %in% ls())) release = TRUE
 
+scaleTransformations = list(`None` = "identity", `Exponential (e)` = "exp", `Log (e)` = "log", `Log (10)` = "log10", 
+							`Log (2)` = "log2", `Logit (log(x/(1 - x)))` = "logit", 
+							`Reciprocal (x^-1)` = "reciprocal", `Square root` = "sqrt", `Reverse (-x)` = "reverse")
+
 textFaceChoices = list(Plain = "plain", Italic = "italic", Bold = "bold", `Bold & Italic` = "bold.italic")
 aggregateFunctionChoices = list(`Do not aggregate` = "NULL", Sum = "sum", Mean = "mean", Median = "median", 
 								Mode = "single.mode", Min = "min", Max = "Max")
@@ -62,7 +66,7 @@ names(formulaChoices) = formulaChoicesVector
 
 circHistQQCellSize = 800
 
-dataModelVersion = 1
+dataModelVersion = 2
 
 tabsID = "tabs"
 tabColorImport = "#ffaaaa"; tabColorOperations = "#aaaaff"; tabColorTables = "#ffffaa"; tabColorPlots = "#aaffaa"
