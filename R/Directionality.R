@@ -156,7 +156,8 @@ directionality_UI = function(id, title, tabColor){
 			 			   		   debugging_UI(ns("debug"), 
 			 			   		   			 list(skip_radar = list(label = "Skip Radar", value = FALSE),
 			 			   		   			 	 skip_degrees = list(label = "Skip Degrees", value = FALSE)))
-			 			   )
+			 			   ),
+			 			   feature_schematics_UI(ns("feature_schematics"))
 			 			   
 			 			   
 			 		),
@@ -725,7 +726,7 @@ directionality_server = function(id, data, features, tracks, trajectories, group
 				}
 			}
 		})
-		
+		feature_schematics_server("feature_schematics", feature = reactive({input$track_direction_cat_In}))
 		facet = facet_control_server("facet", choices)
 		plot_export_server("export", "Directionality", plot)
 		circ_stat_details_server("stats", plot)

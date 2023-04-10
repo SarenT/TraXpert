@@ -16,3 +16,5 @@ Imaris/
 *.xml
 .Rproj.user
 !res/*
+!images/*
+

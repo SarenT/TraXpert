@@ -146,7 +146,9 @@ trajectory_features_UI = function(id, title, tabColor){
 			 			   		   transformations(),
 			 			   		   display_options(),
 			 			   		   debugging_UI(ns("debug"))
-			 			   )
+			 			   ),
+			 			   feature_schematics_UI(ns("feature_schematics_x")),
+			 			   feature_schematics_UI(ns("feature_schematics_y"))
 			 		),
 			 		column(8, 
 			 			   plotOutput(outputId = ns("plotOut")),
@@ -750,6 +752,8 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 			}
 		})
 		
+		feature_schematics_server("feature_schematics_x", feature = reactive({input$x_In}))
+		feature_schematics_server("feature_schematics_y", feature = reactive({input$y_In}))
 		facet = facet_control_server("facet", choices)
 		plot_export_server("export", "Trajectory Feature", plot)
 		stat_details_server("stats", plot)

@@ -182,7 +182,8 @@ track_features_UI = function(id, title, tabColor){
 			 			   		   ranges_units_labels(ns),
 			 			   		   specific_options(ns),
 			 			   		   debugging_UI(ns("debug"))
-			 			   )
+			 			   ),
+			 			   feature_schematics_UI(ns("feature_schematics"))
 			 		),
 			 		column(8, 
 			 			   plotOutput(outputId = ns("plotOut"), dblclick = "plotOut_dblclick", 
@@ -786,6 +787,8 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 				return(list())
 			}
 		})
+		
+		feature_schematics_server("feature_schematics", feature = reactive({input$y_In}))
 		
 		plot_export_server("export", "Track Feature", plot)
 		
