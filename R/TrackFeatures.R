@@ -32,34 +32,7 @@ track_features_UI = function(id, title, tabColor){
 			selectInput(ns("pairwise_stat_method_In"), "Test - Pairwise", 
 						choices = trackPairwiseStatChoices, 
 						selected = "wilcox.test"),
-			selectInput(ns("data_transform_In"), "Transform data with", 
-						choices = dataTransformChoices, 
-						selected = "noneTransform"),
-			conditionalPanel("input.data_transform_In  == 'logTransform'", ns = ns,
-							 shinyWidgets::sliderTextInput(
-							 	ns("data_logTransform_In"), 
-							 	"\\(\\log_a(x) \\) ... a", 
-							 	choices = c(2, exp(1), 10), 
-							 	selected = exp(1))
-			),
-			conditionalPanel("input.data_transform_In  == 'powerTransform'", ns = ns,
-							 sliderInput(ns("data_powerTransform_In"), 
-							 			"\\(x^a\\) ... a", 
-							 			min = 2, max = 5, step = 1, value = 3)
-			),
-			conditionalPanel("input.data_transform_In  == 'rootTransform'", ns = ns,
-							 sliderInput(ns("data_rootTransform_In"), 
-							 			"\\(\\sqrt[a]{x}\\) ... a", 
-							 			min = 2, max = 5, step = 1, value = 3)
-			),
-			
-			conditionalPanel("input.data_transform_In  == ''", ns = ns,
-							 sliderInput(ns("data_invTransform_In"), "", 
-							 			min = 1, max = 2, step = 1, value = 1),
-							 sliderInput(ns("data_noneTransform_In"), "", 
-							 			min = 1, max = 2, step = 1, value = 1)
-			),
-			
+			data_transform_UI(ns("y")),
 			tipify(selectInput(ns("stat_label_In"), 
 							   "Stat. Label", 
 							   choices = statLabelChoices), 
@@ -287,7 +260,7 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 						title = NA, subtitle = NULL,
 						#statGroupName = NULL, 
 						stat.label = "..p.signif..", multiple.stat.method = NULL, pairwise.stat.method = NULL, 
-						hide.ns = FALSE, data.transform = list(method = "noneTransform", paramter = 1),
+						hide.ns = FALSE, data.y.transform = y_transform,
 						stat.text.color = "black", replicateGroupName = NULL,
 						statPairwiseType = "all_combinations", statPairwiseControl = NULL, statPairwiseSelected = NULL, 
 						statSignSymbols = list(cutpoints = c(0, 0.0001, 0.001, 0.01, 0.05, 1), 
@@ -315,21 +288,10 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 		allGroupswoRep = unique(c(x, colorGroupName, fillGroupName, facet.row, facet.col))
 		allGroupswRep = unique(c(allGroupswoRep, replicateGroupName))
 		
-		#Transforming data
-		transformFun = match.fun(data.transform$method)
-		transformFormulaFun = match.fun(paste0(data.transform$method, "Formula"))
-		if(!udunits2::ud.are.convertible(default.y.Unit, y.unit)){
-			y.unit = default.y.Unit
-			#TODO warn about this?
-		}
-		if(!is.factor(dataTracks[[y]])){
-			converted = udunits2::ud.convert(dataTracks[[y]], default.y.Unit, y.unit)
-		}else{
-			converted = dataTracks[[y]]
-		}
-		dataTracks[[y]] = transformFun(converted, data.transform$parameter)
-		attr(dataTracks[[y]], "unit") = y.unit
-		#browser()
+		# Transforming data
+		dataTracks = data_transform(dataTracks, y, data.y.transform, default.y.Unit, y.unit)
+		ytransformFormulaFun = data.y.transform$formula_func()
+		
 		if(!is.factor(dataTracks[[y]])){
 			dataRange = c(min(dataTracks[[y]]), max(dataTracks[[y]]))
 		}else{
@@ -339,8 +301,8 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 		if(is.null(y.lab)){
 			y.labDisp = ""
 		}else{
-			y.labDisp = TeX(paste0(transformFormulaFun(y.lab, data.transform$parameter), 
-								   " \\[", transformFormulaFun(y.unit, data.transform$parameter), "\\]"))
+			y.labDisp = TeX(paste0(ytransformFormulaFun(y.lab, data.y.transform$parameter()), 
+								   " \\[", ytransformFormulaFun(y.unit, data.y.transform$parameter()), "\\]"))
 		}
 		
 		#if(!is.null(unit)){  ud.convert(tracks$TRACK_MEAN_SPEED, "μm/sec", "μm/h")
@@ -642,7 +604,7 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 								 stat.label = input$stat_label_In, hide.ns = input$stat_hidens_In, 
 								 multiple.stat.method = input$multiple_stat_method_In, 
 								 pairwise.stat.method = input$pairwise_stat_method_In, 
-								 data.transform = transform(),
+								 data.y.transform = y_transform,
 								 statPairwiseType = input$stat_comparison_type_In, 
 								 statPairwiseControl = input$stat_comparison_control_In, 
 								 statPairwiseSelected = statPairwiseSelectedPairs, 
@@ -704,7 +666,7 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 			# browser()
 			if(!is.null(tracks()) && !(is.null(input$y_In)) && !(input$y_In == "")){
 				#browser()
-				transformFun = match.fun(transform()$method)
+				transformFun = y_transform$func()
 				values = tracks()[[input$y_In]]
 				unit = attr(values, "unit")
 				
@@ -722,7 +684,7 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 				}
 				#browser()
 				if(!is.factor(values)){
-					values = transformFun(udunits2::ud.convert(values, unit, unitToConvert), transform()$parameter)
+					values = transformFun(udunits2::ud.convert(values, unit, unitToConvert), y_transform$parameter())
 					
 					#if()
 					pretty(values, 20)
@@ -760,13 +722,6 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 			if(!is.null(y)){
 				y[2] - y[1]
 			}
-		})
-		
-		transform = reactive({
-			# Data Transform with parameter
-			ns = session$ns
-			return(list(method = input$data_transform_In, 
-						parameter = input[[ns(paste(c("data", input$data_transform_In, "In"), collapse = "_"))]]))
 		})
 		
 		observe({updateSelectInput(session, "x_In", choices = choices$groupingsChoiceswithoutEmpty())})
@@ -836,6 +791,8 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 		debugging = debugging_server("debug")
 		
 		titles = titles_server("title")
+		
+		y_transform = data_transform_server("y")
 		
 		groupings_colors = groupings_colors_server("groupings_colors", choices)
 		
