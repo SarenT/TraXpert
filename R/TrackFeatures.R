@@ -179,7 +179,8 @@ track_features_UI = function(id, title, tabColor){
 			 			   		   ranges_units_labels(ns),
 			 			   		   specific_options(ns),
 			 			   		   debugging_UI(ns("debug"))
-			 			   )
+			 			   ),
+			 			   feature_schematics_UI(ns("feature_schematics"))
 			 		),
 			 		column(8, 
 			 			   plotOutput(outputId = ns("plotOut"), dblclick = "plotOut_dblclick", 
@@ -486,7 +487,7 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 		plot = setThemeBase(plot, is.dark, plot.subtitle.hjust, plot.subtitle.size, plot.subtitle.face, 
 							facet.label.fill.color, facet.text.face)
 		
-		plot = plot + coord_cartesian(ylim = y.range)
+		plot = plot + coord_trans(y = coord_trans_y$method(), ylim = y.range)
 		
 		if(benchmark) startTime = benchMark("Stats and theme", startTime)
 		if(verbose) cat("Stats and theme...\n")
@@ -781,6 +782,8 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 				return(list())
 			}
 		})
+		
+		feature_schematics_server("feature_schematics", feature = reactive({input$y_In}))
 		
 		plot_export_server("export", "Track Feature", plot)
 		

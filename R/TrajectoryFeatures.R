@@ -142,7 +142,9 @@ trajectory_features_UI = function(id, title, tabColor){
 			 			   		   transformations(),
 			 			   		   display_options(),
 			 			   		   debugging_UI(ns("debug"))
-			 			   )
+			 			   ),
+			 			   feature_schematics_UI(ns("feature_schematics_x")),
+			 			   feature_schematics_UI(ns("feature_schematics_y"))
 			 		),
 			 		column(8, 
 			 			   plotOutput(outputId = ns("plotOut")),
@@ -260,6 +262,17 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 		if(verbose) cat("Preparing names and expressions...\n")
 		
 		default.x.Unit = attr(dataTraj[[x]], "unit"); default.y.Unit = attr(dataTraj[[y]], "unit")
+		
+		dataTraj = dataTraj %>% filter(across(y, ~ !is.na(.)))
+		
+		# Issues wirh the log transformations
+		if(grepl("log", coord_trans_x$method())){
+			dataTraj = dataTraj %>% filter(across(x, ~ is.positive(.)))
+		}
+		
+		if(grepl("log", coord_trans_y$method())){
+			dataTraj = dataTraj %>% filter(across(y, ~ is.positive(.)))
+		}
 		
 		allGroupswoRep = unique(c(trackGlobalIDName, colorGroupName, facet.row, facet.col, shapeGroupName,
 								  lineTypeGroupName, fillGroupName, sizeVarName))
@@ -545,7 +558,7 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 		
 		plot = plot + guides(color = color.legend, alpha = alpha.legend)
 		
-		plot = plot + coord_cartesian(ylim = y.Range)
+		plot = plot + coord_trans(x = coord_trans_x$method(), y = coord_trans_y$method(), ylim = y.Range)
 		
 		if(verbose) cat("Theme...\n")
 		plot = setThemeBase(plot, is.dark, plot.subtitle.hjust, plot.subtitle.size, plot.subtitle.face, 
@@ -677,7 +690,7 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 								   step = getYStep(), value = c(getYMin(), getYMax()))})
 		
 		getYPretty = reactive({
-			if(!is.null(tracks()) && !(input$y_In == "")){
+			if(!is.null(trajectories()) && !(input$y_In == "")){
 				# browser()
 				transformFun = y_transform$func()
 				values = trajectories()[[input$y_In]]
@@ -735,6 +748,8 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 			}
 		})
 		
+		feature_schematics_server("feature_schematics_x", feature = reactive({input$x_In}))
+		feature_schematics_server("feature_schematics_y", feature = reactive({input$y_In}))
 		facet = facet_control_server("facet", choices)
 		plot_export_server("export", "Trajectory Feature", plot)
 		stat_details_server("stats", plot)

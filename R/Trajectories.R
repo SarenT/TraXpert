@@ -115,9 +115,8 @@ trajectories_UI = function(id, title, tabColor){
 			 			   		   ranges_units_labels(ns),
 			 			   		   display_options(ns),
 			 			   		   debugging_UI(ns("debug"))
-			 			   )
-			 			   
-			 			   
+			 			   ),
+			 			   feature_schematics_UI(ns("feature_schematics"))
 			 		),
 			 		column(8, 
 			 			   plotOutput(outputId = ns("plotOut")),
@@ -582,7 +581,7 @@ trajectories_server = function(id, data, features, tracks, trajectories, groupin
 								   choices = choices$groupingsChoiceswithEmptywithDoNotDisplay())})
 		observe({updateSelectInput(session, "replicate_In", choices = choices$groupingsChoiceswithEmpty())})
 		
-		
+		feature_schematics_server("feature_schematics", feature = reactive({input$xy_In}))
 		facet = facet_control_server("facet", choices)
 		plot_export_server("export", "Trajectory", plot)
 		debugging = debugging_server("debug")

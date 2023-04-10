@@ -1,3 +1,4 @@
+addResourcePath("images", directoryPath = "images")
 server = function(input, output, session) {
 	# source("functions.R")
 	
