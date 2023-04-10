@@ -32,7 +32,7 @@ track_features_UI = function(id, title, tabColor){
 			selectInput(ns("pairwise_stat_method_In"), "Test - Pairwise", 
 						choices = trackPairwiseStatChoices, 
 						selected = "wilcox.test"),
-			data_transform_UI(ns("y")),
+			data_transform_UI(ns("y"), "y"),
 			tipify(selectInput(ns("stat_label_In"), 
 							   "Stat. Label", 
 							   choices = statLabelChoices), 
