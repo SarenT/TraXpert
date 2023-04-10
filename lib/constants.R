@@ -19,7 +19,7 @@ trajFeaturesChoices = list(`Point Plot` = "point", `Jitter Plot` = "jitter", `Qu
 						   `Smooth Plot` = "smooth", `Line Plot` = "line", `Area Plot` = "area", `Step Plot` = "step")
 trackFeaturesChoices = list(`Bar Plot` = "bar", `Box Plot` = "box", `Dot Plot` = "dot", `Violin Plot` = "violin")
 featureDimensionChoices = list(`Position` = "POSITION", `Time` = "TIME", `N/A` = "NONE", `Velocity/Speed` = "VELOCITY", 
-							   `Length` = "LENGTH", `Angle` = "ANGLE")
+							   `Length` = "LENGTH", `Angle` = "ANGLE", Area = "AREA")
 trackMultipleStatChoices = list(`Do not perform` = "NONE", `ANOVA` = "anova", `Kruskal–Wallis Test` = "kruskal.test")
 trackPairwiseStatChoices = list(`Do not perform` = "NONE", `Student's t Test` = "t.test", 
 								`Wilcoxon/Mann-Whitney Test` = "wilcox.test")
@@ -121,50 +121,50 @@ trajFeats =
 						   "SPOT_SOURCE_ID", "SPOT_TARGET_ID", "EDGE_TIME", edgeLocationColumns, "VELOCITY", 
 						   "VELOCITY_AVG", "DISPLACEMENT", fixedPositionColumns, rotFixedPositionsColumns[1:3], 
 						   displacementColumns, "DISPLACEMENT_FIX", "SQUARE_DISPLACEMENT_FIX", "TURN_ANGLE",
-						   edgeDirectionColumns),#, edgePointSourceDirectionColumns),
+						   edgeDirectionColumns, "MEAN_SQUARE_DISPLACEMENT", "TAU"),#, edgePointSourceDirectionColumns),
 			   name = c("X", "Y", "Z", "T", "Frame", "Track ID", "Source spot ID", "Target spot ID", "Edge time", 
 			   		 "X Location", "Y Location", "Z Location", "Velocity", "Velocity (Avg)", "Displacement", 
 			   		 "X fixed at origin", "Y fixed at origin", "Z fixed at origin", "T fixed at origin", 
 			   		 "X fixed at origin and rotated", "Y fixed at origin and rotated", "Z fixed at origin and rotated",
 			   		 "X displacement", "Y displacement", "Z displacement", 
 			   		 "Displacement from origin", "Square of displacement from origin", "Turn angle",
-			   		 "Direction φ (XY)", "Direction θ (Z)"),#, 
+			   		 "Direction φ (XY)", "Direction θ (Z)", "Mean Square Displacement", "Tau"),#, 
 			   #"Direction to point source φ (XY)", "Direction to point source θ (Z)"),
 			   shortname = c("X", "Y", "Z", "T", "Frame", "Track ID", "Source ID", "Target ID", "T", "X", "Y", 
 			   			  "Z", "V", "V A", "D", "X fixed", "Y fixed", "Z fixed", "T fixed", 
 			   			  "X fixed rotated", "Y fixed rotated", "Z fixed rotated",
 			   			  "ΔX", "ΔY", "ΔZ",
 			   			  "Displacement", "Displacement squared", "Turn",
-			   			  "φ", "θ"),#, "φ (Point Source)", "θ (Point Source)"),
+			   			  "φ", "θ", "MSD", "τ"),#, "φ (Point Source)", "θ (Point Source)"),
 			   dimension = c("POSITION", "POSITION", "POSITION", "TIME", "NONE", "NONE", "NONE", "NONE", "TIME", 
 			   			  "POSITION", "POSITION", "POSITION", "VELOCITY", "VELOCITY", "LENGTH", "POSITION", "POSITION", 
 			   			  "POSITION", "TIME", "POSITION", "POSITION", "POSITION", "LENGTH", "LENGTH", "LENGTH",
-			   			  "LENGTH", "LENGTH", "ANGLE", "ANGLE", "ANGLE"),#, "ANGLE", "ANGLE"),
+			   			  "LENGTH", "LENGTH", "ANGLE", "ANGLE", "ANGLE", "AREA", "TIME"),#, "ANGLE", "ANGLE"),
 			   isint = c(FALSE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, 
 			   		  FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, 
-			   		  FALSE, FALSE, FALSE, FALSE),#, FALSE, FALSE),
+			   		  FALSE, FALSE, FALSE, FALSE, FALSE, FALSE),#, FALSE, FALSE),
 			   type = c("Spot", "Spot", "Spot", "Spot", "Spot", "Spot", "Edge", "Edge", "Edge", "Edge", 
 			   		 "Edge", "Edge", "Edge", "Edge", "Edge", "Spot", "Spot", "Spot", "Spot", "Spot", "Spot", 
-			   		 "Spot", "Edge", "Edge", "Edge", "Spot", "Spot", "Edge", "Spot", "Spot"))#, "Edge", "Edge"))
+			   		 "Spot", "Edge", "Edge", "Edge", "Spot", "Spot", "Edge", "Spot", "Spot", "Edge", "Edge"))#, "Edge", "Edge"))
 trackFeats = 
 	data.frame(feature = c("TRACK_ID", "TRACK_DURATION", "TRACK_DISPLACEMENT", trackLocationColumns, "TRACK_MEAN_SPEED", 
-						   "TRACK_MAX_SPEED", "TRACK_MIN_SPEED", "TRACK_STD_SPEED", "MEAN_SQUARE_DISPLACEMENT",
+						   "TRACK_MAX_SPEED", "TRACK_MIN_SPEED", "TRACK_STD_SPEED",
 						   "MEAN_ANGLE_TURN", trackDisplacementColumns),
 			   name = c("Track ID", "Duration of track", "Track displacement", "X Location", 
 			   		 "Y Location", "Z Location", "Mean velocity", "Maximal velocity", 
-			   		 "Minimal velocity", "Velocity standard deviation", "Mean Square Displacement",
+			   		 "Minimal velocity", "Velocity standard deviation", 
 			   		 "Mean angular change/turn", 
 			   		 "X Displacement", "Y Displacement", "Z Displacement"),
 			   shortname = c("Track ID", "Duration", "Displacement", "X", "Y", "Z", "Mean V", 
-			   			  "Max V", "Min V", "V std", "MSD", "Mean Turn", 
+			   			  "Max V", "Min V", "V std", "Mean Turn", 
 			   			  "ΔX", "ΔY", "ΔZ"),
 			   dimension = c("NONE", "TIME", "LENGTH", "POSITION", "POSITION", "POSITION", "VELOCITY", 
-			   			  "VELOCITY", "VELOCITY", "VELOCITY", "LENGTH", "ANGLE",  
+			   			  "VELOCITY", "VELOCITY", "VELOCITY", "ANGLE",  
 			   			  "LENGTH", "LENGTH", "LENGTH"),
 			   isint = c(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, 
-			   		  FALSE, FALSE, FALSE),
+			   		  FALSE, FALSE),
 			   type = c("Track", "Track", "Track", "Track", "Track", "Track", "Track", "Track", 
-			   		 "Track", "Track", "Track", "Track", "Track", "Track", "Track"))
+			   		 "Track", "Track", "Track", "Track", "Track", "Track"))
 featsStartEndPositions = 
 	data.frame(feature = c(startPositionColumns, endPositionColumns),
 			   name = c("Track Start X", "Track Start Y", "Track Start Z", "Track Start T",

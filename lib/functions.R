@@ -419,6 +419,28 @@ getTrackingFileType = function(files){
 	return(endings)
 }
 
+mean_square_displacement = function(df, tau, browse = F){
+	if(!release && browse) browser()
+	return((df %>% ungroup() %>% 
+				mutate(sqd = (lead(x, tau) - x)^2 + (lead(y, tau) - y)^2 + (lead(z, tau) - z)^2) %>% 
+				summarise(msd = sum(sqd, na.rm = T)/length(na.omit(sqd))))$msd)
+}
+
+mean_square_displacements = function(track_global_id, all_taus, t, x, y, z, verbose = F, browse = F){
+	if(verbose) cat("MSD on "); cat(unique(track_global_id)); cat("\n")
+	if(!release && browse) browser()
+	taus = t - t[1]
+	df = tibble(t = t, x = x, y = y, z = z, taus = taus)
+	# for(tau_i in 1:length(taus)){
+	df = df %>% rowwise() %>% 
+		mutate(msd = ifelse(taus %in% all_taus, mean_square_displacement(., taus, browse), NA)) %>% 
+		rename(TAU = taus, MEAN_SQUARE_DISPLACEMENT = msd) %>% 
+		select(TAU, MEAN_SQUARE_DISPLACEMENT)
+	
+	# }
+	return(df)
+}
+
 #' Generates a group colors for a grouping depending on the number of groups and the order of the grouping
 #'
 #' @param i Order/index of the grouping
@@ -871,13 +893,14 @@ processData = function(dataList, groups, groupings, updateProgress = NULL, initi
 		}
 		
 		# Calculating MSD
-		tracks = tracks %>%
-			left_join(trajectories %>% group_by(track_global_id) %>% 
-					  	summarise(MEAN_SQUARE_DISPLACEMENT = mean((lead(DISPLACEMENT_FIX) - DISPLACEMENT_FIX)^2, 
-					  													 na.rm = TRUE)), 
-					  by = "track_global_id")
+		all_position_t_fix = unique(trajectories$POSITION_T_FIX)
+		n_tau = min(10, length(all_position_t_fix))
+		all_taus = all_position_t_fix[seq(1, length(all_position_t_fix), floor(length(all_position_t_fix) / n_tau))]
+		trajectories = trajectories %>% group_by(track_global_id) %>% 
+			mutate(mean_square_displacements(track_global_id, all_taus, 
+											 POSITION_T, POSITION_X, POSITION_Y, POSITION_Z))
 		
-		msdFeats = trackFeats %>% filter(feature == "MEAN_SQUARE_DISPLACEMENT")
+		msdFeats = trajFeats %>% filter(feature %in% c("MEAN_SQUARE_DISPLACEMENT", "TAU"))
 		features = appendNewFeatures(features, msdFeats$feature, msdFeats$name, msdFeats$shortname, msdFeats$dimension,
 									 msdFeats$isint, msdFeats$type, groups, groupings$names)
 		
@@ -1298,13 +1321,15 @@ setUnits = function(data, dims, units){
 	for(i in 1:nrow(dims)){
 		dim = as.character(dims$dimension[i])
 		
-		if(dim == "POSITION" || dim == "LENGTH"){
+		if(dim == featureDimensionChoices$Position || dim == featureDimensionChoices$Length){
 			unitstr = spatialUnit
-		}else if(dim == "TIME"){
+		}else if(dim == featureDimensionChoices$Area){
+			unitstr = paste0(spatialUnit,"^2")
+		}else if(dim == featureDimensionChoices$Time){
 			unitstr = timeUnit
-		}else if(dim == "ANGLE"){
+		}else if(dim == featureDimensionChoices$Angle){
 			unitstr = "radian"
-		}else if(dim == "VELOCITY"){
+		}else if(dim == featureDimensionChoices$`Velocity/Speed`){
 			#browser()
 			unitstr = paste0(spatialUnit, "/", timeUnit)
 		}else{
