@@ -42,23 +42,9 @@ point_source_server = function(id, data){
 		
 		observeEvent(input$calculate, {
 			if(!release && input$browse) browser()
-			initializeProgress = function(max, message){
-				progress <<- shiny::Progress$new(max = max)
-				if(!is.null(message)){
-					progress$set(message = message, value = 0)
-				}else{
-					progress$set(value = 0)
-				}
-			}
-			updateProgress = function(value, detail = NULL) {
-				if(is.null(detail)){progress$set(value = value)}else{progress$set(value = value, detail = detail)}
-			}
-			closeProgress = function(){progress$close()}
-			
 			dataList = data()
 			if(sum(is.na(dataList$files[pointSourceColumns])) == 0){
-				data(pointSource(dataList, updateProgress, initializeProgress, closeProgress, 
-								 browse = !release && input$browse))
+				data(pointSource(dataList, get_progress_functions(), browse = !release && input$browse))
 			}
 		})
 		

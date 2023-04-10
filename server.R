@@ -44,7 +44,17 @@ server = function(input, output, session) {
 			version(0)
 		}
 		
-		dataSession = dataSessionVersionUpgrade(dataSession, version())
+		upgrade = dataSessionVersionUpgrade(dataSession, version(), get_progress_functions())
+		if(upgrade$error){
+			#TODO
+			return()
+		}else{
+			if(upgrade$upgraded){
+				showModal(modalDialog(title = "File version upgrade", 
+									  "Session file version is upgraded. Download again to keep this new version."))
+			}
+			dataSession = upgrade$dataSession
+		}
 		
 		if(!is.null(dataSession$groupings)){
 			groupings(dataSession$groupings)
@@ -92,7 +102,17 @@ server = function(input, output, session) {
 			version(0)
 		}
 		
-		dataSession = dataSessionVersionUpgrade(dataSession, version())
+		upgrade = dataSessionVersionUpgrade(dataSession, version(), get_progress_functions())
+		if(upgrade$error){
+			#TODO
+			return()
+		}else{
+			if(upgrade$upgraded){
+				showModal(modalDialog(title = "File version upgrade", 
+									  "Session file version is upgraded. Download again to keep this new version."))
+			}
+			dataSession = upgrade$dataSession
+		}
 		
 		if(!is.null(dataSession$groupings)){
 			groupings(dataSession$groupings)
@@ -145,14 +165,7 @@ server = function(input, output, session) {
 		
 		uploadedFiles = files()
 		if(!is.null(uploadedFiles)){
-			initializeProgress = function(max, message){
-				progress <<- shiny::Progress$new(max = max)
-				if(!is.null(message)){
-					progress$set(message = message, value = 0)
-				}else{
-					progress$set(value = 0)
-				}
-			}
+			progress = get_progress_functions()
 			
 			userUnitInput = function(failed = FALSE){
 				modalDialog(
@@ -178,20 +191,13 @@ server = function(input, output, session) {
 			# Close the progress when this reactive exits (even if there's an error)
 			#on.exit({progress$close()})
 			
-			updateProgress = function(value, detail = NULL) {
-				if(is.null(detail)){progress$set(value = value)}else{progress$set(value = value, detail = detail)}
-			}
-			
-			closeProgress = function(){progress$close()}
-			
 			groupingsDF = groupings()$groupings
 			groupsDF = groupings()$groups
 			if(any(endsWith(uploadedFiles$datapath, suffix = ".csv") | 
 				   endsWith(uploadedFiles$datapath, suffix = ".txt"))){
 				parseParameters(list(files = uploadedFiles$datapath, groupings = groupingsDF, groups = groupsDF, 
 									 fileNames = uploadedFiles$name, 
-									 updateProgress = updateProgress, closeProgress = closeProgress, 
-									 initializeProgress = initializeProgress, 
+									 progress = progress, 
 									 browse = browse))
 				observeEvent(input$userUnitInputOKIn, {
 					# Check that data object exists and is data frame.
@@ -201,12 +207,11 @@ server = function(input, output, session) {
 						userUnits = list(pixelWidth = input$pixelWidthIn, pixelHeight = input$pixelHeightIn, 
 										 voxelThickness = input$voxelThicknessIn, 
 										 frameIntervall = input$frameIntervallIn)
-						dataDF = parseFiles(uploadedFiles, groupingsDF, groupsDF, updateProgress, 
-											closeProgress, initializeProgress, browse = browse, 
+						dataDF = parseFiles(uploadedFiles, groupingsDF, groupsDF, progress, browse = browse, 
 											calibrationUnits = userUnits)
 						if(!is.null(dataDF)){
-							data(processData(dataDF, groupsDF, groupingsDF, updateProgress, initializeProgress, 
-											 closeProgress, recalculate = recalculate, browse = browse))
+							data(processData(dataDF, groupsDF, groupingsDF, progress, recalculate = recalculate, 
+											 browse = browse))
 							
 						}else{
 							data(NULL)
@@ -218,10 +223,9 @@ server = function(input, output, session) {
 				})
 				showModal(userUnitInput())
 			}else{
-				dataDF = parseFiles(uploadedFiles, groupingsDF, groupsDF, updateProgress, 
-									closeProgress, initializeProgress, recalculate = recalculate, browse = browse)
-				data(processData(dataDF, groupsDF, groupingsDF, updateProgress, initializeProgress, closeProgress, 
-								 recalculate = recalculate, browse = browse))
+				dataDF = parseFiles(uploadedFiles, groupingsDF, groupsDF, progress, recalculate = recalculate, 
+									browse = browse)
+				data(processData(dataDF, groupsDF, groupingsDF, progress, recalculate = recalculate, browse = browse))
 				#addClass(selector = "#tabs li a[data-value = tab1]", class = 'showtab')
 				#browser()
 				showTab(inputId = tabsID, target = titleTracks)

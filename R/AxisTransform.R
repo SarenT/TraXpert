@@ -5,7 +5,7 @@ axis_transform_UI = function(id, label, col_width = 12){
 		selectInput(ns("method"), paste0("Transform axis scale (", label, ") with"), 
 					choices = scaleTransformations, selected = "noneTransform"),
 		"Transforms the scale for display only. This does not affect statistics and other calculations.",
-		"bottom", "top"))
+		"top", "hover"))
 }
 
 axis_transform_server = function(id){

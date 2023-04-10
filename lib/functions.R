@@ -66,6 +66,29 @@ safeSelect = function(choices, index = 1){
 	}
 }
 
+#' Returns a set of functions to show progress
+#'
+#' @return list(init, update, close)
+#' @export
+#'
+#' @examples
+get_progress_functions = function(){
+	initializeProgress = function(max, message){
+		progress <<- shiny::Progress$new(max = max)
+		if(!is.null(message)){
+			progress$set(message = message, value = 0)
+		}else{
+			progress$set(value = 0)
+		}
+	}
+	updateProgress = function(value, detail = NULL) {
+		if(is.null(detail)){progress$set(value = value)}else{progress$set(value = value, detail = detail)}
+	}
+	
+	closeProgress = function(){progress$close()}
+	return(list(init = initializeProgress, update = updateProgress, close = closeProgress))
+}
+
 #' Checks if the candidate var name is suitable to be a var name.
 #'
 #' @param names Name to be checked
@@ -419,26 +442,45 @@ getTrackingFileType = function(files){
 	return(endings)
 }
 
-mean_square_displacement = function(df, tau, browse = F){
+mean_square_displacement = function(x, y, z, taus, all_taus, browse = F){
 	if(!release && browse) browser()
-	return((df %>% ungroup() %>% 
-				mutate(sqd = (lead(x, tau) - x)^2 + (lead(y, tau) - y)^2 + (lead(z, tau) - z)^2) %>% 
-				summarise(msd = sum(sqd, na.rm = T)/length(na.omit(sqd))))$msd)
+	taus = as.integer(taus)
+	inds = which(taus %in% all_taus)
+	# return((df %>% ungroup() %>% 
+	# 			mutate(sqd = ) %>% 
+	# 			summarise(msd = sum(sqd, na.rm = T)/length(na.omit(sqd))))$msd)
+	select_msds = 
+		unlist(
+			lapply(taus[inds], 
+				   function(tau) {
+				   	sum((lead(x, tau) - x)^2 + (lead(y, tau) - y)^2 + (lead(z, tau) - z)^2, na.rm = T)/(length(x) - tau)
+				   }
+			))
+	msds = rep(NA, length(taus))
+	msds[inds] = select_msds
+	return(msds)
 }
 
-mean_square_displacements = function(track_global_id, all_taus, t, x, y, z, verbose = F, browse = F){
-	if(verbose) cat("MSD on "); cat(unique(track_global_id)); cat("\n")
-	if(!release && browse) browser()
-	taus = t - t[1]
-	df = tibble(t = t, x = x, y = y, z = z, taus = taus)
-	# for(tau_i in 1:length(taus)){
-	df = df %>% rowwise() %>% 
-		mutate(msd = ifelse(taus %in% all_taus, mean_square_displacement(., taus, browse), NA)) %>% 
-		rename(TAU = taus, MEAN_SQUARE_DISPLACEMENT = msd) %>% 
-		select(TAU, MEAN_SQUARE_DISPLACEMENT)
-	
-	# }
-	return(df)
+#' Calculates all MSDs along equally spaced delays/taus by the given number of delays
+#'
+#' @param trajectories 
+#' @param max_taus 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+calculate_mean_square_displacements = function(trajectories, max_taus = 10){
+	all_position_t_fix = unique(trajectories$POSITION_T_FIX)
+	n_tau = min(max_taus, length(all_position_t_fix))
+	all_taus = all_position_t_fix[seq(1, length(all_position_t_fix), floor(length(all_position_t_fix) / n_tau))]
+	# browser()
+	trajectories = trajectories %>% group_by(track_global_id) %>% 
+		mutate(TAU = POSITION_T - first(POSITION_T)) %>%
+		mutate(MEAN_SQUARE_DISPLACEMENT = mean_square_displacement(POSITION_X, POSITION_Y, POSITION_Z, TAU, all_taus))
+	# mutate(mean_square_displacements(track_global_id, all_taus, 
+	# 								 POSITION_T, POSITION_X, POSITION_Y, POSITION_Z))
+	return(trajectories)
 }
 
 #' Generates a group colors for a grouping depending on the number of groups and the order of the grouping
@@ -674,8 +716,7 @@ toCardinal = function(angles, directionCat, name, browse = FALSE){
 #' @param recalculate Recalculation option
 #' @param browse 
 #' @param updateProgress update progress function
-#' @param closeProgress close progress function
-#' @param initializeProgress initialize progress function
+#' @param progress set of progress functions
 #' @param ... 
 #'
 #' @return Returns parsed files in a data frame
@@ -683,8 +724,7 @@ toCardinal = function(angles, directionCat, name, browse = FALSE){
 #' @export
 #'
 #' @examples
-parseFiles = function(filesDF, groupings, groups, recalculate = FALSE, browse = 0, 
-						updateProgress = NULL, closeProgress = NULL, initializeProgress = NULL, ...) {
+parseFiles = function(filesDF, groupings, groups, recalculate = FALSE, browse = 0, progress = list(), ...) {
 	
 	#browser()
 	# Generating file names by first creating all permutations
@@ -717,8 +757,8 @@ parseFiles = function(filesDF, groupings, groups, recalculate = FALSE, browse = 
 		tracks = data.frame()
 		fileswUnits = data.frame() 
 		
-		if(is.function(initializeProgress) && is.function(updateProgress)){
-			initializeProgress(message = "Parsing TrackMate files...", 
+		if(is.function(progress$init) && is.function(progress$update)){
+			progress$init(message = "Parsing TrackMate files...", 
 							   max = length(files))
 		}
 		
@@ -726,8 +766,8 @@ parseFiles = function(filesDF, groupings, groups, recalculate = FALSE, browse = 
 		for(f in 1:length(files)){
 			filePath = files[f]
 			
-			if(is.function(updateProgress)){
-				updateProgress(value = f - 1, detail = paste0("Parsing ", fileNames[f], "..."))
+			if(is.function(progress$update)){
+				progress$update(value = f - 1, detail = paste0("Parsing ", fileNames[f], "..."))
 			}
 			
 			groupText = paste(data.frame(lapply(groups[f, ], as.character), stringsAsFactors=FALSE), collapse = " | ")
@@ -753,7 +793,7 @@ parseFiles = function(filesDF, groupings, groups, recalculate = FALSE, browse = 
 			tracks = plyr::rbind.fill(tracks, fileData$trks)
 			trajectories = plyr::rbind.fill(trajectories, fileData$trajs)
 			
-			if(is.function(updateProgress)){updateProgress(value = f, detail = paste0("Done ", fileNames[f], "..."))}
+			if(is.function(progress$update)){progress$update(value = f, detail = paste0("Done ", fileNames[f], "..."))}
 			
 			cat(paste("Reading", groupText, "finished."));cat("\n")
 		}
@@ -769,7 +809,7 @@ parseFiles = function(filesDF, groupings, groups, recalculate = FALSE, browse = 
 		features[features$type == "Edge" & features$feature == "MANUAL_COLOR", ]$feature = "MANUAL_EDGE_COLOR"
 	}
 	
-	if(is.function(closeProgress)){closeProgress()}
+	if(is.function(progress$close)){progress$close()}
 	return(list(tracks = tracks, trajectories = trajectories, features = features, files = fileswUnits))
 }
 
@@ -778,9 +818,7 @@ parseFiles = function(filesDF, groupings, groups, recalculate = FALSE, browse = 
 #' @param dataList list of data frames (core data structure)
 #' @param groups data frame typically \code{groupings$groups}
 #' @param groupings data frame typically \code{groupings$groupings}
-#' @param updateProgress update progress function
-#' @param initializeProgress initialize progress function
-#' @param closeProgress close progress function
+#' @param progress set of progress functions
 #' @param recalculate Recalculate option
 #' @param browse 
 #' @param benchmark 
@@ -789,8 +827,8 @@ parseFiles = function(filesDF, groupings, groups, recalculate = FALSE, browse = 
 #' @export
 #'
 #' @examples
-processData = function(dataList, groups, groupings, updateProgress = NULL, initializeProgress = NULL, 
-					   closeProgress = NULL, recalculate = FALSE, browse = 0, benchmark = TRUE){
+processData = function(dataList, groups, groupings, progress = list(), recalculate = FALSE, 
+					   browse = 0, benchmark = TRUE){
 	if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 	if(benchmark) startTime = benchMark()
 	# Getting data frames
@@ -815,8 +853,8 @@ processData = function(dataList, groups, groupings, updateProgress = NULL, initi
 	trajectories$track_global_id = paste0(trajectories$group_id, "_", trajectories$TRACK_ID)
 	#trajectories$track_global_id = paste0(trajectories$group_part_id, "_", trajectories$TRACK_ID)
 	
-	if(is.function(initializeProgress) && is.function(updateProgress)){
-		initializeProgress(message = "Processing tracks...", max = length(unique(trajectories$track_global_id)))
+	if(is.function(progress$init) && is.function(progress$update)){
+		progress$init(message = "Processing tracks...", max = length(unique(trajectories$track_global_id)))
 	}
 	if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 	tracks = tracks %>% group_by(.dots = paste0("`", c(as.character(groupings$names),# "Part", 
@@ -893,12 +931,7 @@ processData = function(dataList, groups, groupings, updateProgress = NULL, initi
 		}
 		
 		# Calculating MSD
-		all_position_t_fix = unique(trajectories$POSITION_T_FIX)
-		n_tau = min(10, length(all_position_t_fix))
-		all_taus = all_position_t_fix[seq(1, length(all_position_t_fix), floor(length(all_position_t_fix) / n_tau))]
-		trajectories = trajectories %>% group_by(track_global_id) %>% 
-			mutate(mean_square_displacements(track_global_id, all_taus, 
-											 POSITION_T, POSITION_X, POSITION_Y, POSITION_Z))
+		trajectories = calculate_mean_square_displacements(trajectories)
 		
 		msdFeats = trajFeats %>% filter(feature %in% c("MEAN_SQUARE_DISPLACEMENT", "TAU"))
 		features = appendNewFeatures(features, msdFeats$feature, msdFeats$name, msdFeats$shortname, msdFeats$dimension,
@@ -958,7 +991,7 @@ processData = function(dataList, groups, groupings, updateProgress = NULL, initi
 	tracks = setUnits(tracks, features[features$type == "Track", ], files)
 	trajectories = setUnits(trajectories, features[features$type == "Spot" | features$type == "Edge", ], files)
 	dataList$tracks = tracks; dataList$trajectories = trajectories; dataList$features = features; dataList$files = files
-	if(is.function(closeProgress)){closeProgress()}
+	if(is.function(progress$close)){progress$close()}
 	return(dataList)
 }
 
@@ -1041,20 +1074,18 @@ angleRemap = function(theta){
 #' Calculates point source directionalities of the particles
 #'
 #' @param dataList List of data frames \code{list(tracks, trajectories, files, features)}
-#' @param updateProgress 
-#' @param initializeProgress 
-#' @param closeProgress 
+#' @param progress
 #' @param browse For debugging purposes
 #'
 #' @return Returns dataList with additional point source data
 #' @export
 #'
 #' @examples
-pointSource = function(dataList, updateProgress = NULL, initializeProgress = NULL, closeProgress = NULL, browse = 0){
+pointSource = function(dataList, progress = list(), browse = 0){
 	if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 	tracks = dataList$tracks; trajectories = dataList$trajectories; files = dataList$files; features = dataList$features
-	if(is.function(initializeProgress) && is.function(updateProgress)){
-		initializeProgress(message = "Calculating point source directionalities...", max = 1)
+	if(is.function(progress$init) && is.function(progress$update)){
+		progress$init(message = "Calculating point source directionalities...", max = 1)
 	}
 	suppressWarnings({
 		trajsPS = trajectories %>% 
@@ -1093,8 +1124,8 @@ pointSource = function(dataList, updateProgress = NULL, initializeProgress = NUL
 					  			  											  na.rm = TRUE)), 
 					  by = "track_global_id", suffix = c("", ".y")) %>% select(-ends_with(".y"))
 		
-		if(is.function(initializeProgress) && is.function(updateProgress)){
-			updateProgress(detail = "Point source directons calculated...", value = 1)
+		if(is.function(progress$init) && is.function(progress$update)){
+			progress$update(detail = "Point source directons calculated...", value = 1)
 		}
 		
 		trajectories$EDGE_DIRECTION_POINT_SOURCE_PHI = trajsPS$EDGE_DIRECTION_POINT_SOURCE_PHI %% (2 * pi)
@@ -1147,16 +1178,14 @@ pointSource = function(dataList, updateProgress = NULL, initializeProgress = NUL
 	})
 	dataList$tracks = tracks; dataList$trajectories = trajectories; dataList$features = features; dataList$files = files
 	
-	if(is.function(closeProgress)){closeProgress()}
+	if(is.function(progress$close)){progress$close()}
 	return(dataList)
 }
 
 #' Rotates tracks
 #'
 #' @param dataList List of data frames \code{list(tracks, trajectories, files, features)}
-#' @param updateProgress 
-#' @param initializeProgress 
-#' @param closeProgress 
+#' @param progress
 #' @param browse 
 #' @param rotation_fix Angle to fix directionalities to. This angle will be the new 0° in the rotated tracks (XY)
 #' @param rotation_z_fix Angle to fix directionalities to. This angle will be the new 0° in the rotated tracks (Z)
@@ -1165,13 +1194,13 @@ pointSource = function(dataList, updateProgress = NULL, initializeProgress = NUL
 #' @export
 #'
 #' @examples
-rotateTracks = function(dataList, updateProgress = NULL, initializeProgress = NULL, closeProgress = NULL, browse = 0, 
+rotateTracks = function(dataList, progress = list(), browse = 0, 
 			 rotation_fix = 0, rotation_z_fix = 0){
 	if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 	# Getting data frames
 	tracks = dataList$tracks; trajectories = dataList$trajectories; files = dataList$files; features = dataList$features
-	if(is.function(initializeProgress) && is.function(updateProgress)){
-		initializeProgress(message = "Rotating tracks...", max = length(unique(trajectories$track_global_id)))
+	if(is.function(progress$init) && is.function(progress$update)){
+		progress$init(message = "Rotating tracks...", max = length(unique(trajectories$track_global_id)))
 	}
 	
 	cat("Calculating rotations")
@@ -1193,7 +1222,7 @@ rotateTracks = function(dataList, updateProgress = NULL, initializeProgress = NU
 	trajectories$POSITION_Z_FIX_ROT = r * cos(theta)
 	
 	dataList$tracks = tracks; dataList$trajectories = trajectories; dataList$features = features; dataList$files = files
-	if(is.function(closeProgress)){closeProgress()}
+	if(is.function(progress$close)){progress$close()}
 	return(dataList)
 }
 
@@ -1969,9 +1998,7 @@ parseChemotaxisToolFile = function(filePath, groupText, fileGroup, recalculate =
 #' @examples
 parseImarisXLSXFile = function(filePath, groupText, fileGroup, recalculate = FALSE, browse = 0){
 	if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
-#parseImarisFiles = function(files, groupings, groups, browse = 0, 
-#							updateProgress = NULL, fileNames = NULL, closeProgress = NULL, initializeProgress = NULL) {
-	#browser()
+	
 	sheets = excel_sheets(filePath)
 	cat("\t");cat(paste("Parsing trajectory features - position for", groupText));cat("\n")
 	essentialSheets = c("Position", "Time")
@@ -2342,34 +2369,86 @@ icon_list = function(x){
 #'
 #' @param dataSession 
 #' @param version 
+#' @param progress
+#' @return
+#' @export
+#'
+#' @examples
+dataSessionVersionUpgrade = function(dataSession, version, progress = list()){
+	upgraded = FALSE
+	if(version == 0){
+		upgraded = TRUE
+		if(is.function(progress$init)){
+			progress$init(message = "Upgrading from version 0 to 1...", max = 1)
+		}
+		
+		cat("Upgrading from version 0 to 1. Please download session file again. (Dummy upgrade)\n")
+		dataSession$version = 1
+		version = dataSession$version
+		if(is.function(progress$close)) progress$close()
+		cat("Upgrade complete\n")
+	}
+	
+	if(version == 1){
+		upgraded = TRUE
+		cat("Upgrading from version 1 to 2. Please download session file again. (MSD new calculation)\n")
+		if(is.function(progress$init)){
+			progress$init(message = "Upgrading from version 1 to 2...", max = 1)
+		}
+		# browser()
+		
+		if(is.character(dataSession$data$features$isint)){
+			dataSession$data$features$isint = as.logical(dataSession$data$features$isint)
+		}
+		
+		dataSession$data$features = dataSession$data$features %>% 
+			filter(!(feature == "MEAN_SQUARE_DISPLACEMENT" & type == "Track"))
+		trajFeats = trajFeats %>% filter(feature %in% c("MEAN_SQUARE_DISPLACEMENT", "TAU"))
+		for(i in 1:nrow(trajFeats)){
+			feat = trajFeats[i, ]$feature; featName = trajFeats[i, ]$name; featShortName = trajFeats[i, ]$shortname
+			featDimension = trajFeats[i, ]$dimension; featType = trajFeats[i, ]$type;
+			dataSession$data$features = appendNewFeatures(dataSession$data$features, feat, featName, featShortName, 
+														  featDimension, FALSE, featType, dataSession$groupings$groups, 
+														  dataSession$groupings$groupings$names)
+		}
+		
+		if("MEAN_SQUARE_DISPLACEMENT" %in% colnames(dataSession$data$tracks)){
+			dataSession$data$tracks = dataSession$data$tracks %>% select(-MEAN_SQUARE_DISPLACEMENT)
+		}
+		
+		dataSession$data$trajectories = calculate_mean_square_displacements(dataSession$data$trajectories)
+		# browser()
+		dataSession$data$trajectories = 
+			setUnits(dataSession$data$trajectories, dataSession$data$features %>% filter(type %in% c("Spot", "Edge")), 
+					 dataSession$data$files)
+		
+		dataSession$version = 2
+		version = dataSession$version
+		if(is.function(progress$close)) progress$close()
+		cat("Upgrade complete\n")
+	}
+	#Add new versions as separate if statements for stepwise adaptation for the newest version
+	
+	if(version == dataModelVersion){
+		return(list(dataSession = dataSession, upgraded = upgraded, error = FALSE))
+	}else{
+		#TODO error reporting
+		return(list(dataSession = NULL, upgraded = FALSE, error = TRUE))
+	}
+	
+}
+
+#' Checks if numbers are positive
+#'
+#' @param x array of numeric
 #'
 #' @return
 #' @export
 #'
 #' @examples
-dataSessionVersionUpgrade = function(dataSession, version){
-	if(version == 0){
-		cat("Upgrading from version 0 to 1. Please download session file again. (Dummy upgrade)\n")
-		dataSession$version = 1
-		version = dataSession$version
-	}
-	
-	if(version == 1){
-		cat("Upgrading from version 1 to 2. Please download session file again. (MSD new calculation)\n")
-		dataSession$version = 2
-		version = dataSession$version
-	}
-	#Add new versions as separate if statements for stepwise adaptation for the newest version
-	
-	if(version == dataModelVersion){
-		return(dataSession)
-	}else{
-		#TODO error reporting
-		return(NULL)
-	}
-	
+is.positive = function(x){
+	return(x > 0)
 }
-
 
 #' Generates a bucket list for the groupings to select from for pairwise comparisons
 #'
