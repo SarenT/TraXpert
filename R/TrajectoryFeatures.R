@@ -82,7 +82,11 @@ trajectory_features_UI = function(id, title, tabColor){
 					"y axis range. Slide the knobs or the line between the knobs to set what range to be displayed. You can also select an area and double click on the plot to set the range (only y axis selection is registered).", 
 					"top")), 
 				column(2, checkboxInput(ns("y_range_check_In"), "", value = TRUE))),
-				axis_labels_UI(ns("axis_labs"))
+				axis_labels_UI(ns("axis_labs")),
+				fluidRow(
+					axis_transform_UI(ns("axis_transform_x"), "x", 6),
+					axis_transform_UI(ns("axis_transform_y"), "y", 6)
+				)
 			)
 		)
 	}
@@ -91,8 +95,8 @@ trajectory_features_UI = function(id, title, tabColor){
 		bsCollapsePanel(
 			"Transformations", 
 			fluidPage(
-				data_transform_UI(ns("x"), "x"),
-				data_transform_UI(ns("y"), "y")
+				data_transform_UI(ns("data_transform_x"), "x"),
+				data_transform_UI(ns("data_transform_y"), "y")
 			)
 		)
 	}
@@ -175,7 +179,6 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 	#' @param shapeGroupName 
 	#' @param lineTypeGroupName 
 	#' @param sizeVarName 
-	#' @param coord_equal 
 	#' @param color.legend 
 	#' @param alpha.legend 
 	#' @param inverse 
@@ -227,7 +230,7 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 						 groupTracks = FALSE,
 						 shapeGroupName = NULL, lineTypeGroupName = NULL, sizeVarName = NULL, 
 						 #alphaGroupName = NULL, 
-						 coord_equal = TRUE, 
+						 coord_trans_x = NULL, coord_trans_y = NULL,
 						 color.legend = NULL, alpha.legend = NULL, #fill.legend = NULL, 
 						 inverse = FALSE, facet.row = NULL, facet.col = NULL, facet.wrap = FALSE,
 						 title = NA, subtitle = NULL,
@@ -260,6 +263,17 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 		if(verbose) cat("Preparing names and expressions...\n")
 		
 		default.x.Unit = attr(dataTraj[[x]], "unit"); default.y.Unit = attr(dataTraj[[y]], "unit")
+		
+		dataTraj = dataTraj %>% filter(across(y, ~ !is.na(.)))
+		
+		# Issues wirh the log transformations
+		if(grepl("log", coord_trans_x$method())){
+			dataTraj = dataTraj %>% filter(across(x, ~ is.positive(.)))
+		}
+		
+		if(grepl("log", coord_trans_y$method())){
+			dataTraj = dataTraj %>% filter(across(y, ~ is.positive(.)))
+		}
 		
 		allGroupswoRep = unique(c(trackGlobalIDName, colorGroupName, facet.row, facet.col, shapeGroupName,
 								  lineTypeGroupName, fillGroupName, sizeVarName))
@@ -545,7 +559,7 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 		
 		plot = plot + guides(color = color.legend, alpha = alpha.legend)
 		
-		plot = plot + coord_cartesian(ylim = y.Range)
+		plot = plot + coord_trans(x = coord_trans_x$method(), y = coord_trans_y$method(), ylim = y.Range)
 		
 		if(verbose) cat("Theme...\n")
 		plot = setThemeBase(plot, is.dark, plot.subtitle.hjust, plot.subtitle.size, plot.subtitle.face, 
@@ -601,6 +615,7 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 							 x.unit = axis_labs$x_unit(), y.unit = axis_labs$y_unit(), 
 							 y.Range = yRange,
 							 colorGroupName = colorGroup, fillGroupName = fillGroup, sizeVarName = sizeVar,
+							 coord_trans_x = x_axis_transform, coord_trans_y = y_axis_transform,
 							 lineTypeGroupName = lineTypeGroup, shapeGroupName = shapeGroup,
 							 groupings = groupings()$groupings, 
 							 facet.row = facetRowGroup, facet.col = facetColGroup, 
@@ -677,7 +692,7 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 								   step = getYStep(), value = c(getYMin(), getYMax()))})
 		
 		getYPretty = reactive({
-			if(!is.null(tracks()) && !(input$y_In == "")){
+			if(!is.null(trajectories()) && !(input$y_In == "")){
 				# browser()
 				transformFun = y_transform$func()
 				values = trajectories()[[input$y_In]]
@@ -738,8 +753,10 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 		facet = facet_control_server("facet", choices)
 		plot_export_server("export", "Trajectory Feature", plot)
 		stat_details_server("stats", plot)
-		x_transform = data_transform_server("x")
-		y_transform = data_transform_server("y")
+		x_transform = data_transform_server("data_transform_x")
+		y_transform = data_transform_server("data_transform_y")
+		x_axis_transform = axis_transform_server("axis_transform_x")
+		y_axis_transform = axis_transform_server("axis_transform_y")
 		debugging = debugging_server("debug")
 		dark_plot = dark_plot_server("dark")
 		titles = titles_server("title")

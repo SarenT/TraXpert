@@ -32,7 +32,7 @@ track_features_UI = function(id, title, tabColor){
 			selectInput(ns("pairwise_stat_method_In"), "Test - Pairwise", 
 						choices = trackPairwiseStatChoices, 
 						selected = "wilcox.test"),
-			data_transform_UI(ns("y")),
+			data_transform_UI(ns("data_transform_y"), "y"),
 			tipify(selectInput(ns("stat_label_In"), 
 							   "Stat. Label", 
 							   choices = statLabelChoices), 
@@ -84,6 +84,9 @@ track_features_UI = function(id, title, tabColor){
 					   	"y axis range. Slide the knobs or the line between the knobs to set what range to be displayed. You can also select an area and double click on the plot to set the range (only y axis selection is registered).", 
 					   	placement = "top")), 
 				column(2, checkboxInput(ns("y_range_check_In"), "", value = TRUE))
+			),
+			fluidRow(
+				axis_transform_UI(ns("axis_transform_y"), "y", 12)
 			)),
 			
 			axis_labels_UI(ns("axis_labs"), 
@@ -261,6 +264,7 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 						#statGroupName = NULL, 
 						stat.label = "..p.signif..", multiple.stat.method = NULL, pairwise.stat.method = NULL, 
 						hide.ns = FALSE, data.y.transform = y_transform,
+						coord_trans_y = NULL, 
 						stat.text.color = "black", replicateGroupName = NULL,
 						statPairwiseType = "all_combinations", statPairwiseControl = NULL, statPairwiseSelected = NULL, 
 						statSignSymbols = list(cutpoints = c(0, 0.0001, 0.001, 0.01, 0.05, 1), 
@@ -486,7 +490,7 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 		plot = setThemeBase(plot, is.dark, plot.subtitle.hjust, plot.subtitle.size, plot.subtitle.face, 
 							facet.label.fill.color, facet.text.face)
 		
-		plot = plot + coord_cartesian(ylim = y.range)
+		plot = plot + coord_trans(y = coord_trans_y$method(), ylim = y.range)
 		
 		if(benchmark) startTime = benchMark("Stats and theme", startTime)
 		if(verbose) cat("Stats and theme...\n")
@@ -605,6 +609,7 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 								 multiple.stat.method = input$multiple_stat_method_In, 
 								 pairwise.stat.method = input$pairwise_stat_method_In, 
 								 data.y.transform = y_transform,
+								 coord_trans_y = y_axis_transform,
 								 statPairwiseType = input$stat_comparison_type_In, 
 								 statPairwiseControl = input$stat_comparison_control_In, 
 								 statPairwiseSelected = statPairwiseSelectedPairs, 
@@ -792,7 +797,9 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 		
 		titles = titles_server("title")
 		
-		y_transform = data_transform_server("y")
+		y_transform = data_transform_server("data_transform_y")
+		
+		y_axis_transform = axis_transform_server("axis_transform_y")
 		
 		groupings_colors = groupings_colors_server("groupings_colors", choices)
 		

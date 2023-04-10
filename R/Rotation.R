@@ -32,27 +32,9 @@ rotation_UI = function(id, column_size = 4){
 rotation_server = function(id, data){
 	moduleServer(id, function(input, output, session){
 		observeEvent(input$rotateIn, {
-			initializeProgress = function(max, message){
-				progress <<- shiny::Progress$new(max = max)
-				if(!is.null(message)){
-					progress$set(message = message, value = 0)
-				}else{
-					progress$set(value = 0)
-				}
-			}
-			
-			# Close the progress when this reactive exits (even if there's an error)
-			#on.exit({progress$close()})
-			
-			updateProgress = function(value, detail = NULL) {
-				if(is.null(detail)){progress$set(value = value)}else{progress$set(value = value, detail = detail)}
-			}
-			
-			closeProgress = function(){progress$close()}
-			
 			dataDF = data()
 			
-			data(rotateTracks(dataDF, updateProgress, initializeProgress, closeProgress, 
+			data(rotateTracks(dataDF, get_progress_functions(),
 							  rotation_fix = input$processRotationFixIn, rotation_z_fix = input$processZRotationFixIn, 
 							  browse = !release && input$rotate_browse_In))
 		})
