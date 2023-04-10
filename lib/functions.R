@@ -2,18 +2,49 @@ source("lib/Black_Theme.R")
 
 # For left skewed data
 powerTransform = function(x, a = 1){return(x ^ a)}
-powerTransformFormula = function(x, a = 1){formula = paste0("$\\left(", x, "\\right)^{", a, "}$"); return(formula)}
+powerTransformFormula = 
+	function(x, a = 1){formula = paste0("$\\left(", x, "\\right)^{", round(a, 2), "}$"); return(formula)}
 # For right skewed data
 rootTransform = function(x, a = 1){return(x ^ (1/a))}
 rootTransformFormula = 
-	function(x, a = 1){formula = paste0("$\\left(", x, "\\right)^{", 1, "/", a, "}$"); return(formula)}
+	function(x, a = 1){formula = paste0("$\\left(", x, "\\right)^{", 1, "/", round(a, 2), "}$"); return(formula)}
 logTransform = function(x, a = 1){return(log(x, a))}
-logTransformFormula = function(x, a = 1){formula = paste0("$\\log_", a, "\\left(", x, "\\right)$"); return(formula)}
+logTransformFormula = 
+	function(x, a = 1){formula = paste0("$\\log_{", round(a, 2), "}\\left(", x, "\\right)$"); return(formula)}
 invTransform = function(x, a = 1){x = 1/x; x[is.infinite(x)] = 0; return(x)}
 invTransformFormula = 
-	function(x, a = 1){formula = paste0("$\\left(", 1, "/", x, "\\right)^{", a, "}$"); return(formula)}
+	function(x, a = 1){formula = paste0("$\\left(", 1, "/", x, "\\right)^{", round(a, 2), "}$"); return(formula)}
 noneTransform = function(x, a = 1){return(x)}
 noneTransformFormula = function(x, a = 1){return(x)}
+
+#' Transforms data in a specified column
+#'
+#' @param data data frame
+#' @param col column name
+#' @param transform transformation parameters (a list with method (e.g. logTransform = custom function with x, a 
+#' parameters) and parameter (e.g. base of log) elements)
+#' @param current_unit current unit
+#' @param new_unit unit to convert
+#'
+#' @return Returns a list of tr
+#' @export
+#'
+#' @examples
+data_transform = function(data, col, transform, current_unit, new_unit){
+	transformFun = transform$func()
+	if(!is.null(current_unit) && !is.null(new_unit) && !udunits2::ud.are.convertible(current_unit, new_unit)){
+		new_unit = current_unit
+		#TODO warn about this?
+	}
+	if(!is.factor(data[[col]])){
+		data = data %>% mutate(
+			across(col, ~ udunits2::ud.convert(., current_unit, new_unit)))
+	}
+	data = data %>% mutate(across(col, ~ transformFun(., transform$parameter())))
+	# browser()
+	attr(data[[col]], "unit") = new_unit
+	return(data)
+}
 
 
 #' Ensures error-free selection by checking if index is within the list., meaning that there are enough number of 
@@ -326,7 +357,7 @@ imarisImportTracks = function(tracks, trajectories, filePath, sheetName, exprs, 
 	}
 	return(tracks)
 }
-#' Convert unit of the variable name
+#' Converts unit of the variable name
 #' 
 #' @param defaultUnit A string (current unit)
 #' @param unit A string (unit to be converted to)

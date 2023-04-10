@@ -90,23 +90,9 @@ trajectory_features_UI = function(id, title, tabColor){
 	transformations = function(){
 		bsCollapsePanel(
 			"Transformations", 
-			selectInput(ns("data_transform_In"), "Transform data with", 
-						choices = dataTransformChoices, selected = "noneTransform"),
-			conditionalPanel("input.data_transform_In  == 'logTransform'", ns = ns,
-							 shinyWidgets::sliderTextInput(ns("data_logTransform_In"), "\\(\\log_a(x) \\) ... a", 
-							 							  choices = c(2, exp(1), 10), selected = exp(1))
-			),
-			conditionalPanel("input.data_transform_In  == 'powerTransform'", ns = ns,
-							 sliderInput(ns("data_powerTransform_In"), "\\(x^a\\) ... a", 
-							 			min = 2, max = 5, step = 1, value = 3)
-			),
-			conditionalPanel("input.data_transform_In  == 'rootTransform'", ns = ns,
-							 sliderInput(ns("data_rootTransform_In"), "\\(\\sqrt[a]{x}\\) ... a", 
-							 			min = 2, max = 5, step = 1, value = 3)
-			),
-			conditionalPanel("input.data_transform_In  == ''", ns = ns,
-							 sliderInput(ns("data_invTransform_In"), "", min = 1, max = 2, step = 1, value = 1),
-							 sliderInput(ns("data_noneTransform_In"), "", min = 1, max = 2, step = 1, value = 1)
+			fluidPage(
+				data_transform_UI(ns("x"), "x"),
+				data_transform_UI(ns("y"), "y")
 			)
 		)
 	}
@@ -162,7 +148,7 @@ trajectory_features_UI = function(id, title, tabColor){
 			 			   plotOutput(outputId = ns("plotOut")),
 			 			   stat_details_UI(ns("stats")),
 			 			   tags$style(type="text/css", "#stat_text_Out {white-space: pre-wrap;}"), hr(),
-			 			   actionButton(ns("plotIn"), label = "Plot Trajectory Festures"),
+			 			   actionButton(ns("plotIn"), label = "Plot Trajectory Features"),
 			 			   plot_export_UI(ns("export"))
 			 		)
 			 	)
@@ -172,7 +158,6 @@ trajectory_features_UI = function(id, title, tabColor){
 }
 
 trajectory_features_server = function(id, data, features, tracks, trajectories, groupings, choices){
-	
 	#' Plots trajectory features
 	#'
 	#' @param dataTraj trajectory features plot
@@ -237,29 +222,30 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 	#'
 	#' @examples
 	plot_data = function(dataTraj, x, y, type, trackGlobalIDName, groupings, x.unit = NULL, y.unit = NULL, 
-								y.Range = NULL,
-								fillGroupName = NULL, colorGroupName = NULL, #colorReverseOrder = FALSE, 
-								groupTracks = FALSE,
-								shapeGroupName = NULL, lineTypeGroupName = NULL, sizeVarName = NULL, 
-								#alphaGroupName = NULL, 
-								coord_equal = TRUE, 
-								color.legend = NULL, alpha.legend = NULL, #fill.legend = NULL, 
-								inverse = FALSE, facet.row = NULL, facet.col = NULL, facet.wrap = FALSE,
-								title = NA, subtitle = NULL,
-								#statGroupName = NULL, stat.label = "..p.signif..", stat.method = "wilcox.test", 
-								#hide.ns = FALSE, 
-								smooth.window = 1,
-								replicateGroupName = NULL, aggregate.fun = NULL, 
-								dispersion.fun = NULL, dispersion.type = NULL,
-								linesize = 1, pointsize = 1,
-								limitNTracks = FALSE, randomizeTrackSampling = FALSE,
-								trackReduced = 1, spotReduced = 1,
-								colorAlpha = 1.0, fillAlpha = 1.0, dispAlpha = 1.0, is.dark = FALSE, 
-								plot.subtitle.hjust = 0.5, plot.subtitle.size = 10, plot.subtitle.face = "italic",
-								h.line = TRUE, v.line = TRUE, panel.border = FALSE, panel.grid.major = FALSE,
-								facet.label.fill.color = "#FFFFFF00", facet.text.face = "bold", 
-								x.lab = NULL, y.lab = NULL, browse = FALSE, verbose = FALSE, benchmark = FALSE,
-								initializeProg = NULL, updateProg = NULL, closeProg = NULL){
+						 y.Range = NULL,
+						 fillGroupName = NULL, colorGroupName = NULL, #colorReverseOrder = FALSE, 
+						 groupTracks = FALSE,
+						 shapeGroupName = NULL, lineTypeGroupName = NULL, sizeVarName = NULL, 
+						 #alphaGroupName = NULL, 
+						 coord_equal = TRUE, 
+						 color.legend = NULL, alpha.legend = NULL, #fill.legend = NULL, 
+						 inverse = FALSE, facet.row = NULL, facet.col = NULL, facet.wrap = FALSE,
+						 title = NA, subtitle = NULL,
+						 #statGroupName = NULL, stat.label = "..p.signif..", stat.method = "wilcox.test", 
+						 #hide.ns = FALSE, 
+						 smooth.window = 1,
+						 data.x.transform = NULL, data.y.transform = NULL,
+						 replicateGroupName = NULL, aggregate.fun = NULL, 
+						 dispersion.fun = NULL, dispersion.type = NULL,
+						 linesize = 1, pointsize = 1,
+						 limitNTracks = FALSE, randomizeTrackSampling = FALSE,
+						 trackReduced = 1, spotReduced = 1,
+						 colorAlpha = 1.0, fillAlpha = 1.0, dispAlpha = 1.0, is.dark = FALSE, 
+						 plot.subtitle.hjust = 0.5, plot.subtitle.size = 10, plot.subtitle.face = "italic",
+						 h.line = TRUE, v.line = TRUE, panel.border = FALSE, panel.grid.major = FALSE,
+						 facet.label.fill.color = "#FFFFFF00", facet.text.face = "bold", 
+						 x.lab = NULL, y.lab = NULL, browse = FALSE, verbose = FALSE, benchmark = FALSE,
+						 initializeProg = NULL, updateProg = NULL, closeProg = NULL){
 		if(is.function(initializeProg) && is.function(updateProg)){
 			initializeProg(message = "Generating trajectory plot...", 
 						   max = 4)
@@ -278,6 +264,13 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 		allGroupswoRep = unique(c(trackGlobalIDName, colorGroupName, facet.row, facet.col, shapeGroupName,
 								  lineTypeGroupName, fillGroupName, sizeVarName))
 		allGroupswRep = unique(c(allGroupswoRep, replicateGroupName))
+		
+		# Transforming data
+		dataTraj = data_transform(dataTraj, x, data.x.transform, default.x.Unit, x.unit)
+		xtransformFormulaFun = data.x.transform$formula_func()
+		
+		dataTraj = data_transform(dataTraj, y, data.y.transform, default.y.Unit, y.unit)
+		ytransformFormulaFun = data.y.transform$formula_func()
 		
 		# Aggregation is required for subtitle but also limiting number of tracks for groups.
 		if(is.null(subtitle) || limitNTracks){
@@ -303,8 +296,9 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 					updateProg(value = 2, detail = "Aggregating data (2/3) (this may take some time)...")
 				}
 				# Aggregating groupings to count number of trackGlobalIDName in each group.
-				aggrNTracks = aggregate(reformulateT(allGroupswRep[!allGroupswRep %in% trackGlobalIDName], "."), 
-										data = aggrTracks, length)
+				aggrNTracks = aggrNTracks %>% 
+					group_by_at(allGroupswRep[!allGroupswRep %in% trackGlobalIDName]) %>% 
+					summarise_at(trackGlobalIDName, length)
 				
 			}
 			
@@ -383,18 +377,29 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 		if(is.null(y.unit)) y.unit = default.y.Unit
 		if(verbose) cat("x/y labels...\n")
 		
-		x.lab = paste0(x.lab, " [", x.unit, "]")
-		y.lab = paste0(y.lab, " [", y.unit, "]")
+		if(is.null(x.lab)){
+			x.labDisp = ""
+		}else{
+			x.labDisp = TeX(paste0(xtransformFormulaFun(gsub(" ", "~", x.lab), data.x.transform$parameter()), 
+								   " \\[", xtransformFormulaFun(x.unit, data.x.transform$parameter()), "\\]"))
+		}
+		
+		if(is.null(y.lab)){
+			y.labDisp = ""
+		}else{
+			y.labDisp = TeX(paste0(ytransformFormulaFun(gsub(" ", "~", y.lab), data.y.transform$parameter()), 
+								   " \\[", ytransformFormulaFun(y.unit, data.y.transform$parameter()), "\\]"))
+		}
 		
 		if(verbose) cat("Generating the plot...\n")
 		
-		xVar = unitConversion(defaultUnit = default.x.Unit, unit = x.unit, x)
+		xVar = sym(x)
 		
 		if(smooth.window == 1){
-			yVar = unitConversion(defaultUnit = default.y.Unit, unit = y.unit, y)
+			yVar = sym(y)
 		}else{
 			dataTraj = dataTraj %>% mutate_at(y, ~smoothLineWithNA(., smooth.window))
-			yVar = unitConversion(defaultUnit = default.y.Unit, unit = y.unit, y)
+			yVar = sym(y)
 		}
 		
 		if(groupTracks){
@@ -414,7 +419,6 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 			}
 			
 			dataTrajAggr = aggregate(reformulateT(aggrGroups, y), data = dataTraj, aggregate.fun)
-			
 			
 			if(is.function(dispersion.fun)){
 				dataTrajDisp = aggregate(reformulateT(aggrGroups, y), data = dataTraj, dispersion.fun)
@@ -453,7 +457,7 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 						   #alpha = getGLab(groupings, alphaGroupName), 
 						   shape = getGLab(groupings, shapeGroupName), 
 						   linetype = getGLab(groupings, lineTypeGroupName), size = getGLab(groupings, sizeVarName), 
-						   x = x.lab, y = y.lab)
+						   x = x.labDisp, y = y.labDisp)
 		
 		color = "black"
 			if(is.dark) color = "white"
@@ -593,37 +597,32 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 			
 			if(input$smooth_In){smoothWindow = input$smooth_windowIn}else{smoothWindow = 1}
 			plot = plot_data(dataTraj = trajectories(), x = input$x_In, y = input$y_In, 
-									type = input$type_In, trackGlobalIDName = "track_global_id",
-									x.unit = axis_labs$x_unit(), y.unit = axis_labs$y_unit(), 
-									y.Range = yRange,
-									colorGroupName = colorGroup, fillGroupName = fillGroup, sizeVarName = sizeVar,
-									lineTypeGroupName = lineTypeGroup, shapeGroupName = shapeGroup,
-									groupings = groupings()$groupings, 
-									facet.row = facetRowGroup, facet.col = facetColGroup, 
-									facet.wrap = facet$wrap(),
-									title = titles$title, subtitle = titles$subtitle, 
-									replicateGroupName = replicateGroup, 
-									aggregate.fun = aggregate.fun, 
-									dispersion.fun = dispersion.fun, dispersion.type = dispersion.fun.type,
-									smooth.window = smoothWindow,
-									dispAlpha = input$disp_alpha_In, colorAlpha = input$color_alpha_In, 
-									x.lab = xlab, y.lab = ylab, is.dark = dark_plot(),
-									facet.text.face = facet$label_face(), 
-									facet.label.fill.color = facet$label_fill_color(),
-									plot.subtitle.hjust = titles$subtitle_hjust, 
-									plot.subtitle.size = titles$subtitle_size, 
-									plot.subtitle.face = titles$subtitle_text_style, 
-									linesize = input$line_size_In,
-									pointsize = input$point_size_In,
-									browse = debugging$browse, benchmark = debugging$benchmark, 
-									verbose = debugging$verbose)
+							 type = input$type_In, trackGlobalIDName = "track_global_id",
+							 x.unit = axis_labs$x_unit(), y.unit = axis_labs$y_unit(), 
+							 y.Range = yRange,
+							 colorGroupName = colorGroup, fillGroupName = fillGroup, sizeVarName = sizeVar,
+							 lineTypeGroupName = lineTypeGroup, shapeGroupName = shapeGroup,
+							 groupings = groupings()$groupings, 
+							 facet.row = facetRowGroup, facet.col = facetColGroup, 
+							 facet.wrap = facet$wrap(),
+							 title = titles$title, subtitle = titles$subtitle, 
+							 replicateGroupName = replicateGroup, 
+							 aggregate.fun = aggregate.fun, 
+							 dispersion.fun = dispersion.fun, dispersion.type = dispersion.fun.type,
+							 smooth.window = smoothWindow,
+							 data.x.transform = x_transform, data.y.transform = y_transform,
+							 dispAlpha = input$disp_alpha_In, colorAlpha = input$color_alpha_In, 
+							 x.lab = xlab, y.lab = ylab, is.dark = dark_plot(),
+							 facet.text.face = facet$label_face(), 
+							 facet.label.fill.color = facet$label_fill_color(),
+							 plot.subtitle.hjust = titles$subtitle_hjust, 
+							 plot.subtitle.size = titles$subtitle_size, 
+							 plot.subtitle.face = titles$subtitle_text_style, 
+							 linesize = input$line_size_In,
+							 pointsize = input$point_size_In,
+							 browse = debugging$browse, benchmark = debugging$benchmark, 
+							 verbose = debugging$verbose)
 			plot	
-		})
-		
-		transform = reactive({
-			# Data Transform with parameter
-			return(list(method = input$data_transform_In, 
-						parameter = input[[paste(c("data", input$data_transform_In, "In"), collapse = "_")]]))
 		})
 		
 		export_size = reactive({
@@ -679,8 +678,8 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 		
 		getYPretty = reactive({
 			if(!is.null(tracks()) && !(input$y_In == "")){
-				#browser()
-				transformFun = match.fun(transform()$method)
+				# browser()
+				transformFun = y_transform$func()
 				values = trajectories()[[input$y_In]]
 				unit = attr(values, "unit")
 				
@@ -693,11 +692,11 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 					unitToConvert = unit
 				}
 				
-				if(!udunits2::ud.are.convertible(unit, unitToConvert)){
+				if(!is.null(unit) && !is.null(unitToConvert) && !udunits2::ud.are.convertible(unit, unitToConvert)){
 					unitToConvert = unit
 				}
 				if(!is.factor(values)){
-					values = transformFun(udunits2::ud.convert(values, unit, unitToConvert), transform()$parameter)
+					values = transformFun(udunits2::ud.convert(values, unit, unitToConvert), y_transform$parameter())
 					
 					#if()
 					pretty(values, 20)
@@ -739,6 +738,8 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 		facet = facet_control_server("facet", choices)
 		plot_export_server("export", "Trajectory Feature", plot)
 		stat_details_server("stats", plot)
+		x_transform = data_transform_server("x")
+		y_transform = data_transform_server("y")
 		debugging = debugging_server("debug")
 		dark_plot = dark_plot_server("dark")
 		titles = titles_server("title")
