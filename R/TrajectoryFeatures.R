@@ -697,7 +697,7 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 					unitToConvert = unit
 				}
 				if(!is.factor(values)){
-					values = transformFun(udunits2::ud.convert(values, unit, unitToConvert), trackTransform()$parameter)
+					values = transformFun(udunits2::ud.convert(values, unit, unitToConvert), transform()$parameter)
 					
 					#if()
 					pretty(values, 20)
