@@ -278,6 +278,10 @@ imarisTrackMaxSpeed = c(TRACK_MAX_SPEED = "Track Speed Max")
 imarisTrackMinSpeed = c(TRACK_MIN_SPEED = "Track Speed Min")
 imarisTrackSTDSpeed = c(TRACK_STD_SPEED = "Track Speed StdDev")
 
+imarisDefaults = list(NULL)
+imarisPosDefaults = list(NULL, NULL, 0)
+imarisDimDefaults = list(NULL, NULL, 0, NULL)
+
 imarisTrackPosStart = paste("Track Position", c("X", "Y", "Z"), "Start")
 names(imarisTrackPosStart) = startPositionColumns[1:3]
 
@@ -291,51 +295,63 @@ imarisTrackModel =
 	list(list(sheetName = "Track Displacement", specNames = imarisTrackDisplNames, 
 			  title = "displacement", summarize = TRUE,
 			  exprs = "last(POSITION_X) - first(POSITION_X); last(POSITION_Y) - first(POSITION_Y); last(POSITION_Z) - first(POSITION_Z)",
-			  names = c("TRACK_DISPLACEMENT_X", "TRACK_DISPLACEMENT_Y", "TRACK_DISPLACEMENT_Z")),
+			  names = c("TRACK_DISPLACEMENT_X", "TRACK_DISPLACEMENT_Y", "TRACK_DISPLACEMENT_Z"),
+			  defaults = imarisPosDefaults),
 		 list(sheetName = "Track Displacement Length", specNames = imarisTrackDisplLengthNames, 
 		 	 title = "displacement length", summarize = FALSE,
 		 	 exprs = "sqrt(TRACK_DISPLACEMENT_X ** 2 + TRACK_DISPLACEMENT_Y ** 2 + TRACK_DISPLACEMENT_Z ** 2)",
-		 	 names = c("TRACK_DISPLACEMENT")),
+		 	 names = c("TRACK_DISPLACEMENT"),
+		 	 defaults = imarisDefaults),
 		 list(sheetName = "Track Length", specNames = imarisTrackPathLength, 
 		 	 title = "path length", summarize = TRUE,
 		 	 exprs = "sum(DISPLACEMENT, na.rm = TRUE)",
-		 	 names = c("PATH_LENGTH")),
+		 	 names = c("PATH_LENGTH"),
+		 	 defaults = imarisDefaults),
 		 list(sheetName = "Track Speed Mean", specNames = imarisTrackMeanSpeed, 
 		 	 title = "mean speed", summarize = TRUE,
 		 	 exprs = "mean(VELOCITY, na.rm = TRUE)",
-		 	 names = c("TRACK_MEAN_SPEED")),
+		 	 names = c("TRACK_MEAN_SPEED"),
+		 	 defaults = imarisDefaults),
 		 list(sheetName = "Track Speed Min", specNames = imarisTrackMinSpeed, 
 		 	 title = "min speed", summarize = TRUE,
 		 	 exprs = "min(VELOCITY, na.rm = TRUE)",
-		 	 names = c("TRACK_MIN_SPEED")),
+		 	 names = c("TRACK_MIN_SPEED"),
+		 	 defaults = imarisDefaults),
 		 list(sheetName = "Track Speed Max", specNames = imarisTrackMaxSpeed, 
 		 	 title = "max speed", summarize = TRUE,
 		 	 exprs = "max(VELOCITY, na.rm = TRUE)",
-		 	 names = c("TRACK_MAX_SPEED")),
+		 	 names = c("TRACK_MAX_SPEED"),
+		 	 defaults = imarisDefaults),
 		 list(sheetName = "Track Speed StdDev", specNames = imarisTrackSTDSpeed, 
 		 	 title = "std dev of speed", summarize = TRUE,
 		 	 exprs = "sd(VELOCITY, na.rm = TRUE)",
-		 	 names = c("TRACK_STD_SPEED")),
+		 	 names = c("TRACK_STD_SPEED"),
+		 	 defaults = imarisDefaults),
 		 list(sheetName = "Track Duration", specNames = imarisTrackDuration, 
 		 	 title = "track duration", summarize = TRUE,
 		 	 exprs = "last(POSITION_T) - first(POSITION_T)",
-		 	 names = c("TRACK_DURATION")),
+		 	 names = c("TRACK_DURATION"),
+		 	 defaults = imarisDefaults),
 		 list(sheetName = "Track Position Start", specNames = imarisTrackPosStart, 
 		 	 title = "start position", summarize = TRUE,
 		 	 exprs = "first(POSITION_X); first(POSITION_Y); first(POSITION_Z); first(POSITION_T)",
-		 	 names = c("START_POSITION_X", "START_POSITION_Y", "START_POSITION_Z", "START_POSITION_T")),
+		 	 names = c("START_POSITION_X", "START_POSITION_Y", "START_POSITION_Z", "START_POSITION_T"),
+		 	 defaults = imarisDimDefaults),
 		 list(sheetName = "Track Position End", specNames = imarisTrackPosEnd, 
 		 	 title = "end position", summarize = TRUE,
 		 	 exprs = "last(POSITION_X); last(POSITION_Y); last(POSITION_Z); last(POSITION_T)",
-		 	 names = c("END_POSITION_X", "END_POSITION_Y", "END_POSITION_Z", "END_POSITION_T")),
+		 	 names = c("END_POSITION_X", "END_POSITION_Y", "END_POSITION_Z", "END_POSITION_T"),
+		 	 defaults = imarisDimDefaults),
 		 list(sheetName = "Track Straightness", specNames = imarisTrackStraightness, 
 		 	 title = "straightness", summarize = FALSE,
 		 	 exprs = "TRACK_DISPLACEMENT / PATH_LENGTH",
-		 	 names = c("STRAIGHTNESS")),
+		 	 names = c("STRAIGHTNESS"),
+		 	 defaults = imarisDefaults),
 		 list(sheetName = "Track Velocity", specNames = imarisTrackVelocity, 
 		 	 title = "velocity", summarize = FALSE, #Mock
 		 	 exprs = "TRACK_DISPLACEMENT / TRACK_DURATION",
-		 	 names = c("TRACK_VELOCITY"))
+		 	 names = c("TRACK_VELOCITY"),
+		 	 defaults = imarisDefaults)
 		 
 	)
 
