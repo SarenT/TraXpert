@@ -359,8 +359,14 @@ imarisImportTrajectories = function(trajectories, filePath, sheetName, exprs, sh
 #' @export
 #'
 #' @examples
-imarisImportTracks = function(tracks, trajectories, filePath, sheetName, exprs, summarize, sheets, newColnames, 
-							  groupText, recalculate, coreNames, specNames, title = ""){
+imarisImportTracks = function(tracks, trajectories, filePath, sheets, importModel, groupText, recalculate, coreNames){
+	sheetName = importModel$sheetName
+	exprs = importModel$exprs
+	summarize = importModel$summarize
+	newColnames = importModel$names
+	specNames = importModel$specNames
+	title = importModel$title
+	defaults = importModel$defaults
 	if(recalculate || !(sheetName %in% sheets)){
 		cat("\t");cat(paste("Calculating track features -", title, groupText));cat("\n")
 		if(summarize){
@@ -374,9 +380,19 @@ imarisImportTracks = function(tracks, trajectories, filePath, sheetName, exprs, 
 		}
 	}else{
 		cat("\t");cat(paste("Parsing track features -", title, groupText));cat("\n")
-		tracks = tracks %>% left_join(read_excel(path = filePath, sheet = sheetName, skip = 1) %>%
-									  	select(c(coreNames, specNames)) %>% 
-									  	arrange(TRACK_ID), by = names(coreNames))
+		imarisRead = read_excel(path = filePath, sheet = sheetName, skip = 1)
+		missing_col_selector = !(specNames %in% colnames(imarisRead))
+		cols_to_fill = specNames[missing_col_selector]
+		defaults_to_fill = defaults[missing_col_selector]
+		
+		if(length(cols_to_fill) > 0){
+			for(i in 1:length(cols_to_fill)){
+				imarisRead[[cols_to_fill[i]]] = defaults_to_fill[[i]]
+			}
+		}
+	
+		tracks = tracks %>% 
+			left_join(imarisRead %>% select(c(coreNames, specNames)) %>%  arrange(TRACK_ID), by = names(coreNames))
 	}
 	return(tracks)
 }
@@ -2046,8 +2062,7 @@ parseImarisXLSXFile = function(filePath, groupText, fileGroup, recalculate = FAL
 	# 	 exprs = "")
 	for(i in 1:length(imarisTrackModel)){
 		item = imarisTrackModel[[i]]
-		trks = imarisImportTracks(trks, trajs, filePath, item$sheetName, item$exprs, item$summarize, sheets, item$names, 
-								  groupText, recalculate, imarisTrackCoreNames, item$specNames, item$title)
+		trks = imarisImportTracks(trks, trajs, filePath, sheets, item, groupText, recalculate, imarisTrackCoreNames)
 	}
 	
 	feats = rbind(trajFeats, trackFeats)
