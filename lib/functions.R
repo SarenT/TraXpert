@@ -460,18 +460,18 @@ getTrackingFileType = function(files){
 
 mean_square_displacement = function(x, y, z, taus, all_taus, browse = F){
 	if(!release && browse) browser()
-	taus = as.integer(taus)
+	taus = as.numeric(taus)
 	inds = which(taus %in% all_taus)
 	# return((df %>% ungroup() %>% 
 	# 			mutate(sqd = ) %>% 
 	# 			summarise(msd = sum(sqd, na.rm = T)/length(na.omit(sqd))))$msd)
 	select_msds = 
 		unlist(
-			lapply(taus[inds], 
-				   function(tau) {
-				   	sum((lead(x, tau) - x)^2 + (lead(y, tau) - y)^2 + (lead(z, tau) - z)^2, na.rm = T)/(length(x) - tau)
-				   }
-			))
+			Map(function(tau, ind) {
+				# browser()
+				square_displacement = (lead(x, ind) - x)^2 + (lead(y, ind) - y)^2 + (lead(z, ind) - z)^2
+				return(mean(square_displacement, na.rm = T))
+			}, taus[inds], inds))
 	msds = rep(NA, length(taus))
 	msds[inds] = select_msds
 	return(msds)
@@ -489,7 +489,7 @@ mean_square_displacement = function(x, y, z, taus, all_taus, browse = F){
 calculate_mean_square_displacements = function(trajectories, max_taus = 10){
 	all_position_t_fix = unique(trajectories$POSITION_T_FIX)
 	n_tau = min(max_taus, length(all_position_t_fix))
-	all_taus = all_position_t_fix[seq(1, length(all_position_t_fix), floor(length(all_position_t_fix) / n_tau))]
+	all_taus = all_position_t_fix[seq(1, length(all_position_t_fix), ceiling(length(all_position_t_fix) / n_tau))]
 	# browser()
 	trajectories = trajectories %>% group_by(track_global_id) %>% 
 		mutate(TAU = POSITION_T - first(POSITION_T)) %>%
@@ -882,9 +882,6 @@ processData = function(dataList, groups, groupings, progress = list(), recalcula
 																   "track_global_id"), "`"))
 	files = files %>% group_by(.dots = paste0("`", c(as.character(groupings$names), "group_id"), "`"))
 	
-	#trajectories2 = trajectories
-	#tracks2 = tracks
-	
 	if(benchmark) startTime = benchMark("Process data - groupings and global id", startTime)
 	if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
 	cat("Calculating fixed positions of tracks at (0/0)\n")
@@ -988,7 +985,6 @@ processData = function(dataList, groups, groupings, progress = list(), recalcula
 					  by = "track_global_id")
 		
 		tracks$TRACK_DIRECTION_Z = acos(tracks$TRACK_DIRECTION_Z / tracks$TRACK_DISPLACEMENT) %% pi
-		#browser()
 		tracks = tracks %>% mutate(toCardinal(get("TRACK_DIRECTION"), directionCat, 
 											  unlist(names(cardinalCols)[cardinalCols == "TRACK_DIRECTION"])))
 		
@@ -1003,7 +999,6 @@ processData = function(dataList, groups, groupings, progress = list(), recalcula
 		}
 	})
 	if(!release && browse == 1){ browse = browse - 1; browser() } else {browse = browse - 1}
-	#browser()
 	tracks = setUnits(tracks, features[features$type == "Track", ], files)
 	trajectories = setUnits(trajectories, features[features$type == "Spot" | features$type == "Edge", ], files)
 	dataList$tracks = tracks; dataList$trajectories = trajectories; dataList$features = features; dataList$files = files
