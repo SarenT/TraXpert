@@ -697,6 +697,8 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 				}else{
 					values
 				}
+			}else{
+				return(NULL)
 			}
 		})
 		#getXMin = reactive({getXPretty()[1]})
@@ -710,16 +712,22 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 				}else{
 					return(prettyMin * 2)
 				}
+			}else{
+				return(0)
 			}
 		})
 		getYMax = reactive({
-			prettyMax = last(getYPretty())
+			# browser()
+			prettyMax = getYPretty()
 			if(!is.null(prettyMax) && !is.factor(prettyMax)){
+				prettyMax = last(prettyMax)
 				if(prettyMax < 0){
 					return(0)
 				}else{
 					return(prettyMax * 2)
 				}
+			}else{
+				return(1)
 			}
 			
 		})
@@ -727,6 +735,8 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 			y = getYPretty()
 			if(!is.null(y)){
 				y[2] - y[1]
+			}else{
+				return(0.1)
 			}
 		})
 		

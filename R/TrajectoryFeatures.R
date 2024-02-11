@@ -75,13 +75,21 @@ trajectory_features_UI = function(id, title, tabColor){
 	ranges_colors_units = function(){
 		bsCollapsePanel(
 			"Ranges, Units & Labels", 
-			fluidPage(fluidRow(
-				column(10, tipify(
-					sliderInput(ns("y_range_In"), "y Axis Range", 
-								min = 0, max = 1, step = 0.1, value = c(0, 1), dragRange = TRUE), 
-					"y axis range. Slide the knobs or the line between the knobs to set what range to be displayed. You can also select an area and double click on the plot to set the range (only y axis selection is registered).", 
-					"top")), 
-				column(2, checkboxInput(ns("y_range_check_In"), "", value = TRUE))),
+			fluidPage(
+				fluidRow(
+					column(10, tipify(
+						sliderInput(ns("x_range_In"), "x Axis Range", 
+									min = 0, max = 1, step = 0.1, value = c(0, 1), dragRange = TRUE), 
+						"x axis range. Slide the knobs or the line between the knobs to set what range to be displayed. You can also select an area and double click on the plot to set the range (only x axis selection is registered).", 
+						"top")), 
+					column(2, checkboxInput(ns("x_range_check_In"), "", value = TRUE))),
+				fluidRow(
+					column(10, tipify(
+						sliderInput(ns("y_range_In"), "y Axis Range", 
+									min = 0, max = 1, step = 0.1, value = c(0, 1), dragRange = TRUE), 
+						"y axis range. Slide the knobs or the line between the knobs to set what range to be displayed. You can also select an area and double click on the plot to set the range (only y axis selection is registered).", 
+						"top")), 
+					column(2, checkboxInput(ns("y_range_check_In"), "", value = TRUE))),
 				axis_labels_UI(ns("axis_labs")),
 				fluidRow(
 					axis_transform_UI(ns("axis_transform_x"), "x", 6),
@@ -227,7 +235,7 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 	#'
 	#' @examples
 	plot_data = function(dataTraj, x, y, type, trackGlobalIDName, groupings, x.unit = NULL, y.unit = NULL, 
-						 y.Range = NULL,
+						 x.Range = NULL, y.Range = NULL,
 						 fillGroupName = NULL, colorGroupName = NULL, #colorReverseOrder = FALSE, 
 						 groupTracks = FALSE,
 						 shapeGroupName = NULL, lineTypeGroupName = NULL, sizeVarName = NULL, 
@@ -266,16 +274,23 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 		
 		default.x.Unit = attr(dataTraj[[x]], "unit"); default.y.Unit = attr(dataTraj[[y]], "unit")
 		
-		dataTraj = dataTraj %>% filter(across(y, ~ !is.na(.)))
+		dataTraj = dataTraj %>% filter(!is.na(.data[[y]]))
 		
 		# Issues wirh the log transformations
 		if(grepl("log", coord_trans_x$method())){
-			dataTraj = dataTraj %>% filter(across(x, ~ is.positive(.)))
+			dataTraj = dataTraj %>% filter(is.positive(.data[[x]]))
+			placeholder.x.Range = ifelse(x.Range[2] <= 1, x.Range[2] / 10, 1)
+			x.Range = replace(x.Range, x.Range <= 0, placeholder.x.Range)
 		}
 		
 		if(grepl("log", coord_trans_y$method())){
-			dataTraj = dataTraj %>% filter(across(y, ~ is.positive(.)))
+			dataTraj = dataTraj %>% filter(is.positive(.data[[y]]))
+			placeholder.y.Range = ifelse(y.Range[2] <= 1, y.Range[2] / 10, 1)
+			y.Range = replace(y.Range, y.Range <= 0, placeholder.y.Range)
 		}
+		
+		x.Breaks = pretty(x.Range)
+		y.Breaks = pretty(y.Range)
 		
 		allGroupswoRep = unique(c(trackGlobalIDName, colorGroupName, facet.row, facet.col, shapeGroupName,
 								  lineTypeGroupName, fillGroupName, sizeVarName))
@@ -560,8 +575,10 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 		plot = fillPlot(plot, dataTraj, groupings, fillGroupName, fillAlpha, is.dark)
 		
 		plot = plot + guides(color = color.legend, alpha = alpha.legend)
-		
-		plot = plot + coord_trans(x = coord_trans_x$method(), y = coord_trans_y$method(), ylim = y.Range)
+		# browser()
+		plot = plot + scale_x_continuous(breaks = x.Breaks) + 
+			scale_y_continuous(breaks = y.Breaks) + 
+			coord_trans(x = coord_trans_x$method(), y = coord_trans_y$method(), xlim = x.Range, ylim = y.Range)
 		
 		if(verbose) cat("Theme...\n")
 		plot = setThemeBase(plot, is.dark, plot.subtitle.hjust, plot.subtitle.size, plot.subtitle.face, 
@@ -590,7 +607,9 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 			xlab = axis_labs$x_lab()
 			ylab = axis_labs$y_lab()
 			
+			if(input$x_range_check_In){xRange = input$x_range_In}else{xRange = NULL}
 			if(input$y_range_check_In){yRange = input$y_range_In}else{yRange = NULL}
+			
 			
 			colorGroup = input$color_In; if(colorGroup == "NULL") {colorGroup = NULL}
 			lineTypeGroup = input$linetype_In; if(lineTypeGroup == "NULL") {lineTypeGroup = NULL}
@@ -615,7 +634,7 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 			plot = plot_data(dataTraj = trajectories(), x = input$x_In, y = input$y_In, 
 							 type = input$type_In, trackGlobalIDName = "track_global_id",
 							 x.unit = axis_labs$x_unit(), y.unit = axis_labs$y_unit(), 
-							 y.Range = yRange,
+							 x.Range = xRange, y.Range = yRange,
 							 colorGroupName = colorGroup, fillGroupName = fillGroup, sizeVarName = sizeVar,
 							 coord_trans_x = x_axis_transform, coord_trans_y = y_axis_transform,
 							 lineTypeGroupName = lineTypeGroup, shapeGroupName = shapeGroup,
@@ -692,6 +711,8 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 		
 		observe({updateSliderInput(session, "y_range_In", min = getYMin(), max = getYMax(), 
 								   step = getYStep(), value = c(getYMin(), getYMax()))})
+		observe({updateSliderInput(session, "x_range_In", min = getXMin(), max = getXMax(), 
+								   step = getXStep(), value = c(getXMin(), getXMax()))})
 		
 		getYPretty = reactive({
 			if(!is.null(trajectories()) && !(input$y_In == "")){
@@ -720,6 +741,39 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 				}else{
 					values
 				}
+			}else{
+				return(NULL)
+			}
+		})
+		getXPretty = reactive({
+			if(!is.null(trajectories()) && !(input$x_In == "")){
+				# browser()
+				transformFun = x_transform$func()
+				values = trajectories()[[input$x_In]]
+				unit = attr(values, "unit")
+				
+				if(is.null(unit)){
+					unit = ""
+				}
+				
+				unitToConvert = axis_labs$x_unit()
+				if(unitToConvert == ""){
+					unitToConvert = unit
+				}
+				
+				if(!is.null(unit) && !is.null(unitToConvert) && !udunits2::ud.are.convertible(unit, unitToConvert)){
+					unitToConvert = unit
+				}
+				if(!is.factor(values)){
+					values = transformFun(udunits2::ud.convert(values, unit, unitToConvert), x_transform$parameter())
+					
+					#if()
+					pretty(values, 20)
+				}else{
+					values
+				}
+			}else{
+				return(NULL)
 			}
 		})
 		
@@ -732,16 +786,22 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 				}else{
 					return(prettyMin * 2)
 				}
+			}else{
+				return(0)
 			}
 		})
 		getYMax = reactive({
-			prettyMax = last(getYPretty())
+			# browser()
+			prettyMax = getYPretty()
 			if(!is.null(prettyMax)){
+				prettyMax = last(prettyMax)
 				if(prettyMax < 0){
 					return(0)
 				}else{
 					return(prettyMax * 2)
 				}
+			}else{
+				return(1)
 			}
 			
 		})
@@ -749,6 +809,45 @@ trajectory_features_server = function(id, data, features, tracks, trajectories, 
 			y = getYPretty()
 			if(!is.null(y)){
 				y[2] - y[1]
+			}else{
+				return(0.1)
+			}
+		})
+		
+		getXMin = reactive({
+			#browser()
+			prettyMin = getXPretty()[1]
+			if(!is.null(prettyMin)){
+				if(prettyMin > 0){
+					return(0)
+				}else{
+					return(prettyMin * 2)
+				}
+			}else{
+				return(0)
+			}
+		})
+		getXMax = reactive({
+			# browser()
+			prettyMax = getXPretty()
+			if(!is.null(prettyMax)){
+				prettyMax = last(prettyMax)
+				if(prettyMax < 0){
+					return(0)
+				}else{
+					return(prettyMax * 2)
+				}
+			}else{
+				return(1)
+			}
+			
+		})
+		getXStep = reactive({
+			x = getXPretty()
+			if(!is.null(x)){
+				x[2] - x[1]
+			}else{
+				return(0.1)
 			}
 		})
 		
