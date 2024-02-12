@@ -15,6 +15,7 @@ Imaris/
 .RDataTmp
 *.xml
 .Rproj.user
+traxpertlogs/
 !res/*
 !images/*
 

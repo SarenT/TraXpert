@@ -1,0 +1,10 @@
+res/
+.vscode/
+.Rproj.user/
+.git/
+
+docker-compose.yml
+README.html
+README.md
+.gitignore
+.Renviron
