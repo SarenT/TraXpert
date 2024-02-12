@@ -46,9 +46,7 @@ track_features_UI = function(id, title, tabColor){
 			fluidPage(fluidRow(
 				column(6, checkboxInput(ns("stat_hidens_In"), 
 										"Hide Non-Sign.", 
-										value = FALSE))#,
-				
-				#column(6, checkboxInput("stat_pairwise_In", "Pairwise Comparisons", value = TRUE))
+										value = FALSE))
 			)),
 			bsTooltip(ns("stat_method_In"), toolTips$stat_method_In, 
 					  placement = "top", trigger = "hover"),
@@ -56,8 +54,6 @@ track_features_UI = function(id, title, tabColor){
 					  placement = "top", trigger = "hover"),
 			bsTooltip(ns("stat_hidens_In"), toolTips$stat_hidens_In, 
 					  placement = "bottom", trigger = "hover"),
-			#bsTooltip("stat_pairwise_In", toolTips$stat_pairwise_In, placement = "bottom", trigger = "hover"),
-			
 			conditionalPanel("input.multiple_stat_method_In  == 'kruskal.test'", ns = ns,
 							 
 			),
@@ -173,7 +169,7 @@ track_features_UI = function(id, title, tabColor){
 			 fluidPage(
 			 	fluidRow(
 			 		column(4,
-			 			   bsCollapse(# id = ns("settings"),
+			 			   bsCollapse(
 			 			   		   titles_UI(ns("title"), textFaceChoices),
 			 			   		   plot_type(),
 			 			   		   groupings_colors_UI(ns("groupings_colors"), can_dark = TRUE),
@@ -257,12 +253,10 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 	#'
 	#' @examples
 	plot_data = function(dataTracks, x, y, type, groupings, y.unit = NULL, colorGroupName = NULL, fillGroupName = NULL, 
-						#alphaGroupName = NULL, 
 						y.range = NULL,
 						quantiles = c(0.25, 0.5, 0.75),
 						facet.row = NULL, facet.col = NULL, facet.wrap = FALSE,
 						title = NA, subtitle = NULL,
-						#statGroupName = NULL, 
 						stat.label = "..p.signif..", multiple.stat.method = NULL, pairwise.stat.method = NULL, 
 						hide.ns = FALSE, data.y.transform = y_transform,
 						coord_trans_y = NULL, 
@@ -278,7 +272,6 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 						box.notch = TRUE, box.varwidth = FALSE, 
 						dot.binwidth = 1, dot.stackgroups = FALSE, dot.method = "dotdensity", dot.stackdir = "up",
 						browse = FALSE, verbose = FALSE, benchmark = FALSE,
-						#xReverseOrder = FALSE, 
 						initializeProg = NULL, updateProg = NULL, closeProg = NULL){
 		if(!release && browse) browser()
 		if(benchmark) startTime = benchMark()
@@ -471,7 +464,6 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 						withinGroupLabel = apply(dataTracksSplit[ , nonStatGroupings ], 1, paste, collapse = " AND " )[1]
 						if(!is.null(comparisons)){
 							stat.fun = match.fun(paste0("pairwise.", pairwise.stat.method))
-							#browser()
 							statOutTemp[[withinGroupLabel]] = capture.output(stat.fun(x = dataTracksSplit[[y]], 
 																				  g = dataTracksSplit[[x]]))
 						}else{
@@ -567,7 +559,6 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 				
 				a = input$stat_comparison_select1_In
 				b = input$stat_comparison_select2_In
-				#browser()
 				
 				statPairwiseSelectedPairs = list()
 				if(length(a) == length(b) && length(a) > 0){
@@ -649,19 +640,12 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 		})
 		
 		observeEvent(input$plotOut_dblclick, {
-			#browser()
 			brush = input$plotOut_brush
 			if (!is.null(brush)) {
-				#ranges$x = c(brush$xmin, brush$xmax)
-				#trackRanges$y = c(brush$ymin, brush$ymax)
-				#updateCheckboxInput(session, "track_x_range_check_In", value = TRUE)
 				updateCheckboxInput(session, "y_range_check_In", value = TRUE)
 				updateSliderInput(session, "y_range_In", min = getYMin(), max = getYMax(), 
 								  step = getYStep(), value = c(brush$ymin, brush$ymax))
 			} else {
-				#ranges$x = NULL
-				#trackRanges$y = NULL
-				#updateCheckboxInput(session, "x_range_check_In", value = FALSE)
 				updateCheckboxInput(session, "y_range_check_In", value = FALSE)
 				updateSliderInput(session, "y_range_In", min = getYMin(), max = getYMax(), 
 								  step = getYStep(), value = c(getYMin(), getYMax()))
@@ -669,9 +653,7 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 		})
 		
 		getYPretty = reactive({
-			# browser()
 			if(!is.null(tracks()) && !(is.null(input$y_In)) && !(input$y_In == "")){
-				#browser()
 				transformFun = y_transform$func()
 				values = tracks()[[input$y_In]]
 				unit = attr(values, "unit")
@@ -688,11 +670,10 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 				if(!udunits2::ud.are.convertible(unit, unitToConvert)){
 					unitToConvert = unit
 				}
-				#browser()
+				
 				if(!is.factor(values)){
 					values = transformFun(udunits2::ud.convert(values, unit, unitToConvert), y_transform$parameter())
 					
-					#if()
 					pretty(values, 20)
 				}else{
 					values
@@ -701,10 +682,8 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 				return(NULL)
 			}
 		})
-		#getXMin = reactive({getXPretty()[1]})
-		#getXMax = reactive({x = getXPretty(); x[length(x)]})
+		
 		getYMin = reactive({
-			#browser()
 			prettyMin = getYPretty()[1]
 			if(!is.null(prettyMin) && !is.factor(prettyMin)){
 				if(prettyMin > 0){
@@ -717,7 +696,6 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 			}
 		})
 		getYMax = reactive({
-			# browser()
 			prettyMax = getYPretty()
 			if(!is.null(prettyMax) && !is.factor(prettyMax)){
 				prettyMax = last(prettyMax)
@@ -743,7 +721,6 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 		observe({updateSelectInput(session, "x_In", choices = choices$groupingsChoiceswithoutEmpty())})
 		observe({updateSelectInput(session, "y_In", choices = choices$trackChoiceswithoutEmpty(), 
 								   selected = "TRACK_MEAN_SPEED")})
-		# observe({updateSelectInput(session, "stat_In", choices = groupingsChoiceswithEmpty())})
 		observe({updateSelectInput(session, "replicate_In", choices = choices$groupingsChoiceswithEmpty())})
 		observe({updateSelectInput(session, "stat_comparison_control_In", choices = statGroups(), 
 								   selected = safeSelect(statGroups()))})
@@ -754,28 +731,17 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 			groupingsList = groupings()
 			dataList = data()
 			statGroup = input$x_In
-			#trackData = tracks()
 			if(!is.null(statGroup) && statGroup != ""){
 				if(length(groupingsList) > 1){
 					groupingsDF = groupingsList$groupings
 					
 					removeUI(selector = "#placeholderPairwiseGroupSelect div", multiple = TRUE)
-					#for(rankListOb in rankListObs){rankListOb$destroy()}
-					#rankListObs <<- list()
+					
 					if(length(dataList) > 1){
-						#browser()
 						choices = as.character(getGroups(groupingsDF, statGroup))
 						labels = as.character(getGLabs(groupingsDF, statGroup))
-						#choices = as.list(choices)
-						#names(choices) = labels
-						
 						insertUI(selector = "#placeholderPairwiseGroupSelect", 
 								 ui = generateBucketList(session$ns, choices),
-								 # ui = bucket_list(header = "Select pairs", orientation = "horizontal",
-								 # 				 add_rank_list(text = "Compare these", input_id = "track_stat_comparison_select1_In", labels = NULL),
-								 # 				 add_rank_list(text = "<- from these ->", input_id = "track_stat_comparison_select_In", labels = choices),
-								 # 				 add_rank_list(text = "with these", input_id = "track_stat_comparison_select2_In", labels = NULL)
-								 # 				 ), 
 								 where = "beforeEnd")
 					}
 				}
@@ -783,9 +749,7 @@ track_features_server = function(id, data, features, tracks, trajectories, group
 		})
 		
 		statGroups = reactive({
-			#browser()
 			statGroup = input$x_In
-			#trackData = tracks()
 			if(!is.null(statGroup) && statGroup != ""){
 				groupingsDF = groupings()$groupings
 				groups = as.character(getGroups(groupingsDF, statGroup))
