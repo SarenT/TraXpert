@@ -1,7 +1,5 @@
 addResourcePath("images", directoryPath = "images")
 server = function(input, output, session) {
-	# source("functions.R")
-	
 	labelRVs = list()
 	# Save extra values in state$values when we bookmark
 	onBookmark(function(state) {
@@ -32,7 +30,6 @@ server = function(input, output, session) {
 	})
 	
 	observeEvent(input$sessionFileIn, {
-		#browser()
 		sessionFilePath = input$sessionFileIn$datapath[1]
 		sessionFile = file(paste0("file://", sessionFilePath))
 		open(sessionFile, "rb")
@@ -78,9 +75,6 @@ server = function(input, output, session) {
 		showTab(inputId = tabsID, target = titlePlotTrajectories)
 		showTab(inputId = tabsID, target = titlePlotDirectionality)
 		showTab(inputId = tabsID, target = titlePlotTrajFeatures)
-		#data(list())
-		#browser()
-		#serialize(dataObj, NULL)
 	})
 	
 	output$debug_field = renderUI({
@@ -136,18 +130,13 @@ server = function(input, output, session) {
 		showTab(inputId = tabsID, target = titlePlotTrajectories)
 		showTab(inputId = tabsID, target = titlePlotDirectionality)
 		showTab(inputId = tabsID, target = titlePlotTrajFeatures)
-		#data(list())
-		#browser()
-		#serialize(dataObj, NULL)
 	})
 	
 	groupings = reactiveVal({
-		#browser()
 		print("groupings = reactiveVal({")
 		prepareBareGroupings(NULL)
 	})
 	
-	#filesList = reactiveVal(NULL)
 	version = reactiveVal(NULL)
 	data = reactiveVal(NULL)
 	
@@ -157,7 +146,6 @@ server = function(input, output, session) {
 	parseParameters = reactiveVal(NULL)
 	
 	observeEvent(input$processFilesIn, {
-		#dataTMFiles = eventReactive(input$processFilesIn, {
 		# Create a Progress object
 		recalculate = input$process_recalculate_In
 		browse = input$process_browse_In
@@ -189,8 +177,6 @@ server = function(input, output, session) {
 					)
 				)
 			}
-			# Close the progress when this reactive exits (even if there's an error)
-			#on.exit({progress$close()})
 			
 			groupingsDF = groupings()$groupings
 			groupsDF = groupings()$groups
@@ -202,7 +188,6 @@ server = function(input, output, session) {
 									 browse = browse))
 				observeEvent(input$userUnitInputOKIn, {
 					# Check that data object exists and is data frame.
-					# browser()
 					if (!is.null(input$pixelWidthIn) && !is.null(input$pixelHeightIn) && 
 						!is.null(input$voxelThicknessIn) && !is.null(input$frameIntervallIn)) {
 						userUnits = list(pixelWidth = input$pixelWidthIn, pixelHeight = input$pixelHeightIn, 
@@ -227,8 +212,7 @@ server = function(input, output, session) {
 				dataDF = parseFiles(uploadedFiles, groupingsDF, groupsDF, progress, recalculate = recalculate, 
 									browse = browse)
 				data(processData(dataDF, groupsDF, groupingsDF, progress, recalculate = recalculate, browse = browse))
-				#addClass(selector = "#tabs li a[data-value = tab1]", class = 'showtab')
-				#browser()
+				
 				showTab(inputId = tabsID, target = titleTracks)
 				showTab(inputId = tabsID, target = titleFiles)
 				showTab(inputId = tabsID, target = titleFeatures)
@@ -261,31 +245,24 @@ server = function(input, output, session) {
 	})
 	
 	trajChoiceswithoutEmpty = reactive({
-		#featuresToNamedList("Track", data()$features, empty = FALSE)
-		#browser()
 		choicesInNamedList(c("Spot", "Edge"), features(), empty = FALSE)
 	})
 	
 	trajChoiceswithEmpty = reactive({
-		#featuresToNamedList("Track", data()$features, empty = FALSE)
-		#browser()
 		choicesInNamedList(c("Spot", "Edge"), features(), empty = TRUE)
 	})
 	
 	groupingsChoiceswithEmpty = reactive({
 		req(groupings())
-		#browser()
 		groupingsToNamedList(groupings()$groupings, empty = TRUE)
 	})
 	
 	groupingsChoiceswithEmptywithDoNotDisplay = reactive({
 		req(groupings())
-		#browser()
 		groupingsToNamedList(groupings()$groupings, empty = TRUE, doNotDisplay = TRUE)
 	})
 	
 	groupingsAndFeatureChoiceswithoutEmpty = reactive({
-		#browser()
 		choices = list(`Grouping Variables` = as.vector(groupingsChoiceswithoutEmpty()),
 					   `Measures` = as.vector(trajChoiceswithoutEmpty()))
 		choices
@@ -305,7 +282,6 @@ server = function(input, output, session) {
 	trackDirectionCatChoiceswithoutEmpty = reactive({
 		#req(groupings())
 		#featuresToNamedList(type = "Track", features = data()$features, empty = FALSE)
-		#browser()
 		a = choicesInNamedList(type = "Track", features(), "CARDINAL", empty = FALSE)
 		print("a:")
 		print(a)
@@ -314,7 +290,7 @@ server = function(input, output, session) {
 	
 	dispersionChoices = reactive({
 		#featuresToNamedList("Track", data()$features, empty = FALSE)
-		#browser()
+
 		# According to the chosen aggregate function, the index of the choice is found (which). Then the available 
 		# choices is found (in dispChoicesforAggrFunction). Finally names of available dispersion functions are 
 		# found (in dispersionMeasureChoices).
@@ -330,7 +306,7 @@ server = function(input, output, session) {
 	observeEvent(input$groupingsOut_cell_clicked, {
 		info = input$groupingsOut_cell_clicked
 		if(!is.null(info$row)){
-			#browser()
+	
 			groupingsDF = groupings()$groupings; groupsDF = groupings()$groups
 			grouping = groupingsDF[[info$row, 1]]
 			groupingLabel = groupingsDF[[info$row, 2]]
@@ -346,7 +322,7 @@ server = function(input, output, session) {
 			insertUI(selector = '#placeholder', ui = textInput(id, label = "Grouping label:", value = groupingLabel))
 			for(labelRV in labelRVs){labelRV$destroy()}
 			print(labelRVs)
-			#browser()
+	
 			labelRVs <<- list()
 			labelRVs[[id]] <<- observeEvent(input[[id]], {
 				groupingsDF = groupings()$groupings; groupsDF = groupings()$groups
@@ -392,18 +368,13 @@ server = function(input, output, session) {
 		}
 	})
 	
-	#groupRankListOut = list()
-	
-	#output$groupRankOut = renderUI({groupRankListOut()})
-	
 	rankListObs = list() # observeEvents for rank_list objects
 	observe({
 		groupingsList = groupings()
 		dataList = data()
-		#browser()
-		#uiList = list()
+
 		if(length(groupingsList) > 1){
-			#browser()
+	
 			
 			groupingsDF = groupingsList$groupings
 			
@@ -414,7 +385,7 @@ server = function(input, output, session) {
 				
 				lapply(1:nrow(groupingsDF), function(i){
 					#for(i in 1:nrow(groupingsDF)){
-					#browser()
+			
 					
 					#uiList[[i]] = 
 					#insertUI(selector = "#placeholderRank", ui =  textAreaInput(inputId = paste("rankGroupahaha",  sprintf("%03d", i), sep = "_"), 
@@ -430,7 +401,7 @@ server = function(input, output, session) {
 						observeEvent(input[[paste("rankGroup",  sprintf("%03d", i), sep = "_")]], {
 							
 							groupingsDF = groupings()$groupings; groupsDF = groupings()$groups
-							#browser()
+					
 							newOrder = input[[paste('rankGroup', sprintf("%03d", i), sep = "_")]]
 							#cat(newOrder); cat("\n")
 							#cat(as.character(groupingsDF$groupLabels[[i]])); cat("\n")
@@ -444,7 +415,7 @@ server = function(input, output, session) {
 								
 								# NA means some labels are changed, this triggers due to above statement but user actually didn't update anything
 								if(!any(is.na(ranks))){	
-									#browser()
+							
 									groupingsDF$groupLabels[[i]] = 
 										factor(newOrder, levels = as.character(groupingsDF$groupLabels[[i]])[ranks])
 									
@@ -488,10 +459,10 @@ server = function(input, output, session) {
 											 			   					   targets = pointSourceColumnDisable())
 											 			   )
 											 )
-	)#c(1, 2, 3))))
+	)
 	
 	observeEvent(input$files_point_source_Out_cell_edit, {
-		#browser()
+
 		info = input$files_point_source_Out_cell_edit
 		info$col = info$col + 1
 		if(info$value[1] != ""){
@@ -502,7 +473,7 @@ server = function(input, output, session) {
 	})
 	
 	observeEvent(input$filesOut_cell_edit, {
-		#browser()
+
 		info = input$filesOut_cell_edit
 		
 		info$col = info$col + 1
@@ -513,7 +484,7 @@ server = function(input, output, session) {
 	})
 	
 	observeEvent(input$featuresOut_cell_edit, {
-		#browser()
+
 		info = input$featuresOut_cell_edit
 		info$col = info$col + 1
 		
@@ -523,7 +494,7 @@ server = function(input, output, session) {
 	})
 	
 	observeEvent(input$tracksOut_cell_edit, {
-		#browser()
+
 		info = input$tracksOut_cell_edit
 		info$col = info$col + 1
 		
@@ -533,7 +504,7 @@ server = function(input, output, session) {
 	})
 	
 	observeEvent(input$trajecoriesOut_cell_edit, {
-		#browser()
+
 		info = input$trajecoriesOut_cell_edit
 		info$col = info$col + 1
 		
@@ -557,7 +528,7 @@ server = function(input, output, session) {
 			dataObj$version = dataModelVersion
 			dataObj$groupings = groupings()
 			dataObj$data = data()
-			#browser()
+	
 			# Write to a file specified by the 'file' argument
 			dataObjSerial = serialize(dataObj, NULL)
 			writeBin(object = dataObjSerial, con = file)
@@ -565,8 +536,6 @@ server = function(input, output, session) {
 	)
 	
 	trackChoiceswithoutEmpty = reactive({
-		#featuresToNamedList("Track", data()$features, empty = FALSE)
-		#browser()
 		choicesInNamedList("Track", features(), empty = FALSE)
 	})
 	
@@ -602,4 +571,3 @@ server = function(input, output, session) {
 	directionality_server("directionality", data, features, tracks, trajectories, groupings, choices)
 	trajectory_features_server("trajectory_features", data, features, tracks, trajectories, groupings, choices)
 }
-# shinyApp(ui = ui, server = server, enableBookmarking = "server")
