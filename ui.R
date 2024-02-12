@@ -78,14 +78,13 @@ ui = function(request){
 		tabPanel(title,
 				 tags$style(HTML(tabBGColorCSS(title, tabColor))),
 				 sidebarLayout(
-				 	sidebarPanel(#h3("TraXpert"),
-				 		#hr(),
+				 	sidebarPanel(
 				 		p("TraXpert is a tool to automate analysis of tracking files to create plots and simple statistics. TraXpert is smart enough to understand basic file naming convention and the source of files, where each tracking file has ", 
 				 		  strong("\"_\""), 
 				 		  "separated groupings."),
 				 		br(),
 				 		p("For instance, files ",
-				 		  br(), #em("2019.05.08_WT_", strong("Untreated")),
+				 		  br(),
 				 		  HTML("<em>2019.05.08_WT_<strong>Untreated</strong>.xml</em> and <br><em>2019.05.08_WT_<strong>Treated</strong>.xml</em> will be recognized as <br><em>2019.05.08_WT_<strong>group1</strong>.xml</em> and <br><em>2019.05.08_WT_<strong>group2</strong>.xml</em>. Also multiple groupings are supported (treatments, genotypes, etc...")
 				 		),
 				 		tags$ul(
@@ -138,19 +137,14 @@ ui = function(request){
 				 	feature_calculator_UI(
 				 		"track_new_feat", "New Track Feature", 
 				 		"Calculate a new track feature based on an existing feature. With this, you can calculate new measures by entering the formula.",
-				 		# "track", 
 				 		featureDimensionChoices, list(`Track` = "Track")),
 				 	feature_calculator_UI(
 				 		"traj_new_feat", "New Trajectory (Spot/Edge) Feature", 
 				 		"Calculate a new spot or edge feature based on an existing feature. With this, you can calculate new measures by entering the formula.",
-				 		# "traj", 
 				 		featureDimensionChoices, list(`Spot` = "Spot", `Edge` = "Edge")),
-				 	# )),
-				 	# fluidPage(fluidRow(
 				 	feature_calculator_UI(
 				 		"track_from_traj_new_feat", "New Track Feature from Trajectories", 
 				 		"Calculate a new track feature based on existing trajectory features. This summarises trajectory information (spots and edges of a track) into a single value per track. e.g. mean track speed is the average of all speeds between spots of a track.",
-				 		# "track_from_traj", 
 				 		featureDimensionChoices, list(`Track` = "Track"))
 				 ))
 				 
@@ -175,9 +169,7 @@ ui = function(request){
 								  .navbar-default .navbar-nav > li[class=active] {font-weight: bold;}"))),
 		fluidRow(
 			tags$head(tags$style(HTML(".tab-content { height: 90vh; overflow-y: auto !important; }"))),
-			#column(12,
 			navbarPage(title = "TraXpert", id = tabsID, 
-					   #tabsetPanel(type = "tabs",
 						tabPanelImport(title = titleImportGroupings, tabColor = tabColorImport),
 						tabPanelOperations(titleOperations, tabColorOperations),
 						tabPanel(titleFiles, 
