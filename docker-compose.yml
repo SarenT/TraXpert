@@ -1,0 +1,13 @@
+version: '3'
+services:
+  traxpert:
+    build: ./
+
+    container_name: traxpert
+    restart: unless-stopped
+    expose:
+      - "3838-3838"
+    ports:
+      - "3838:3838"
+    volumes:
+      - ./traxpertlogs:/var/log/shiny-server/
