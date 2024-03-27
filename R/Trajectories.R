@@ -431,8 +431,8 @@ trajectories_server = function(id, data, features, tracks, trajectories, groupin
 		}
 		
 		if(equalRange){
-			x.max = max(abs(dataTraj[[x]])); x.min = -1 * x.max
-			y.max = max(abs(dataTraj[[y]])); y.min = -1 * y.max
+			x.max = max(abs(ud.convert(dataTraj[[x]], default.x.Unit, x.unit))); x.min = -1 * x.max
+			y.max = max(abs(ud.convert(dataTraj[[y]], default.y.Unit, y.unit))); y.min = -1 * y.max
 			min = min(x.min, y.min); max = max(x.max, y.max)
 			plot = plot + xlim(min, max)
 			plot = plot + ylim(min, max)
