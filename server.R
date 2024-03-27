@@ -342,11 +342,17 @@ server = function(input, output, session) {
 					observeEvent(input[[paste0('label_', sprintf("%03d", i))]], {
 						groupingsDF = groupings()$groupings; groupsDF = groupings()$groups
 						listVals = as.character(groupingsDF[[info$row, 4]])
-						listVals[i] = input[[paste0('label_', sprintf("%03d", i))]]
-						groupingsDF[[info$row, 4]] = as.factor(listVals)
-						#cat(paste("---", id, info$row, "\n"))
-						#cat(paste("---", "\t", input[[paste0('label_', sprintf("%03d", i))]], paste(groupingsDF[info$row, 4], collapse = "-"), "\n"))
-						groupings(list(groupings = groupingsDF, groups = groupsDF))
+						
+						if(!(input[[paste0('label_', sprintf("%03d", i))]] %in% listVals)){
+							listVals[i] = input[[paste0('label_', sprintf("%03d", i))]]
+							groupingsDF[[info$row, 4]] = as.factor(listVals)
+							#cat(paste("---", id, info$row, "\n"))
+							#cat(paste("---", "\t", input[[paste0('label_', sprintf("%03d", i))]], paste(groupingsDF[info$row, 4], collapse = "-"), "\n"))
+							groupings(list(groupings = groupingsDF, groups = groupsDF))
+						} else {
+							showNotification(type = "warning", duration = 2, "Duplicate label!")
+						}
+						
 					})
 				insertUI(selector = "#placeholder", 
 						 ui = colourInput(paste0('color_', sprintf("%03d", i)), 
